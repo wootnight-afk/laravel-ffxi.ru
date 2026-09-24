@@ -30,7 +30,6 @@ LANGUAGE:
 - Communication with the user: Russian.
 - Code, comments, commit messages: English.
 
-
 ============================================================
 CRITICAL CONSTRAINTS — DO NOT VIOLATE
 ============================================================
@@ -61,34 +60,77 @@ docs/ai/context.md. In particular:
   (laravel.com/docs, filamentphp.com/docs, livewire.laravel.com),
   github.com raw files of official repositories.
 
-## Current state
+============================================================
+CURRENT STATE — CONFIRMED DATA (already collected)
+============================================================
 
-We are at STEP 1 of section 34 of the spec.
-You have already collected:
-- Laravel framework 13.33.0 (requires PHP ^8.3)
-- Filament 5.8.4 (requires PHP ^8.2)
-- Livewire 4.4.6 (supports Laravel ^10–^13)
-- spatie/laravel-permission 8.3.0 (Laravel ^12|^13, PHP ^8.3)
-- Pest 5.2.1 (PHP ^8.4)
-- Larastan 3.12.2 (Laravel ^11|^12|^13)
-- Laravel Pint 1.32.1
-- Laravel Fortify 1.40.0
-- Intervention Image 4.3.2
+Verified via Packagist (September 2026):
 
-This is ENOUGH DATA. Do not collect more.
+- laravel/framework          13.33.0    requires PHP ^8.3
+- filament/filament          5.8.4      requires PHP ^8.2
+- livewire/livewire          4.4.6      requires PHP ^8.1,
+                                          supports Laravel ^10|^11|^12|^13
+- spatie/laravel-permission  8.3.0      requires PHP ^8.3,
+                                          Laravel ^12|^13
+- pestphp/pest               5.2.1      requires PHP ^8.4
+- larastan/larastan          3.12.2     requires PHP ^8.2,
+                                          Laravel ^11|^12|^13
+- laravel/pint               1.32.1     requires PHP ^8.3
+- intervention/image         4.3.2      requires PHP ^8.3
 
-## What to do now
+NOT in composer.json (deliberately excluded):
+- laravel/fortify — remains a candidate for stage 4 (MFA), NOT part
+  of the stack. Add only via separate PR with ADR justification if
+  Filament 5 does not provide MFA out of the box.
 
-Do NOT run any more commands.
+Still MISSING:
+- Filament 4 data (last stable 4.x, PHP and Laravel constraints).
+  Needed for ADR-001 comparison per section 3 of the spec.
+
+============================================================
+CURRENT TASK — WHAT TO DO NOW
+============================================================
+
+Context: Step 1 (architecture summary) was already delivered and
+accepted with corrections. We are now on the correction round before
+Step 2 (file generation).
+
+Do the following, in order:
+
+1. Collect Filament 4 data via Packagist API — last stable 4.x version,
+   PHP constraint, Laravel constraint. If the request fails after up
+   to 3 attempts with 5s pause — say honestly:
+   "Filament 4 data unavailable, manual verification required."
+   Do NOT consult third-party blogs.
+
+2. Produce UPDATED point 2 (Chosen versions) and point 4 (Compatibility
+   check) of Step 1 only. Do NOT redo other points.
+
+3. Point 2 (Chosen versions) MUST NOT include laravel/fortify.
+
+4. Point 4 (Compatibility check) MUST be a table built only from
+   concrete constraints (package → requirement → environment → verdict).
+   NO "works with" phrasing.
+
+5. In ADR-001 the CVE wording MUST be literal:
+   "Security advisories are checked automatically via composer audit
+   in CI (section 21 of the spec) and monthly via composer outdated
+   --direct (section 20 of the spec). No claims about the absence of
+   CVE are made in ADR-001."
+
+6. Livewire as explicit require — keep. One-line justification for
+   ADR-001: "Explicit require livewire/livewire: control over the
+   critical transitive dependency of Filament 5; version pinned via
+   composer.lock."
+
+7. ADR-001 must record ONE of:
+   — "Both stacks (Filament 5 and Filament 4) are workable; chosen
+     by tie-break rule (section 3): longer support window, wider
+     plugin coverage, shorter upgrade path";
+   — "Filament 4 rejected: incompatible with Laravel 13 (specify
+     concrete constraint)".
+
 Do NOT create any files.
-Produce the complete Step 1 answer per section 34 of the spec:
-  1) architecture summary,
-  2) chosen versions,
-  3) justification per tie-break rule (section 3),
-  4) compatibility check,
-  5) main dependencies list,
-  6) project structure (section 26),
-  7) files to be created,
-  8) development order (section 30, stages 0–14),
-  9) potential risks.
-Then STOP and wait for confirmation.
+Do NOT proceed to Step 2.
+Stop and wait for confirmation.
+
