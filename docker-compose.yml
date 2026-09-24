@@ -1,0 +1,111 @@
+# ------------------------------------------------------------------
+# Local development stack (dev-only). Never used in production.
+# Matches spec section 4: app (PHP-FPM), web (Nginx), db (MySQL 8.4),
+# node (Vite), plus Mailpit for local SMTP testing (spec section 13).
+#
+# Host ports 8080 / 3310 / 5173 / 8025 are chosen on purpose: another
+# project (bitrix) already occupies 80 and 3309 on this WSL2 machine.
+# Container names use the ffxi_laravel_ prefix and the stack runs on
+# its own bridge network to avoid any clash with that project.
+#
+# Production deployment does not use Docker (spec sections 1, 7, 22).
+# ------------------------------------------------------------------
+
+services:
+    app:
+        build:
+            context: ./docker/php
+            dockerfile: Dockerfile
+        container_name: ffxi_laravel_app
+        working_dir: /var/www/html
+        environment:
+            APP_ENV: ${APP_ENV:-local}
+            APP_DEBUG: ${APP_DEBUG:-true}
+        volumes:
+            - ./:/var/www/html
+        depends_on:
+            db:
+                condition: service_healthy
+        networks:
+            - ffxi_laravel_network
+
+    web:
+        image: nginx:1.24-alpine
+        container_name: ffxi_laravel_web
+        ports:
+            - "8080:80"
+        volumes:
+            - ./:/var/www/html
+            - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+        depends_on:
+            app:
+                condition: service_started
+        healthcheck:
+            test: ["CMD", "wget", "--spider", "-q", "http://localhost/up"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+        networks:
+            - ffxi_laravel_network
+
+    db:
+        image: mysql:8.4
+        container_name: ffxi_laravel_db
+        ports:
+            - "3310:3306"
+        environment:
+            MYSQL_DATABASE: ${DB_DATABASE:-laravel_ffxi}
+            MYSQL_USER: ${DB_USERNAME:-laravel}
+            MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_secret}
+        volumes:
+            - ffxi_laravel_db_data:/var/lib/mysql
+            - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 30s
+        networks:
+            - ffxi_laravel_network
+
+    node:
+        image: node:22-alpine
+        container_name: ffxi_laravel_node
+        working_dir: /var/www/html
+        command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+        ports:
+            - "5173:5173"
+        volumes:
+            - ./:/var/www/html
+        depends_on:
+            app:
+                condition: service_started
+        networks:
+            - ffxi_laravel_network
+
+    mailpit:
+        image: axllent/mailpit:latest
+        container_name: ffxi_laravel_mailpit
+        ports:
+            - "8025:8025"
+        environment:
+            MP_MAX_MESSAGES: 500
+            MP_SMTP_AUTH_ACCEPT_ANY: 1
+            MP_SMTP_AUTH_ALLOW_INSECURE: 1
+        healthcheck:
+            test: ["CMD", "wget", "--spider", "-q", "http://localhost:8025"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+        networks:
+            - ffxi_laravel_network
+
+networks:
+    ffxi_laravel_network:
+        driver: bridge
+
+volumes:
+    ffxi_laravel_db_data:
+        driver: local
