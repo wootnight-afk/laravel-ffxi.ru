@@ -1,0 +1,63 @@
+# Laravel
+/vendor/
+/node_modules/
+/.env
+/.env.*
+!.env.example
+
+# Storage (user data, cache, logs)
+/storage/app/private/
+/storage/app/public/
+/storage/app/*.key
+/storage/logs/*
+!/storage/logs/.gitignore
+/storage/framework/cache/*
+!/storage/framework/cache/.gitignore
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore
+/storage/framework/views/*
+!/storage/framework/views/.gitignore
+/storage/framework/testing/
+/storage/framework/cache/data/
+
+# Public build assets
+/public/build/
+/public/hot
+/public/storage/
+
+# Composer / NPM caches
+/.composer/
+/.npm/
+*.cache
+
+# IDE
+/.idea/
+/.vscode/
+*.sublime-*
+/.fleet/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Local databases
+*.sqlite
+*.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
+
+# Backup files
+*.sql.gz
+*.sql.zip
+/backups/
+
+# Testing
+/.phpunit.cache/
+/.phpunit.result.cache
+
+# Laravel specific
+bootstrap/cache/*.php
+!bootstrap/cache/.gitignore

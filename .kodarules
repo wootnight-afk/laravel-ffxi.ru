@@ -1,0 +1,94 @@
+PROJECT CONTEXT — MANDATORY
+
+The full technical specification for this project is located at:
+    docs/ai/context.md
+
+You MUST read this file at the start of EVERY session and BEFORE ANY task,
+file creation, or code generation.
+
+This file contains:
+- mandatory architecture constraints,
+- locked stack decisions,
+- deployment and production rules,
+- security requirements,
+- forbidden actions.
+
+These requirements OVERRIDE any of your default assumptions.
+
+If you have not read docs/ai/context.md in the current session,
+you are NOT allowed to proceed with any file creation, modification,
+or code generation.
+
+WORK FORMAT (section 34 of the spec):
+- Step 1 — provide architecture summary and wait for confirmation.
+- Step 2 — after confirmation, generate files one at a time, complete,
+  no placeholders.
+- Step 3 — if any contradiction, incompatibility, or missing capability
+  is found, STOP and report before continuing.
+
+LANGUAGE:
+- Communication with the user: Russian.
+- Code, comments, commit messages: English.
+
+
+============================================================
+CRITICAL CONSTRAINTS — DO NOT VIOLATE
+============================================================
+
+## Working directory
+
+The ONLY allowed project directory is:
+
+    /home/skyw/projects/laravel-ffxi.ru
+
+You MUST NOT:
+- execute commands outside this directory,
+- explore other projects in /home/skyw/projects/* or elsewhere,
+- attempt to cd to /home/alex/... or any path with a different user,
+- read files outside this project,
+- look at unrelated projects (admin-api, hotel-booking, cloud-storage,
+  bitrix-project) — they exist but are NOT related to this task.
+
+If you need information from outside — ASK the user and WAIT.
+
+## No unrequested exploration
+
+You MUST NOT ask about or research topics not explicitly present in
+docs/ai/context.md. In particular:
+- Do NOT ask about PHP 8.5 EOL — the spec requires PHP 8.4.
+- Do NOT look at third-party blogs (travisbean.com, medium.com, dev.to, etc.).
+- Only use: packagist.org, repo.packagist.org, official docs
+  (laravel.com/docs, filamentphp.com/docs, livewire.laravel.com),
+  github.com raw files of official repositories.
+
+## Current state
+
+We are at STEP 1 of section 34 of the spec.
+You have already collected:
+- Laravel framework 13.33.0 (requires PHP ^8.3)
+- Filament 5.8.4 (requires PHP ^8.2)
+- Livewire 4.4.6 (supports Laravel ^10–^13)
+- spatie/laravel-permission 8.3.0 (Laravel ^12|^13, PHP ^8.3)
+- Pest 5.2.1 (PHP ^8.4)
+- Larastan 3.12.2 (Laravel ^11|^12|^13)
+- Laravel Pint 1.32.1
+- Laravel Fortify 1.40.0
+- Intervention Image 4.3.2
+
+This is ENOUGH DATA. Do not collect more.
+
+## What to do now
+
+Do NOT run any more commands.
+Do NOT create any files.
+Produce the complete Step 1 answer per section 34 of the spec:
+  1) architecture summary,
+  2) chosen versions,
+  3) justification per tie-break rule (section 3),
+  4) compatibility check,
+  5) main dependencies list,
+  6) project structure (section 26),
+  7) files to be created,
+  8) development order (section 30, stages 0–14),
+  9) potential risks.
+Then STOP and wait for confirmation.
