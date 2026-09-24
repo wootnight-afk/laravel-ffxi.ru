@@ -1,0 +1,45 @@
+# ------------------------------------------------------------------
+# Line endings: normalize to LF in the repository for all text files
+# (spec section 4). This is critical when the same project is edited
+# from WSL2 and Windows tooling. Binary files are marked explicitly
+# to prevent Git from touching them.
+# ------------------------------------------------------------------
+
+* text=auto eol=lf
+
+# Explicitly binary — never normalize or diff as text.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.pdf  binary
+*.zip  binary
+*.gz   binary
+*.tar  binary
+*.phar binary
+
+# Fonts.
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.eot   binary
+
+# Composer and npm lock files: keep them as-is, do not merge.
+composer.lock  -diff
+package-lock.json -diff
+
+# Export-ignore: keep deploy artefacts out of `git archive`.
+/.editorconfig       export-ignore
+/.gitattributes      export-ignore
+/.gitignore          export-ignore
+/.github/            export-ignore
+/.vscode/            export-ignore
+/.idea/              export-ignore
+/docker/             export-ignore
+/docs/               export-ignore
+/tests/              export-ignore
+/.kodarules          export-ignore
+/KODA.md             export-ignore
