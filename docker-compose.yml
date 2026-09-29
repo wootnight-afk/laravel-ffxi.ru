@@ -41,7 +41,7 @@ services:
             app:
                 condition: service_started
         healthcheck:
-            test: ["CMD", "wget", "--spider", "-q", "http://localhost/up"]
+            test: [ "CMD", "wget", "--spider", "-q", "http://127.0.0.1/up" ]
             interval: 30s
             timeout: 5s
             retries: 3
@@ -62,7 +62,7 @@ services:
             - ffxi_laravel_db_data:/var/lib/mysql
             - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
         healthcheck:
-            test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+            test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD" ]
             interval: 10s
             timeout: 5s
             retries: 5
@@ -95,7 +95,7 @@ services:
             MP_SMTP_AUTH_ACCEPT_ANY: 1
             MP_SMTP_AUTH_ALLOW_INSECURE: 1
         healthcheck:
-            test: ["CMD", "wget", "--spider", "-q", "http://localhost:8025"]
+            test: [ "CMD", "wget", "--spider", "-q", "http://127.0.0.1:8025" ]
             interval: 30s
             timeout: 5s
             retries: 3
@@ -109,3 +109,4 @@ networks:
 volumes:
     ffxi_laravel_db_data:
         driver: local
+        
