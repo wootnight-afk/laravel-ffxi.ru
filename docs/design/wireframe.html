@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Review - FFXI Phoenix Server</title>
+    <style>
+        :root {
+            --primary-color: #5fa8ac;
+            --primary-dark: #4a8a8e;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --bg-body: #ffffff;
+            --bg-light: #f8f9fa;
+            --bg-placeholder: #e9ecef;
+            --bg-card: #ffffff;
+            --bg-header: #343a40;
+            --text-header: #adb5bd;
+            --border-color: #dee2e6;
+            --shadow-color: rgba(0,0,0,0.05);
+            --shadow-header: rgba(0,0,0,0.15);
+            --placeholder-line: #ced4da;
+            --stat-highlight-bg: #fff3cd;
+            --stat-highlight-text: #856404;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 32px;
+            --max-width: 1000px;
+            --header-height: 76px;
+            --footer-height: 100px;
+        }
+
+        /* === Тёмная тема === */
+        [data-theme="dark"] {
+            --primary-color: #5fb8bc;
+            --primary-dark: #7fd0d4;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --bg-body: #0f172a;
+            --bg-light: #1e293b;
+            --bg-placeholder: #1e293b;
+            --bg-card: #1e293b;
+            --bg-header: #020617;
+            --text-header: #94a3b8;
+            --border-color: #334155;
+            --shadow-color: rgba(0,0,0,0.4);
+            --shadow-header: rgba(0,0,0,0.6);
+            --placeholder-line: #475569;
+            --stat-highlight-bg: #78350f;
+            --stat-highlight-text: #fcd34d;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-main);
+            background-color: var(--bg-body);
+            line-height: 1.6;
+            padding-top: var(--header-height);
+            padding-bottom: var(--footer-height);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        a { color: var(--primary-color); text-decoration: none; cursor: pointer; }
+        a:hover { text-decoration: underline; }
+
+        /* --- Плейсхолдеры изображений --- */
+        .img-placeholder {
+            background-color: var(--bg-placeholder);
+            border: 1px solid var(--border-color);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-muted);
+            font-size: 12px; font-weight: bold;
+            position: relative; overflow: hidden; text-align: center;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .img-placeholder::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                linear-gradient(to bottom right, transparent calc(50% - 1px), var(--placeholder-line), transparent calc(50% + 1px)),
+                linear-gradient(to top right, transparent calc(50% - 1px), var(--placeholder-line), transparent calc(50% + 1px));
+        }
+
+        /* --- Общий контейнер --- */
+        .container { max-width: var(--max-width); margin: 0 auto; padding: 0 var(--spacing-md); }
+
+        /* --- Фиксированный Хедер --- */
+        header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            background-color: var(--bg-header);
+            padding: var(--spacing-sm) 0;
+            box-shadow: 0 2px 8px var(--shadow-header);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        .nav-container {
+            display: flex; justify-content: space-between; align-items: center;
+            max-width: var(--max-width); margin: 0 auto;
+            padding: 0 var(--spacing-md); gap: var(--spacing-md);
+        }
+
+        .logo-link { text-decoration: none; flex-shrink: 0; }
+        .logo-link:hover { text-decoration: none; opacity: 0.9; }
+
+        .nav-links { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+
+        .nav-links a {
+            background-color: var(--primary-color); color: white;
+            padding: 8px 16px; border-radius: 20px;
+            font-size: 13px; font-weight: 500;
+            transition: background 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
+        }
+        .nav-links a:hover { background-color: var(--primary-dark); text-decoration: none; }
+        .nav-links a.active {
+            background-color: var(--primary-dark);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* --- Правая часть шапки: тема + логин --- */
+        .header-right {
+            display: flex; align-items: center; gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .theme-toggle {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            background-color: rgba(255,255,255,0.08);
+            color: #f0d87a;
+            border: 1px solid rgba(255,255,255,0.12);
+            font-size: 17px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s, color 0.2s;
+            padding: 0;
+            line-height: 1;
+        }
+        .theme-toggle:hover {
+            background-color: rgba(255,255,255,0.18);
+            transform: rotate(15deg);
+        }
+        [data-theme="dark"] .theme-toggle {
+            color: #cbd5e1;
+            background-color: rgba(255,255,255,0.05);
+        }
+        [data-theme="dark"] .theme-toggle:hover {
+            background-color: rgba(255,255,255,0.12);
+            color: #f0d87a;
+        }
+
+        .login-link {
+            color: var(--text-header);
+            font-size: 14px; font-weight: 500;
+            padding: 6px 12px; border-radius: 4px;
+            transition: color 0.2s, background 0.2s;
+        }
+        .login-link:hover { color: #fff; background-color: rgba(255,255,255,0.1); text-decoration: none; }
+        .login-link.active { color: var(--primary-color); background-color: rgba(95, 168, 172, 0.15); }
+
+        /* --- Hero Banner --- */
+        .hero {
+            display: flex; align-items: stretch;
+            border: 1px solid var(--border-color);
+            border-radius: 4px; overflow: hidden;
+            margin-bottom: var(--spacing-lg);
+            background: var(--bg-card);
+            box-shadow: 0 2px 4px var(--shadow-color);
+            cursor: pointer; position: relative;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .hero-logo {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            padding: var(--spacing-lg);
+            border-right: 1px solid var(--border-color);
+            background: var(--bg-light);
+            transition: background-color 0.3s;
+        }
+        .hero-text {
+            flex: 1.5; padding: var(--spacing-lg);
+            display: flex; flex-direction: column; justify-content: center;
+            color: var(--primary-color); font-style: italic;
+        }
+        .hero-text h1 { font-size: 24px; margin-bottom: 4px; }
+        .hero-text h2 { font-size: 20px; margin-bottom: 4px; }
+        .hero-text h3 { font-size: 18px; margin-bottom: 0; }
+
+        .hero::after {
+            content: ''; display: block; height: 6px;
+            background-color: var(--primary-color);
+            position: absolute; bottom: 0; left: 0; right: 0;
+        }
+
+        /* --- Секции контента --- */
+        .page-section { display: none; animation: fadeIn 0.3s ease; }
+        .page-section.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1.page-title { font-size: 24px; font-weight: normal; margin-bottom: var(--spacing-md); color: var(--text-main); }
+        h2.section-title { font-size: 18px; font-weight: normal; color: var(--primary-color); margin: var(--spacing-lg) 0 var(--spacing-md) 0; }
+
+        .content-text p { font-size: 15px; line-height: 1.7; margin-bottom: var(--spacing-md); color: var(--text-main); }
+
+        /* --- Новости --- */
+        .news-item {
+            margin-bottom: var(--spacing-lg);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: var(--spacing-lg);
+            transition: border-color 0.3s;
+        }
+        .news-item:last-child { border-bottom: none; }
+        .news-image { width: 100%; height: 350px; margin-bottom: var(--spacing-md); border-radius: 2px; }
+        .news-text { font-size: 14px; color: var(--text-main); margin-bottom: var(--spacing-md); }
+        .news-meta { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--text-muted); }
+
+        /* --- Игроки --- */
+        .player-card {
+            display: flex; gap: var(--spacing-md);
+            padding: var(--spacing-md) 0;
+            border-bottom: 1px solid var(--border-color);
+            transition: border-color 0.3s;
+        }
+        .player-avatar { width: 80px; height: 80px; flex-shrink: 0; border-radius: 4px; }
+        .player-info h3 { font-size: 16px; color: var(--primary-color); margin-bottom: 4px; }
+        .player-info .subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: var(--spacing-sm); }
+        .player-stats { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; }
+        .stat-item { display: flex; gap: 4px; }
+        .stat-label { color: var(--text-muted); }
+        .stat-value { font-weight: bold; color: var(--text-main); }
+        .stat-highlight {
+            background-color: var(--stat-highlight-bg);
+            color: var(--stat-highlight-text);
+            padding: 0 4px; border-radius: 2px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* --- Галерея --- */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+        .gallery-item { text-align: center; }
+        .gallery-thumb { width: 100%; aspect-ratio: 1 / 1; margin-bottom: var(--spacing-sm); border-radius: 4px; }
+        .gallery-caption { font-size: 13px; color: var(--primary-color); }
+
+        /* --- Формы --- */
+        .form-group { margin-bottom: var(--spacing-md); max-width: 400px; }
+        .form-group label { display: block; font-size: 14px; margin-bottom: 4px; color: var(--text-main); }
+        .form-control {
+            width: 100%; padding: 8px 12px; font-size: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+        }
+
+        .btn {
+            display: inline-block; padding: 8px 16px; font-size: 14px;
+            color: var(--text-main);
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 4px; cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: #fff;
+        }
+
+        /* --- Контакты --- */
+        .contact-text { font-size: 14px; margin-bottom: var(--spacing-md); max-width: 600px; }
+
+        /* --- Фиксированный Футер --- */
+        footer {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
+            background-color: var(--bg-light);
+            border-top: 1px solid var(--border-color);
+            padding: var(--spacing-lg) 0;
+            font-size: 14px;
+            box-shadow: 0 -2px 8px var(--shadow-color);
+            transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+        .footer-content {
+            display: flex; justify-content: space-between; align-items: center;
+            max-width: var(--max-width); margin: 0 auto;
+            padding: 0 var(--spacing-md);
+        }
+        .footer-links { display: flex; gap: var(--spacing-md); }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            :root { --header-height: 120px; --footer-height: 120px; }
+            .nav-container { flex-direction: column; align-items: stretch; }
+            .nav-links { justify-content: center; order: 2; margin-top: 8px; }
+            .header-right { order: 3; justify-content: flex-end; margin-top: 4px; }
+            .logo-link { align-self: flex-start; }
+            .hero { flex-direction: column; }
+            .hero-logo { border-right: none; border-bottom: 1px solid var(--border-color); padding: var(--spacing-md); }
+            .hero-text { padding: var(--spacing-md); }
+            .footer-content { flex-direction: column; gap: var(--spacing-md); text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Фиксированный Хедер -->
+    <header>
+        <div class="nav-container">
+            <!-- Логотип-ссылка на главную -->
+            <a href="#" class="logo-link" onclick="showPage('home'); return false;">
+                <div class="img-placeholder" style="width: 130px; height: 40px; border: none; font-size: 10px; color: #fff; background: transparent;">FINAL FANTASY XI</div>
+            </a>
+
+            <!-- Основные кнопки (2-5) -->
+            <nav class="nav-links">
+                <a href="#" id="nav-news" onclick="showPage('news'); return false;">Новости игры</a>
+                <a href="#" id="nav-gallery" onclick="showPage('gallery'); return false;">Галерея</a>
+                <a href="#" id="nav-players" onclick="showPage('players'); return false;">Игроки</a>
+                <a href="#" id="nav-contacts" onclick="showPage('contacts'); return false;">Контакты</a>
+            </nav>
+
+            <!-- Правая часть: переключатель темы + авторизация -->
+            <div class="header-right">
+                <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Переключить тему" aria-label="Переключить тему">☀</button>
+                <a href="#" id="nav-login" onclick="showPage('login'); return false;" class="login-link">Авторизация</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Hero Banner -->
+        <div class="hero" onclick="showPage('home'); return false;">
+            <div class="hero-logo">
+                <div class="img-placeholder" style="width: 200px; height: 80px; border: none;">FINAL FANTASY XI LOGO</div>
+            </div>
+            <div class="hero-text">
+                <h1>Содружество игроков</h1>
+                <h2>Final Fantasy XI</h2>
+                <h3>Phoenix Server</h3>
+            </div>
+        </div>
+
+        <!-- ================= СТРАНИЦА 1: ГЛАВНАЯ ================= -->
+        <section id="page-home" class="page-section">
+            <h1 class="page-title">Содружество игроков Final Fantasy XI - Phoenix Server</h1>
+            <div class="content-text">
+                <p>Приветствую тебя, уважаемый искатель приключений! Ты оказался на страницах нашего сообщества игроков Final Fantasy XI – Phoenix Server. С радостью сообщаем, что этот сайт вновь распахнул свои двери после долгого перерыва! Несмотря на то, что некоторые русскоязычные игроки временно оставили волшебный мир Vana'diel, есть и те, кто продолжает путешествовать по его бескрайним просторам. Для них Final Fantasy XI стала не просто игрой — это настоящая вселенная, где каждый может найти новых друзей, делиться впечатлениями, ставить амбициозные цели или просто наслаждаться коллекционированием миссий и уникального снаряжения.</p>
+                <p>Эта игра превратилась в настоящую историю, полную незабываемых моментов и эпических свершений. Каждый из нас, кто хоть раз погружался в этот мир, может вспомнить те волнующие мгновения, с которых всё начиналось, и увидеть, как сильно он изменился. Присоединяйся к нам в этом увлекательном путешествии и дай новую жизнь своим приключениям в Final Fantasy XI</p>
+            </div>
+        </section>
+
+        <!-- ================= СТРАНИЦА 2: НОВОСТИ ================= -->
+        <section id="page-news" class="page-section">
+            <h1 class="page-title">Новости игры</h1>
+
+            <article class="news-item">
+                <div class="img-placeholder news-image">Изображение новости</div>
+                <p class="news-text">
+                    Final Fantasy XI, запущенная в 2002 году, на протяжении многих лет радовала своих преданных фанатов, даже после завершения сюжетной линии. Однако, с течением времени разработчики Square Enix столкнулись с непростым выбором: что же делать с этой культовой MMORPG? Варианты варьировались от режима «технического обслуживания» и прекращения поддержки до полного отключения серверов. Однако фанаты Final Fantasy XI вновь обратились к Square Enix с просьбой о долгосрочной поддержке своей любимой игры. Их страсть и преданность не остались незамеченными: компания подтвердила, что MMORPG продолжит развиваться! Игроков ждут улучшения качества жизни, новые высокоуровневые задания и захватывающие испытания, а также расширение мира Ванадиэль. Приготовьтесь к новым приключениям в этом удивительном мире!
+                </p>
+                <div class="news-meta">
+                    <span>18.09.2026</span>
+                    <a href="#">Читать дальше →</a>
+                </div>
+            </article>
+
+            <article class="news-item">
+                <h3 style="font-size: 16px; margin-bottom: 8px;">MMORPG Final Fantasy XI, вышедшая более 20 лет назад, продолжит получать обновления.</h3>
+                <p class="news-text">
+                    Как стало известно из интервью геймдиректора Ёдзи Фудзито для Dengeki Online, в 2022 году в Square Enix всерьёз обсуждали завершение поддержки проекта. Рассматривалась даже возможность отключения серверов ПК-версии. Причиной для таких обсуждений должен был стать финал сюжетной линии The Voracious Resurgence, после которого в компании ожидали снижение интереса к игре. Однако прогнозы не оправдались: сообщество продолжило активно играть и оформлять подписку, стоимость которой с 2002 года остаётся неизменной — $11,95 в месяц. В результате было принято решение не только сохранить поддержку, но и провести модернизацию сетевой инфраструктуры и расширить команду разработчиков.
+                </p>
+                <div class="news-meta">
+                    <span>18.09.2026</span>
+                    <a href="#">Читать дальше →</a>
+                </div>
+            </article>
+
+            <article class="news-item">
+                <div class="img-placeholder news-image" style="height: 200px;">Изображение новости</div>
+                <p class="news-text">
+                    В бесплатной пробной версии игры максимальный уровень персонажа повышен с 50 до 75, а в конце сентября будет снято ограничение по времени. Приглашайте друзей и возвращающихся игроков в Ванадиэль!
+                </p>
+                <div class="news-meta">
+                    <span>18.12.2025</span>
+                    <a href="#">Читать дальше →</a>
+                </div>
+            </article>
+        </section>
+
+        <!-- ================= СТРАНИЦА 3: ГАЛЕРЕЯ ================= -->
+        <section id="page-gallery" class="page-section">
+            <h1 class="page-title">Галерея</h1>
+
+            <h2 class="section-title">Linkshell members</h2>
+            <div class="gallery-grid">
+                <div class="gallery-item"><div class="img-placeholder gallery-thumb">Фото</div><div class="gallery-caption">Bugor</div></div>
+                <div class="gallery-item"><div class="img-placeholder gallery-thumb">Фото</div><div class="gallery-caption">Scaevola</div></div>
+                <div class="gallery-item"><div class="img-placeholder gallery-thumb">Фото</div><div class="gallery-caption">Drakonus</div></div>
+                <div class="gallery-item"><div class="img-placeholder gallery-thumb">Фото</div><div class="gallery-caption">Jumxi</div></div>
+                <div class="gallery-item"><div class="img-placeholder gallery-thumb">Фото</div><div class="gallery-caption">Oleg</div></div>
+                <div class="gallery-item"><div class="img-placeholder gallery-thumb">Фото</div><div class="gallery-caption">Monarch</div></div>
+            </div>
+
+            <h2 class="section-title">Memories</h2>
+            <div class="gallery-grid">
+                <div class="gallery-item"><div class="img-placeholder gallery-thumb" style="aspect-ratio: 4/3;">Скриншот</div><div class="gallery-caption">14.05.2005</div></div>
+                <div class="gallery-item"><div class="img-placeholder gallery-thumb" style="aspect-ratio: 4/3;">Скриншот</div><div class="gallery-caption">28.02.2006</div></div>
+                <div class="gallery-item"><div class="img-placeholder gallery-thumb" style="aspect-ratio: 4/3;">Скриншот</div><div class="gallery-caption">28.02.2006 forum</div></div>
+                <div class="gallery-item"><div class="img-placeholder gallery-thumb" style="aspect-ratio: 4/3;">Скриншот</div><div class="gallery-caption">Users 1</div></div>
+                <div class="gallery-item"><div class="img-placeholder gallery-thumb" style="aspect-ratio: 4/3;">Скриншот</div><div class="gallery-caption">Users 2</div></div>
+                <div class="gallery-item"><div class="img-placeholder gallery-thumb" style="aspect-ratio: 4/3;">Скриншот</div><div class="gallery-caption">Users 3</div></div>
+            </div>
+
+            <h2 class="section-title">Areas</h2>
+            <div class="gallery-grid">
+                <div class="gallery-item"><div class="img-placeholder gallery-thumb" style="aspect-ratio: 16/9;">Зона</div><div class="gallery-caption">Temenos</div></div>
+                <div class="gallery-item"><div class="img-placeholder gallery-thumb" style="aspect-ratio: 16/9;">Зона</div><div class="gallery-caption">Escha - Ru'Aun</div></div>
+                <div class="gallery-item"><div class="img-placeholder gallery-thumb" style="aspect-ratio: 16/9;">Зона</div><div class="gallery-caption">Reisenjima HELM NMs</div></div>
+                <div class="gallery-item"><div class="img-placeholder gallery-thumb" style="aspect-ratio: 16/9;">Зона</div><div class="gallery-caption">Sortie</div></div>
+                <div class="gallery-item"><div class="img-placeholder gallery-thumb" style="aspect-ratio: 16/9;">Зона</div><div class="gallery-caption">Ambuscade</div></div>
+            </div>
+        </section>
+
+        <!-- ================= СТРАНИЦА 4: ИГРОКИ ================= -->
+        <section id="page-players" class="page-section">
+            <h1 class="page-title">Игроки</h1>
+
+            <div class="player-card">
+                <div class="img-placeholder player-avatar">Аватар</div>
+                <div class="player-info">
+                    <h3>Jumxi</h3>
+                    <div class="subtitle">Jumxi - Main race</div>
+                    <div class="player-stats">
+                        <div class="stat-item"><span class="stat-label">Data 1:</span> <span class="stat-value stat-highlight">Data 2</span></div>
+                        <div class="stat-item"><span class="stat-label">Calcula:</span> <span class="stat-value">Promathia</span></div>
+                        <div class="stat-item"><span class="stat-label">Robots:</span> <span class="stat-value stat-highlight">Jumxi</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="player-card">
+                <div class="img-placeholder player-avatar">Аватар</div>
+                <div class="player-info">
+                    <h3>Oleg</h3>
+                    <div class="subtitle">Oleg - Main race</div>
+                    <div class="player-stats">
+                        <div class="stat-item"><span class="stat-label">Data 1:</span> <span class="stat-value stat-highlight">Data 2</span></div>
+                        <div class="stat-item"><span class="stat-label">Calcula:</span> <span class="stat-value">Promathia</span></div>
+                        <div class="stat-item"><span class="stat-label">Robots:</span> <span class="stat-value stat-highlight">Jumxi</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="player-card">
+                <div class="img-placeholder player-avatar">Аватар</div>
+                <div class="player-info">
+                    <h3>Drakonus</h3>
+                    <div class="subtitle">Drakonus - Main race</div>
+                    <div class="player-stats">
+                        <div class="stat-item"><span class="stat-label">Data 1:</span> <span class="stat-value stat-highlight">Data 2</span></div>
+                        <div class="stat-item"><span class="stat-label">Calcula:</span> <span class="stat-value">Promathia</span></div>
+                        <div class="stat-item"><span class="stat-label">Robots:</span> <span class="stat-value stat-highlight">Jumxi</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="player-card">
+                <div class="img-placeholder player-avatar">Аватар</div>
+                <div class="player-info">
+                    <h3>Monarch</h3>
+                    <div class="subtitle">Monarch - Main race</div>
+                    <div class="player-stats">
+                        <div class="stat-item"><span class="stat-label">Data 1:</span> <span class="stat-value stat-highlight">Data 2</span></div>
+                        <div class="stat-item"><span class="stat-label">Calcula:</span> <span class="stat-value">Promathia</span></div>
+                        <div class="stat-item"><span class="stat-label">Robots:</span> <span class="stat-value stat-highlight">Jumxi</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="player-card">
+                <div class="img-placeholder player-avatar">Аватар</div>
+                <div class="player-info">
+                    <h3>Scaevola</h3>
+                    <div class="subtitle">Scaevola - Main race</div>
+                    <div class="player-stats">
+                        <div class="stat-item"><span class="stat-label">Data 1:</span> <span class="stat-value stat-highlight">Data 2</span></div>
+                        <div class="stat-item"><span class="stat-label">Calcula:</span> <span class="stat-value">Promathia</span></div>
+                        <div class="stat-item"><span class="stat-label">Robots:</span> <span class="stat-value stat-highlight">Jumxi</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="player-card">
+                <div class="img-placeholder player-avatar">Аватар</div>
+                <div class="player-info">
+                    <h3>Bugor</h3>
+                    <div class="subtitle">Bugor - Main race</div>
+                    <div class="player-stats">
+                        <div class="stat-item"><span class="stat-label">Data 1:</span> <span class="stat-value stat-highlight">Data 2</span></div>
+                        <div class="stat-item"><span class="stat-label">Calcula:</span> <span class="stat-value">Promathia</span></div>
+                        <div class="stat-item"><span class="stat-label">Robots:</span> <span class="stat-value stat-highlight">Jumxi</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= СТРАНИЦА 5: КОНТАКТЫ ================= -->
+        <section id="page-contacts" class="page-section">
+            <h1 class="page-title">Контакты</h1>
+            <p class="contact-text">Мы рады приветствовать тебя и ждем, что ты присоединишься к нашей дружной команде.</p>
+            <p class="contact-text">Вы можете обратиться к нам по электронной почте, договориться о встрече в нашем игровом сервере. Будем рады помочь вам и ответить на все ваши вопросы.</p>
+            <p class="contact-text" style="font-weight: 500;">Регистрация новых пользователей приостановлена.<br>Сайт функционирует как информационный ресурс с полностью открытым контентом.</p>
+
+            <h2 class="section-title">Email</h2>
+            <ul style="list-style-position: inside; font-size: 14px;">
+                <li><a href="mailto:linkshell@yandex.ru">linkshell@yandex.ru</a> — общие вопросы</li>
+            </ul>
+        </section>
+
+        <!-- ================= СТРАНИЦА 6: АВТОРИЗАЦИЯ ================= -->
+        <section id="page-login" class="page-section">
+            <h1 class="page-title">Авторизация</h1>
+            <form onsubmit="event.preventDefault(); alert('Вход выполнен (демо)');">
+                <div class="form-group">
+                    <label>Логин</label>
+                    <input type="text" class="form-control" value="admin" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input type="password" class="form-control">
+                </div>
+                <button type="submit" class="btn btn-primary">Войти</button>
+                <div style="margin-top: 16px; font-size: 13px;">
+                    <a href="#">Забыли свой пароль?</a>
+                    <p style="color: var(--text-muted); margin-top: 4px;">Следуйте на форму для запроса пароля.<br>После получения контрольной строки следуйте на форму для смены пароля.</p>
+                </div>
+            </form>
+        </section>
+
+    </div>
+
+    <!-- Фиксированный Футер -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-left">
+                Community of Players Final Fantasy XI - Phoenix Server
+            </div>
+            <div class="footer-links">
+                <a href="#" onclick="showPage('contacts'); return false;">Контакты</a>
+                <a href="#" onclick="showPage('login'); return false;">Авторизация</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        /* ================= THEME SWITCHER ================= */
+        const THEME_KEY = 'ffxi-theme';
+
+        function applyTheme(theme) {
+            const html = document.documentElement;
+            const btn = document.getElementById('theme-toggle');
+            if (theme === 'dark') {
+                html.setAttribute('data-theme', 'dark');
+                btn.textContent = '🌙';
+                btn.title = 'Включить светлую тему';
+            } else {
+                html.removeAttribute('data-theme');
+                btn.textContent = '☀';
+                btn.title = 'Включить тёмную тему';
+            }
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+            const next = current === 'dark' ? 'light' : 'dark';
+            applyTheme(next);
+            try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+        }
+
+        /* Инициализация темы: localStorage → prefers-color-scheme → light */
+        (function initTheme() {
+            let saved = null;
+            try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
+            if (!saved) {
+                saved = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            applyTheme(saved);
+        })();
+
+        /* ================= PAGE SWITCHER ================= */
+        function showPage(pageId) {
+            document.querySelectorAll('.page-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            const activeSection = document.getElementById('page-' + pageId);
+            if (activeSection) activeSection.classList.add('active');
+
+            document.querySelectorAll('.nav-links a').forEach(link => link.classList.remove('active'));
+            const activeLink = document.getElementById('nav-' + pageId);
+            if (activeLink) activeLink.classList.add('active');
+
+            const loginLink = document.getElementById('nav-login');
+            if (loginLink) {
+                if (pageId === 'login') loginLink.classList.add('active');
+                else loginLink.classList.remove('active');
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            showPage('home');
+        });
+    </script>
+
+</body>
+</html>

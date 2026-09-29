@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — FFXI Phoenix Server</title>
+<style>
+    :root {
+        --primary-50:  #f0fdfa;
+        --primary-100: #ccfbf1;
+        --primary-500: #14b8a6;
+        --primary-600: #0d9488;
+        --primary-700: #0f766e;
+
+        --gray-50:  #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+
+        --danger-50:  #fef2f2;
+        --danger-500: #ef4444;
+        --danger-600: #dc2626;
+        --success-50: #f0fdf4;
+        --success-500:#22c55e;
+        --warning-50: #fffbeb;
+        --warning-500:#f59e0b;
+
+        --sidebar-width: 260px;
+        --topbar-height: 60px;
+        --radius: 10px;
+        --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 14px; line-height: 1.5; color: var(--gray-900);
+        background-color: var(--gray-50); -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; }
+
+    /* ============ LAYOUT ============ */
+    .admin-layout { display: flex; min-height: 100vh; }
+
+    /* ============ SIDEBAR ============ */
+    .sidebar {
+        width: var(--sidebar-width); background: #fff;
+        border-right: 1px solid var(--gray-200);
+        display: flex; flex-direction: column;
+        position: fixed; top: 0; left: 0; bottom: 0;
+        z-index: 40; overflow-y: auto;
+    }
+    .sidebar-header {
+        height: var(--topbar-height); display: flex; align-items: center;
+        gap: 10px; padding: 0 20px; border-bottom: 1px solid var(--gray-200); flex-shrink: 0;
+    }
+    .sidebar-logo {
+        width: 32px; height: 32px;
+        background: linear-gradient(135deg, var(--primary-500), var(--primary-700));
+        border-radius: 8px; display: flex; align-items: center; justify-content: center;
+        color: #fff; font-weight: 700; font-size: 14px; flex-shrink: 0;
+    }
+    .sidebar-title { font-size: 14px; font-weight: 600; color: var(--gray-900); line-height: 1.2; }
+    .sidebar-subtitle { font-size: 11px; color: var(--gray-500); }
+    .sidebar-nav { padding: 16px 0; flex: 1; }
+    .nav-group { margin-bottom: 8px; }
+    .nav-group-label {
+        padding: 8px 20px 4px; font-size: 11px; font-weight: 600;
+        text-transform: uppercase; letter-spacing: 0.05em; color: var(--gray-400);
+    }
+    .nav-item {
+        display: flex; align-items: center; gap: 10px;
+        padding: 8px 20px; font-size: 13.5px; color: var(--gray-600);
+        cursor: pointer; border-left: 3px solid transparent;
+        transition: all 0.15s; position: relative;
+    }
+    .nav-item:hover { background: var(--gray-50); color: var(--gray-900); }
+    .nav-item.active {
+        background: var(--primary-50); color: var(--primary-700);
+        border-left-color: var(--primary-600); font-weight: 500;
+    }
+    .nav-item .icon { font-size: 15px; width: 18px; text-align: center; flex-shrink: 0; opacity: 0.85; }
+    .nav-item .badge {
+        margin-left: auto; background: var(--gray-100); color: var(--gray-600);
+        font-size: 11px; padding: 1px 7px; border-radius: 10px; font-weight: 500;
+    }
+    .nav-item.active .badge { background: var(--primary-100); color: var(--primary-700); }
+    .nav-item .badge.danger { background: var(--danger-50); color: var(--danger-600); }
+
+    /* ============ MAIN ============ */
+    .main { margin-left: var(--sidebar-width); flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+    .topbar {
+        height: var(--topbar-height); background: #fff;
+        border-bottom: 1px solid var(--gray-200);
+        display: flex; align-items: center; padding: 0 24px;
+        position: sticky; top: 0; z-index: 30;
+    }
+    .breadcrumbs { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--gray-500); }
+    .breadcrumbs .sep { color: var(--gray-300); }
+    .breadcrumbs .current { color: var(--gray-900); font-weight: 500; }
+    .topbar-spacer { flex: 1; }
+    .topbar-actions { display: flex; align-items: center; gap: 4px; }
+    .icon-btn {
+        width: 36px; height: 36px; border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--gray-500); font-size: 16px; transition: background 0.15s; position: relative;
+    }
+    .icon-btn:hover { background: var(--gray-100); color: var(--gray-800); }
+    .icon-btn .dot {
+        position: absolute; top: 6px; right: 6px; width: 8px; height: 8px;
+        border-radius: 50%; background: var(--danger-500); border: 2px solid #fff;
+    }
+    .user-menu {
+        display: flex; align-items: center; gap: 10px;
+        padding: 6px 10px 6px 6px; border-radius: 8px; cursor: pointer;
+        margin-left: 8px; transition: background 0.15s;
+    }
+    .user-menu:hover { background: var(--gray-100); }
+    .user-avatar {
+        width: 32px; height: 32px; border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-500), var(--primary-700));
+        color: #fff; display: flex; align-items: center; justify-content: center;
+        font-weight: 600; font-size: 12px;
+    }
+    .user-info .name { font-size: 13px; font-weight: 500; color: var(--gray-900); line-height: 1.2; }
+    .user-info .role { font-size: 11px; color: var(--gray-500); }
+
+    .content { flex: 1; padding: 24px; max-width: 1400px; width: 100%; }
+
+    .page-header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 20px; gap: 16px;
+    }
+    .page-title { font-size: 20px; font-weight: 600; color: var(--gray-900); }
+    .page-subtitle { font-size: 13px; color: var(--gray-500); margin-top: 2px; }
+    .page-actions { display: flex; gap: 8px; }
+
+    .btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 8px 14px; font-size: 13px; font-weight: 500; border-radius: 8px;
+        border: 1px solid var(--gray-200); background: #fff; color: var(--gray-700);
+        transition: all 0.15s; white-space: nowrap;
+    }
+    .btn:hover { background: var(--gray-50); border-color: var(--gray-300); }
+    .btn-primary { background: var(--primary-600); border-color: var(--primary-600); color: #fff; }
+    .btn-primary:hover { background: var(--primary-700); border-color: var(--primary-700); }
+    .btn-danger { background: #fff; border-color: var(--gray-200); color: var(--danger-600); }
+    .btn-danger:hover { background: var(--danger-50); border-color: var(--danger-500); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+    .card { background: #fff; border: 1px solid var(--gray-200); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
+    .card-pad { padding: 20px; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+    .stat-card { background: #fff; border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow-sm); }
+    .stat-card .label { font-size: 12px; color: var(--gray-500); font-weight: 500; margin-bottom: 6px; }
+    .stat-card .value { font-size: 26px; font-weight: 700; color: var(--gray-900); line-height: 1.2; }
+    .stat-card .trend { margin-top: 6px; font-size: 12px; display: flex; align-items: center; gap: 4px; }
+    .trend.up { color: var(--success-500); }
+    .trend.down { color: var(--danger-500); }
+
+    .table-wrap { background: #fff; border: 1px solid var(--gray-200); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); }
+    .table-toolbar {
+        display: flex; align-items: center; gap: 12px;
+        padding: 14px 16px; border-bottom: 1px solid var(--gray-200); background: #fff;
+    }
+    .search-input {
+        flex: 1; max-width: 320px; padding: 8px 12px 8px 34px; font-size: 13px;
+        border: 1px solid var(--gray-200); border-radius: 8px; background: var(--gray-50); outline: none;
+        transition: all 0.15s;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round'><circle cx='11' cy='11' r='8'/><path d='m21 21-4.35-4.35'/></svg>");
+        background-repeat: no-repeat; background-position: 11px center;
+    }
+    .search-input:focus { border-color: var(--primary-500); background: #fff; box-shadow: 0 0 0 3px var(--primary-50); }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+        text-align: left; font-size: 11px; font-weight: 600;
+        text-transform: uppercase; letter-spacing: 0.04em; color: var(--gray-500);
+        padding: 10px 16px; background: var(--gray-50); border-bottom: 1px solid var(--gray-200);
+    }
+    tbody td { padding: 12px 16px; font-size: 13.5px; color: var(--gray-700); border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: var(--gray-50); }
+    .cell-strong { color: var(--gray-900); font-weight: 500; }
+    .cell-muted { color: var(--gray-500); font-size: 12.5px; }
+    .cell-user { display: flex; align-items: center; gap: 10px; }
+    .avatar-sm {
+        width: 30px; height: 30px; border-radius: 50%; background: var(--gray-200);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 11px; font-weight: 600; color: var(--gray-600); flex-shrink: 0;
+    }
+    .badge {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 2px 8px; border-radius: 12px; font-size: 11.5px; font-weight: 500; line-height: 1.6;
+    }
+    .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .badge.no-dot::before { display: none; }
+    .badge-success { background: var(--success-50); color: #15803d; }
+    .badge-warning { background: var(--warning-50); color: #b45309; }
+    .badge-danger  { background: var(--danger-50);  color: var(--danger-600); }
+    .badge-info    { background: var(--primary-50); color: var(--primary-700); }
+    .badge-gray    { background: var(--gray-100);   color: var(--gray-600); }
+
+    .row-actions { display: flex; gap: 4px; justify-content: flex-end; }
+
+    .gallery-admin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
+    .gallery-admin-item {
+        border: 1px solid var(--gray-200); border-radius: var(--radius);
+        overflow: hidden; background: #fff; box-shadow: var(--shadow-sm); transition: box-shadow 0.15s;
+    }
+    .gallery-admin-item:hover { box-shadow: var(--shadow-md); }
+    .gallery-admin-thumb {
+        aspect-ratio: 4/3; background: var(--gray-100);
+        display: flex; align-items: center; justify-content: center;
+        color: var(--gray-400); font-size: 12px; position: relative;
+    }
+    .gallery-admin-thumb::before {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(to bottom right, transparent calc(50% - 1px), var(--gray-300), transparent calc(50% + 1px)),
+                    linear-gradient(to top right, transparent calc(50% - 1px), var(--gray-300), transparent calc(50% + 1px));
+    }
+    .gallery-admin-info { padding: 10px 12px; font-size: 12.5px; }
+    .gallery-admin-info .title { font-weight: 500; color: var(--gray-900); }
+    .gallery-admin-info .meta  { color: var(--gray-500); font-size: 11.5px; margin-top: 2px; }
+
+    .log-list { padding: 8px 0; }
+    .log-item { display: flex; gap: 14px; padding: 12px 20px; border-bottom: 1px solid var(--gray-100); }
+    .log-item:last-child { border-bottom: none; }
+    .log-icon {
+        width: 32px; height: 32px; border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 14px; flex-shrink: 0; background: var(--gray-100);
+    }
+    .log-icon.success { background: var(--success-50); }
+    .log-icon.warning { background: var(--warning-50); }
+    .log-icon.danger  { background: var(--danger-50); }
+    .log-icon.info    { background: var(--primary-50); }
+    .log-body { flex: 1; min-width: 0; }
+    .log-body .text { font-size: 13.5px; color: var(--gray-800); }
+    .log-body .text strong { font-weight: 600; color: var(--gray-900); }
+    .log-body .time { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-field { display: flex; flex-direction: column; gap: 6px; }
+    .form-field.full { grid-column: 1 / -1; }
+    .form-label { font-size: 13px; font-weight: 500; color: var(--gray-700); }
+    .form-label .req { color: var(--danger-500); }
+    .form-hint { font-size: 12px; color: var(--gray-500); }
+    .input, .textarea, .select {
+        width: 100%; padding: 8px 12px; font-size: 13.5px; font-family: inherit;
+        color: var(--gray-900); background: #fff; border: 1px solid var(--gray-200);
+        border-radius: 8px; outline: none; transition: all 0.15s;
+    }
+    .input:focus, .textarea:focus, .select:focus {
+        border-color: var(--primary-500); box-shadow: 0 0 0 3px var(--primary-50);
+    }
+    .textarea { resize: vertical; min-height: 90px; }
+
+    .toggle { position: relative; display: inline-block; width: 40px; height: 22px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+        position: absolute; inset: 0; background: var(--gray-300);
+        border-radius: 22px; transition: 0.2s; cursor: pointer;
+    }
+    .toggle-slider::before {
+        content: ''; position: absolute; height: 16px; width: 16px;
+        left: 3px; top: 3px; background: #fff; border-radius: 50%;
+        transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    .toggle input:checked + .toggle-slider { background: var(--primary-600); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+    .form-row-toggle {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 12px 0; border-bottom: 1px solid var(--gray-100);
+    }
+    .form-row-toggle:last-child { border-bottom: none; }
+    .form-row-toggle .label { font-size: 13.5px; color: var(--gray-900); font-weight: 500; }
+    .form-row-toggle .desc  { font-size: 12.5px; color: var(--gray-500); margin-top: 2px; }
+
+    .settings-section { margin-bottom: 20px; }
+    .settings-section-header {
+        padding: 16px 20px; border-bottom: 1px solid var(--gray-200);
+        display: flex; align-items: center; gap: 10px;
+    }
+    .settings-section-header .icon {
+        width: 30px; height: 30px; border-radius: 8px;
+        background: var(--primary-50); color: var(--primary-700);
+        display: flex; align-items: center; justify-content: center; font-size: 14px;
+    }
+    .settings-section-header h3 { font-size: 14px; font-weight: 600; color: var(--gray-900); }
+    .settings-section-header p { font-size: 12.5px; color: var(--gray-500); }
+
+    .page { display: none; animation: fadeIn 0.2s ease; }
+    .page.active { display: block; }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==================== PERMISSIONS MATRIX ==================== */
+    .matrix-toolbar {
+        display: flex; align-items: center; gap: 12px;
+        padding: 14px 20px; border-bottom: 1px solid var(--gray-200); background: #fff;
+    }
+    .matrix-toolbar .title { font-size: 14px; font-weight: 600; color: var(--gray-900); }
+    .matrix-toolbar .subtitle { font-size: 12.5px; color: var(--gray-500); }
+
+    .matrix-wrap { overflow-x: auto; }
+    .matrix-table { width: 100%; border-collapse: collapse; min-width: 640px; }
+    .matrix-table th, .matrix-table td {
+        padding: 12px 16px; text-align: center; border-bottom: 1px solid var(--gray-100);
+    }
+    .matrix-table th:first-child, .matrix-table td:first-child {
+        text-align: left; min-width: 240px;
+    }
+    .matrix-table thead th {
+        background: var(--gray-50); font-size: 11.5px; text-transform: uppercase;
+        letter-spacing: 0.04em; color: var(--gray-500); font-weight: 600;
+        border-bottom: 1px solid var(--gray-200); vertical-align: bottom;
+    }
+    .matrix-table tbody tr:hover { background: var(--gray-50); }
+
+    .matrix-page-name { font-weight: 500; color: var(--gray-900); font-size: 13.5px; }
+    .matrix-page-url {
+        font-family: 'SF Mono', Menlo, Consolas, monospace;
+        font-size: 11.5px; color: var(--gray-500); margin-top: 2px;
+    }
+
+    .role-header { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .role-header .role-name {
+        font-weight: 600; color: var(--gray-700); font-size: 12px;
+        text-transform: none; letter-spacing: normal;
+    }
+    .role-header .role-desc {
+        font-size: 10.5px; color: var(--gray-400); font-weight: 400;
+        text-transform: none; letter-spacing: normal;
+    }
+
+    /* Custom checkbox */
+    .perm-check {
+        appearance: none; -webkit-appearance: none;
+        width: 18px; height: 18px; border: 1.5px solid var(--gray-300);
+        border-radius: 4px; cursor: pointer; position: relative;
+        transition: all 0.15s; background: #fff; vertical-align: middle;
+    }
+    .perm-check:hover { border-color: var(--primary-500); }
+    .perm-check:checked { background: var(--primary-600); border-color: var(--primary-600); }
+    .perm-check:checked::after {
+        content: ''; position: absolute; left: 4px; top: 1px;
+        width: 4px; height: 8px; border: solid #fff;
+        border-width: 0 2px 2px 0; transform: rotate(45deg);
+    }
+    .perm-check:disabled { background: var(--gray-100); border-color: var(--gray-200); cursor: not-allowed; }
+    .perm-check:disabled:checked { background: var(--gray-300); border-color: var(--gray-300); }
+
+    .matrix-legend {
+        display: flex; gap: 20px; padding: 12px 20px;
+        border-top: 1px solid var(--gray-200); background: var(--gray-50);
+        font-size: 12px; color: var(--gray-500);
+    }
+    .matrix-legend .dot {
+        display: inline-block; width: 8px; height: 8px;
+        border-radius: 50%; margin-right: 6px; vertical-align: middle;
+    }
+    .matrix-legend .dot.green { background: var(--success-500); }
+    .matrix-legend .dot.gray  { background: var(--gray-300); }
+
+    /* Role cards for page-edit form */
+    .perms-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .perm-card {
+        border: 1.5px solid var(--gray-200); border-radius: 10px;
+        padding: 14px; cursor: pointer; transition: all 0.15s;
+        display: flex; align-items: flex-start; gap: 12px;
+        background: #fff;
+    }
+    .perm-card:hover { border-color: var(--primary-500); background: var(--primary-50); }
+    .perm-card.selected { border-color: var(--primary-500); background: var(--primary-50); }
+    .perm-card .perm-info { flex: 1; }
+    .perm-card .perm-title { font-size: 13.5px; font-weight: 600; color: var(--gray-900); }
+    .perm-card .perm-desc  { font-size: 11.5px; color: var(--gray-500); margin-top: 2px; }
+
+    @media (max-width: 900px) {
+        .sidebar { transform: translateX(-100%); transition: transform 0.2s; }
+        .sidebar.open { transform: translateX(0); }
+        .main { margin-left: 0; }
+        .form-grid { grid-template-columns: 1fr; }
+        .content { padding: 16px; }
+        .perms-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+</style>
+</head>
+<body>
+
+<div class="admin-layout">
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">XI</div>
+            <div>
+                <div class="sidebar-title">FFXI Phoenix</div>
+                <div class="sidebar-subtitle">Admin Panel</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-group">
+                <div class="nav-group-label">Основное</div>
+                <a class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">
+                    <span class="icon">◧</span> Дашборд
+                </a>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-group-label">Сообщество</div>
+                <a class="nav-item" data-page="users" onclick="showPage('users')">
+                    <span class="icon">👥</span> Пользователи
+                    <span class="badge">248</span>
+                </a>
+                <a class="nav-item" data-page="roles" onclick="showPage('roles')">
+                    <span class="icon">🛡</span> Роли и права
+                </a>
+                <a class="nav-item" data-page="permissions" onclick="showPage('permissions')">
+                    <span class="icon">🔑</span> Матрица доступа
+                </a>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-group-label">Контент</div>
+                <a class="nav-item" data-page="news" onclick="showPage('news')">
+                    <span class="icon">📰</span> Новости
+                    <span class="badge">12</span>
+                </a>
+                <a class="nav-item" data-page="comments" onclick="showPage('comments')">
+                    <span class="icon">💬</span> Комментарии
+                    <span class="badge danger">7</span>
+                </a>
+                <a class="nav-item" data-page="gallery" onclick="showPage('gallery')">
+                    <span class="icon">🖼</span> Галерея
+                </a>
+                <a class="nav-item" data-page="pages" onclick="showPage('pages')">
+                    <span class="icon">📄</span> Страницы
+                </a>
+                <a class="nav-item" data-page="events" onclick="showPage('events')">
+                    <span class="icon">📋</span> События / Формы
+                </a>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-group-label">Система</div>
+                <a class="nav-item" data-page="logs" onclick="showPage('logs')">
+                    <span class="icon">📜</span> Журнал событий
+                </a>
+                <a class="nav-item" data-page="settings" onclick="showPage('settings')">
+                    <span class="icon">⚙</span> Настройки
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- ==================== MAIN ==================== -->
+    <div class="main">
+
+        <header class="topbar">
+            <button class="icon-btn" onclick="document.getElementById('sidebar').classList.toggle('open')" style="margin-right:12px;">☰</button>
+            <nav class="breadcrumbs">
+                <span>Админ</span>
+                <span class="sep">/</span>
+                <span class="current" id="breadcrumb-current">Дашборд</span>
+            </nav>
+            <div class="topbar-spacer"></div>
+            <div class="topbar-actions">
+                <button class="icon-btn" title="Поиск">🔍</button>
+                <button class="icon-btn" title="Уведомления">🔔<span class="dot"></span></button>
+                <div class="user-menu">
+                    <div class="user-avatar">ДС</div>
+                    <div class="user-info">
+                        <div class="name">Денис Соболев</div>
+                        <div class="role">Администратор</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="content">
+
+            <!-- ============ DASHBOARD ============ -->
+            <section class="page active" id="page-dashboard">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Дашборд</h1>
+                        <p class="page-subtitle">Обзорная сводка по состоянию проекта</p>
+                    </div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="label">Пользователей всего</div>
+                        <div class="value">248</div>
+                        <div class="trend up">▲ +12 за неделю</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Новостей опубликовано</div>
+                        <div class="value">142</div>
+                        <div class="trend up">▲ +3 за месяц</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Комментариев на модерации</div>
+                        <div class="value">7</div>
+                        <div class="trend down">▼ -2 за сутки</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Фото в галерее</div>
+                        <div class="value">1 284</div>
+                        <div class="trend up">▲ +48 за месяц</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-pad" style="border-bottom:1px solid var(--gray-200);">
+                        <div style="font-size:14px; font-weight:600; color:var(--gray-900);">Активность за последние 30 дней</div>
+                        <div style="font-size:12.5px; color:var(--gray-500); margin-top:2px;">Регистрации, публикации, комментарии</div>
+                    </div>
+                    <div class="card-pad">
+                        <div style="height:200px; background:linear-gradient(180deg, var(--primary-50), #fff); border:1px dashed var(--gray-200); border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--gray-400); font-size:13px;">
+                            [ График активности — Chart Widget Filament ]
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ USERS ============ -->
+            <section class="page" id="page-users">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Пользователи</h1>
+                        <p class="page-subtitle">Управление учётными записями сообщества</p>
+                    </div>
+                    <div class="page-actions">
+                        <button class="btn">Экспорт</button>
+                        <button class="btn btn-primary">+ Создать пользователя</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <div class="table-toolbar">
+                        <input class="search-input" placeholder="Поиск по имени или email...">
+                        <button class="btn btn-sm">Фильтры</button>
+                        <button class="btn btn-sm">Роль</button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Пользователь</th>
+                                <th>Роль</th>
+                                <th>Статус</th>
+                                <th>Регистрация</th>
+                                <th style="text-align:right;">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><div class="cell-user"><div class="avatar-sm">ДС</div><div><div class="cell-strong">Денис Соболев</div><div class="cell-muted">admin@ffxi.ru</div></div></div></td>
+                                <td><span class="badge badge-info no-dot">Администратор</span></td>
+                                <td><span class="badge badge-success">Активен</span></td>
+                                <td class="cell-muted">12.03.2024</td>
+                                <td><div class="row-actions"><button class="btn btn-sm">Изменить</button></div></td>
+                            </tr>
+                            <tr>
+                                <td><div class="cell-user"><div class="avatar-sm">АП</div><div><div class="cell-strong">Александр Петров</div><div class="cell-muted">a.petrov@mail.ru</div></div></div></td>
+                                <td><span class="badge badge-gray no-dot">Модератор</span></td>
+                                <td><span class="badge badge-success">Активен</span></td>
+                                <td class="cell-muted">04.07.2024</td>
+                                <td><div class="row-actions"><button class="btn btn-sm">Изменить</button></div></td>
+                            </tr>
+                            <tr>
+                                <td><div class="cell-user"><div class="avatar-sm">МК</div><div><div class="cell-strong">Мария Кузнецова</div><div class="cell-muted">m.k@yandex.ru</div></div></div></td>
+                                <td><span class="badge badge-gray no-dot">Пользователь</span></td>
+                                <td><span class="badge badge-warning">На проверке</span></td>
+                                <td class="cell-muted">18.09.2025</td>
+                                <td><div class="row-actions"><button class="btn btn-sm">Изменить</button></div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ============ ROLES ============ -->
+            <section class="page" id="page-roles">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Роли и права</h1>
+                        <p class="page-subtitle">Управление ролями через spatie/laravel-permission</p>
+                    </div>
+                    <div class="page-actions">
+                        <button class="btn btn-primary">+ Создать роль</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Роль</th>
+                                <th>Slug</th>
+                                <th>Пользователей</th>
+                                <th>Разрешений</th>
+                                <th style="text-align:right;">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="cell-strong">Администратор</td>
+                                <td class="cell-muted">admin</td>
+                                <td>3</td>
+                                <td><span class="badge badge-info no-dot">Все (48)</span></td>
+                                <td><div class="row-actions"><button class="btn btn-sm">Права</button><button class="btn btn-sm">Изменить</button></div></td>
+                            </tr>
+                            <tr>
+                                <td class="cell-strong">Редактор контента</td>
+                                <td class="cell-muted">editor</td>
+                                <td>5</td>
+                                <td><span class="badge badge-gray no-dot">14</span></td>
+                                <td><div class="row-actions"><button class="btn btn-sm">Права</button><button class="btn btn-sm">Изменить</button></div></td>
+                            </tr>
+                            <tr>
+                                <td class="cell-strong">Пользователь</td>
+                                <td class="cell-muted">user</td>
+                                <td>232</td>
+                                <td><span class="badge badge-gray no-dot">6</span></td>
+                                <td><div class="row-actions"><button class="btn btn-sm">Права</button><button class="btn btn-sm">Изменить</button></div></td>
+                            </tr>
+                            <tr>
+                                <td class="cell-strong">Гость</td>
+                                <td class="cell-muted">guest</td>
+                                <td>—</td>
+                                <td><span class="badge badge-gray no-dot">4</span></td>
+                                <td><div class="row-actions"><button class="btn btn-sm">Права</button><button class="btn btn-sm">Изменить</button></div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ============ PERMISSIONS MATRIX (GLOBAL) ============ -->
+            <section class="page" id="page-permissions">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Матрица доступа</h1>
+                        <p class="page-subtitle">Сводная таблица прав на разделы сайта по ролям</p>
+                    </div>
+                    <div class="page-actions">
+                        <button class="btn">Сбросить</button>
+                        <button class="btn btn-primary">Сохранить изменения</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="matrix-toolbar">
+                        <div>
+                            <div class="title">Доступ к разделам сайта</div>
+                            <div class="subtitle">Отметьте роли, которые имеют доступ к каждому разделу</div>
+                        </div>
+                        <div style="flex:1"></div>
+                        <button class="btn btn-sm" onclick="matrixAll(true)">Выбрать всё</button>
+                        <button class="btn btn-sm" onclick="matrixAll(false)">Снять всё</button>
+                    </div>
+
+                    <div class="matrix-wrap">
+                        <table class="matrix-table">
+                            <thead>
+                                <tr>
+                                    <th>Страница / URL</th>
+                                    <th>
+                                        <div class="role-header">
+                                            <span class="role-name">Гость</span>
+                                            <span class="role-desc">guest</span>
+                                        </div>
+                                    </th>
+                                    <th>
+                                        <div class="role-header">
+                                            <span class="role-name">User</span>
+                                            <span class="role-desc">user</span>
+                                        </div>
+                                    </th>
+                                    <th>
+                                        <div class="role-header">
+                                            <span class="role-name">Editor</span>
+                                            <span class="role-desc">editor</span>
+                                        </div>
+                                    </th>
+                                    <th>
+                                        <div class="role-header">
+                                            <span class="role-name">Admin</span>
+                                            <span class="role-desc">admin</span>
+                                        </div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="matrix-page-name">Главная</div>
+                                        <div class="matrix-page-url">/</div>
+                                    </td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="matrix-page-name">Новости</div>
+                                        <div class="matrix-page-url">/news</div>
+                                    </td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="matrix-page-name">Галерея</div>
+                                        <div class="matrix-page-url">/gallery</div>
+                                    </td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="matrix-page-name">Контакты</div>
+                                        <div class="matrix-page-url">/contacts</div>
+                                    </td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="matrix-page-name">Игроки + чат</div>
+                                        <div class="matrix-page-url">/players</div>
+                                    </td>
+                                    <td><input type="checkbox" class="perm-check"></td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="matrix-page-name">Карточка игрока</div>
+                                        <div class="matrix-page-url">/players/{id}</div>
+                                    </td>
+                                    <td><input type="checkbox" class="perm-check"></td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="matrix-page-name">События</div>
+                                        <div class="matrix-page-url">/events</div>
+                                    </td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                    <td><input type="checkbox" class="perm-check" checked></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="matrix-legend">
+                        <div><span class="dot green"></span>Доступ разрешён</div>
+                        <div><span class="dot gray"></span>Доступ запрещён</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ NEWS ============ -->
+            <section class="page" id="page-news">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Новости</h1>
+                        <p class="page-subtitle">Публикации на публичном сайте</p>
+                    </div>
+                    <div class="page-actions">
+                        <button class="btn btn-primary">+ Создать новость</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <div class="table-toolbar">
+                        <input class="search-input" placeholder="Поиск по заголовку...">
+                        <button class="btn btn-sm">Статус</button>
+                        <button class="btn btn-sm">Дата</button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Заголовок</th>
+                                <th>Автор</th>
+                                <th>Статус</th>
+                                <th>Дата</th>
+                                <th style="text-align:right;">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="cell-strong">MMORPG Final Fantasy XI продолжит получать обновления</td>
+                                <td class="cell-muted">Денис Соболев</td>
+                                <td><span class="badge badge-success">Опубликовано</span></td>
+                                <td class="cell-muted">18.09.2026</td>
+                                <td><div class="row-actions"><button class="btn btn-sm">Изменить</button><button class="btn btn-sm btn-danger">Удалить</button></div></td>
+                            </tr>
+                            <tr>
+                                <td class="cell-strong">Бесплатная пробная версия — уровень повышен до 75</td>
+                                <td class="cell-muted">Александр Петров</td>
+                                <td><span class="badge badge-success">Опубликовано</span></td>
+                                <td class="cell-muted">18.12.2025</td>
+                                <td><div class="row-actions"><button class="btn btn-sm">Изменить</button><button class="btn btn-sm btn-danger">Удалить</button></div></td>
+                            </tr>
+                            <tr>
+                                <td class="cell-strong">Возвращение домой в кампанию «Вана'дэль»</td>
+                                <td class="cell-muted">Мария Кузнецова</td>
+                                <td><span class="badge badge-warning">Черновик</span></td>
+                                <td class="cell-muted">—</td>
+                                <td><div class="row-actions"><button class="btn btn-sm">Изменить</button><button class="btn btn-sm btn-danger">Удалить</button></div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ============ COMMENTS ============ -->
+            <section class="page" id="page-comments">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Комментарии</h1>
+                        <p class="page-subtitle">Модерация пользовательских комментариев</p>
+                    </div>
+                    <div class="page-actions">
+                        <button class="btn">Одобрить все</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Текст</th>
+                                <th>Автор</th>
+                                <th>К материалу</th>
+                                <th>Статус</th>
+                                <th style="text-align:right;">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="max-width:320px;">Отличная новость, ждём обновлений с нетерпением!</td>
+                                <td class="cell-muted">Иван Сидоров</td>
+                                <td class="cell-muted">MMORPG FFXI продолжит...</td>
+                                <td><span class="badge badge-success">Одобрен</span></td>
+                                <td><div class="row-actions"><button class="btn btn-sm">Скрыть</button></div></td>
+                            </tr>
+                            <tr>
+                                <td style="max-width:320px;">А когда будет смена расы? Очень ждём!</td>
+                                <td class="cell-muted">Мария Кузнецова</td>
+                                <td class="cell-muted">MMORPG FFXI продолжит...</td>
+                                <td><span class="badge badge-warning">На модерации</span></td>
+                                <td><div class="row-actions"><button class="btn btn-sm">Одобрить</button><button class="btn btn-sm btn-danger">Удалить</button></div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ============ GALLERY ============ -->
+            <section class="page" id="page-gallery">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Галерея</h1>
+                        <p class="page-subtitle">Изображения, отображаемые на публичном сайте</p>
+                    </div>
+                    <div class="page-actions">
+                        <button class="btn">Загрузить пакет</button>
+                        <button class="btn btn-primary">+ Загрузить фото</button>
+                    </div>
+                </div>
+                <div class="gallery-admin-grid">
+                    <div class="gallery-admin-item">
+                        <div class="gallery-admin-thumb">Изображение</div>
+                        <div class="gallery-admin-info"><div class="title">Bugor — Main</div><div class="meta">Linkshell · 04.02.2024</div></div>
+                    </div>
+                    <div class="gallery-admin-item">
+                        <div class="gallery-admin-thumb">Изображение</div>
+                        <div class="gallery-admin-info"><div class="title">Scaevola — Main</div><div class="meta">Linkshell · 04.02.2024</div></div>
+                    </div>
+                    <div class="gallery-admin-item">
+                        <div class="gallery-admin-thumb">Изображение</div>
+                        <div class="gallery-admin-info"><div class="title">Drakonus — Main</div><div class="meta">Linkshell · 04.02.2024</div></div>
+                    </div>
+                    <div class="gallery-admin-item">
+                        <div class="gallery-admin-thumb">Изображение</div>
+                        <div class="gallery-admin-info"><div class="title">Jumxi — Main</div><div class="meta">Linkshell · 04.02.2024</div></div>
+                    </div>
+                    <div class="gallery-admin-item">
+                        <div class="gallery-admin-thumb">Изображение</div>
+                        <div class="gallery-admin-info"><div class="title">Oleg — Main</div><div class="meta">Linkshell · 04.02.2024</div></div>
+                    </div>
+                    <div class="gallery-admin-item">
+                        <div class="gallery-admin-thumb">Изображение</div>
+                        <div class="gallery-admin-info"><div class="title">Monarch — Main</div><div class="meta">Linkshell · 04.02.2024</div></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ PAGES (LIST) ============ -->
+            <section class="page" id="page-pages">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Страницы</h1>
+                        <p class="page-subtitle">Статические страницы публичного сайта</p>
+                    </div>
+                    <div class="page-actions">
+                        <button class="btn btn-primary" onclick="openPageEdit('create')">+ Создать страницу</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Название</th>
+                                <th>Slug</th>
+                                <th>Доступ</th>
+                                <th>Статус</th>
+                                <th>Обновлено</th>
+                                <th style="text-align:right;">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="cell-strong">Главная</td>
+                                <td class="cell-muted">/</td>
+                                <td>
+                                    <span class="badge badge-info no-dot">Все роли</span>
+                                </td>
+                                <td><span class="badge badge-success">Опубликовано</span></td>
+                                <td class="cell-muted">12.08.2026</td>
+                                <td><div class="row-actions"><button class="btn btn-sm" onclick="openPageEdit('edit')">Изменить</button></div></td>
+                            </tr>
+                            <tr>
+                                <td class="cell-strong">Новости</td>
+                                <td class="cell-muted">/news</td>
+                                <td><span class="badge badge-info no-dot">Все роли</span></td>
+                                <td><span class="badge badge-success">Опубликовано</span></td>
+                                <td class="cell-muted">03.07.2026</td>
+                                <td><div class="row-actions"><button class="btn btn-sm" onclick="openPageEdit('edit')">Изменить</button></div></td>
+                            </tr>
+                            <tr>
+                                <td class="cell-strong">Игроки + чат</td>
+                                <td class="cell-muted">/players</td>
+                                <td><span class="badge badge-warning no-dot">User + Editor + Admin</span></td>
+                                <td><span class="badge badge-success">Опубликовано</span></td>
+                                <td class="cell-muted">03.07.2026</td>
+                                <td><div class="row-actions"><button class="btn btn-sm" onclick="openPageEdit('edit')">Изменить</button></div></td>
+                            </tr>
+                            <tr>
+                                <td class="cell-strong">События</td>
+                                <td class="cell-muted">/events</td>
+                                <td><span class="badge badge-info no-dot">Все роли</span></td>
+                                <td><span class="badge badge-success">Опубликовано</span></td>
+                                <td class="cell-muted">03.07.2026</td>
+                                <td><div class="row-actions"><button class="btn btn-sm" onclick="openPageEdit('edit')">Изменить</button></div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ============ PAGE EDIT (CREATE / UPDATE) ============ -->
+            <section class="page" id="page-edit">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title" id="edit-title">Создание страницы</h1>
+                        <p class="page-subtitle">Заполните основные поля и настройте права доступа</p>
+                    </div>
+                    <div class="page-actions">
+                        <button class="btn" onclick="showPage('pages')">Отмена</button>
+                        <button class="btn btn-primary">Сохранить</button>
+                    </div>
+                </div>
+
+                <!-- Основная информация -->
+                <div class="card settings-section">
+                    <div class="settings-section-header">
+                        <div class="icon">📄</div>
+                        <div>
+                            <h3>Основная информация</h3>
+                            <p>Название, адрес и содержимое страницы</p>
+                        </div>
+                    </div>
+                    <div class="card-pad">
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <label class="form-label">Название страницы <span class="req">*</span></label>
+                                <input class="input" placeholder="Например: Правила сообщества">
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label">URL (slug) <span class="req">*</span></label>
+                                <input class="input" placeholder="/rules">
+                            </div>
+                            <div class="form-field full">
+                                <label class="form-label">Краткое описание (SEO)</label>
+                                <textarea class="textarea" placeholder="Мета-описание для поисковых систем..."></textarea>
+                            </div>
+                            <div class="form-field full">
+                                <label class="form-label">Содержимое страницы</label>
+                                <textarea class="textarea" style="min-height:180px;" placeholder="HTML или markdown содержимое..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Права доступа -->
+                <div class="card settings-section">
+                    <div class="settings-section-header">
+                        <div class="icon">🔑</div>
+                        <div>
+                            <h3>Права доступа</h3>
+                            <p>Отметьте, каким ролям разрешён просмотр этой страницы</p>
+                        </div>
+                        <div style="flex:1"></div>
+                        <button class="btn btn-sm" onclick="toggleAllPerms(true)">Разрешить всем</button>
+                        <button class="btn btn-sm" onclick="toggleAllPerms(false)">Запретить всем</button>
+                    </div>
+                    <div class="card-pad">
+                        <div class="perms-grid">
+                            <label class="perm-card" id="card-guest">
+                                <input type="checkbox" class="perm-check" id="perm-guest" onchange="toggleCard('card-guest')">
+                                <div class="perm-info">
+                                    <div class="perm-title">Гость</div>
+                                    <div class="perm-desc">Без авторизации</div>
+                                </div>
+                            </label>
+                            <label class="perm-card" id="card-user">
+                                <input type="checkbox" class="perm-check" id="perm-user" onchange="toggleCard('card-user')" checked>
+                                <div class="perm-info">
+                                    <div class="perm-title">User</div>
+                                    <div class="perm-desc">Авторизованный игрок</div>
+                                </div>
+                            </label>
+                            <label class="perm-card" id="card-editor">
+                                <input type="checkbox" class="perm-check" id="perm-editor" onchange="toggleCard('card-editor')" checked>
+                                <div class="perm-info">
+                                    <div class="perm-title">Editor</div>
+                                    <div class="perm-desc">Редактор контента</div>
+                                </div>
+                            </label>
+                            <label class="perm-card" id="card-admin">
+                                <input type="checkbox" class="perm-check" id="perm-admin" onchange="toggleCard('card-admin')" checked>
+                                <div class="perm-info">
+                                    <div class="perm-title">Admin</div>
+                                    <div class="perm-desc">Полный доступ</div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="form-hint" style="margin-top:14px;">
+                            Гости видят страницу без авторизации. User и Editor — только после входа. Admin всегда имеет доступ.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Публикация -->
+                <div class="card settings-section">
+                    <div class="settings-section-header">
+                        <div class="icon">🚀</div>
+                        <div>
+                            <h3>Публикация</h3>
+                            <p>Настройки видимости и статуса страницы</p>
+                        </div>
+                    </div>
+                    <div class="card-pad">
+                        <div class="form-row-toggle">
+                            <div>
+                                <div class="label">Опубликовать страницу</div>
+                                <div class="desc">Страница будет доступна на публичном сайте</div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+                        </div>
+                        <div class="form-row-toggle">
+                            <div>
+                                <div class="label">Показывать в главном меню</div>
+                                <div class="desc">Ссылка на страницу появится в навигации сайта</div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+                        </div>
+                        <div class="form-row-toggle">
+                            <div>
+                                <div class="label">Индексировать поисковиками</div>
+                                <div class="desc">Разрешить индексацию страницы в Google и Яндекс</div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ EVENTS ============ -->
+            <section class="page" id="page-events">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">События / Формы</h1>
+                        <p class="page-subtitle">Игровые события и формы обратной связи</p>
+                    </div>
+                    <div class="page-actions">
+                        <button class="btn btn-primary">+ Создать событие</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Название</th>
+                                <th>Тип</th>
+                                <th>Дата начала</th>
+                                <th>Заявок</th>
+                                <th>Статус</th>
+                                <th style="text-align:right;">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="cell-strong">Осенний фестиваль Linkshell</td>
+                                <td><span class="badge badge-info no-dot">Событие</span></td>
+                                <td class="cell-muted">01.10.2026</td>
+                                <td>42</td>
+                                <td><span class="badge badge-success">Активно</span></td>
+                                <td><div class="row-actions"><button class="btn btn-sm">Заявки</button><button class="btn btn-sm">Изменить</button></div></td>
+                            </tr>
+                            <tr>
+                                <td class="cell-strong">Форма обратной связи</td>
+                                <td><span class="badge badge-gray no-dot">Форма</span></td>
+                                <td class="cell-muted">—</td>
+                                <td>18</td>
+                                <td><span class="badge badge-success">Активно</span></td>
+                                <td><div class="row-actions"><button class="btn btn-sm">Ответы</button><button class="btn btn-sm">Изменить</button></div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ============ LOGS ============ -->
+            <section class="page" id="page-logs">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Журнал событий</h1>
+                        <p class="page-subtitle">История действий администраторов и системы</p>
+                    </div>
+                    <div class="page-actions">
+                        <button class="btn">Фильтры</button>
+                        <button class="btn">Экспорт</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="log-list">
+                        <div class="log-item">
+                            <div class="log-icon success">✓</div>
+                            <div class="log-body">
+                                <div class="text"><strong>Денис Соболев</strong> опубликовал новость «MMORPG Final Fantasy XI продолжит получать обновления»</div>
+                                <div class="time">18.09.2026, 14:32 · IP 192.168.1.42</div>
+                            </div>
+                        </div>
+                        <div class="log-item">
+                            <div class="log-icon info">✎</div>
+                            <div class="log-body">
+                                <div class="text"><strong>Александр Петров</strong> изменил права доступа к странице «Игроки + чат»</div>
+                                <div class="time">18.09.2026, 12:08 · IP 192.168.1.17</div>
+                            </div>
+                        </div>
+                        <div class="log-item">
+                            <div class="log-icon warning">⚠</div>
+                            <div class="log-body">
+                                <div class="text"><strong>Мария Кузнецова</strong> загрузила 12 изображений в галерею «Linkshell members»</div>
+                                <div class="time">18.09.2026, 10:45 · IP 192.168.1.88</div>
+                            </div>
+                        </div>
+                        <div class="log-item">
+                            <div class="log-icon danger">✕</div>
+                            <div class="log-body">
+                                <div class="text"><strong>Денис Соболев</strong> заблокировал пользователя <strong>Иван Сидоров</strong> (причина: спам)</div>
+                                <div class="time">17.09.2026, 22:14 · IP 192.168.1.42</div>
+                            </div>
+                        </div>
+                        <div class="log-item">
+                            <div class="log-icon info">✦</div>
+                            <div class="log-body">
+                                <div class="text"><strong>Система</strong> выполнила автоматическое резервное копирование БД <strong>laravel_ffxi</strong></div>
+                                <div class="time">17.09.2026, 03:00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ SETTINGS ============ -->
+            <section class="page" id="page-settings">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Настройки</h1>
+                        <p class="page-subtitle">Параметры работы админ-контура и публичного сайта</p>
+                    </div>
+                    <div class="page-actions">
+                        <button class="btn">Сбросить</button>
+                        <button class="btn btn-primary">Сохранить</button>
+                    </div>
+                </div>
+
+                <div class="card settings-section">
+                    <div class="settings-section-header">
+                        <div class="icon">🌐</div>
+                        <div>
+                            <h3>Общие</h3>
+                            <p>Название сайта, контактные данные, локализация</p>
+                        </div>
+                    </div>
+                    <div class="card-pad">
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <label class="form-label">Название сайта <span class="req">*</span></label>
+                                <input class="input" value="Содружество игроков Final Fantasy XI">
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label">Сервер <span class="req">*</span></label>
+                                <input class="input" value="Phoenix">
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label">Контактный email <span class="req">*</span></label>
+                                <input class="input" value="linkshell@yandex.ru">
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label">Язык по умолчанию</label>
+                                <select class="select"><option>Русский</option><option>English</option></select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card settings-section">
+                    <div class="settings-section-header">
+                        <div class="icon">👥</div>
+                        <div>
+                            <h3>Регистрация и доступ</h3>
+                            <p>Управление регистрацией новых пользователей</p>
+                        </div>
+                    </div>
+                    <div class="card-pad">
+                        <div class="form-row-toggle">
+                            <div>
+                                <div class="label">Регистрация новых пользователей</div>
+                                <div class="desc">Сейчас приостановлена — сайт работает как информационный ресурс</div>
+                            </div>
+                            <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+                        </div>
+                        <div class="form-row-toggle">
+                            <div>
+                                <div class="label">Подтверждение email</div>
+                                <div class="desc">Обязательное подтверждение адреса при регистрации</div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+                        </div>
+                        <div class="form-row-toggle">
+                            <div>
+                                <div class="label">Модерация комментариев</div>
+                                <div class="desc">Все комментарии проходят предварительную проверку</div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card settings-section">
+                    <div class="settings-section-header">
+                        <div class="icon">📝</div>
+                        <div>
+                            <h3>Журнал событий</h3>
+                            <p>Логирование действий администраторов</p>
+                        </div>
+                    </div>
+                    <div class="card-pad">
+                        <div class="form-row-toggle">
+                            <div>
+                                <div class="label">Логировать действия в админке</div>
+                                <div class="desc">Все изменения сохраняются в журнале событий</div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+                        </div>
+                        <div class="form-field" style="margin-top:16px; max-width:280px;">
+                            <label class="form-label">Срок хранения логов (дней)</label>
+                            <input class="input" type="number" value="90">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+</div>
+
+<script>
+    const pageTitles = {
+        dashboard: 'Дашборд',
+        users: 'Пользователи',
+        roles: 'Роли и права',
+        permissions: 'Матрица доступа',
+        news: 'Новости',
+        comments: 'Комментарии',
+        gallery: 'Галерея',
+        pages: 'Страницы',
+        edit: 'Редактирование страницы',
+        events: 'События / Формы',
+        logs: 'Журнал событий',
+        settings: 'Настройки'
+    };
+
+    function showPage(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        const target = document.getElementById('page-' + pageId);
+        if (target) target.classList.add('active');
+
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.toggle('active', item.dataset.page === pageId);
+        });
+
+        document.getElementById('breadcrumb-current').textContent = pageTitles[pageId] || '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        if (window.innerWidth <= 900) {
+            document.getElementById('sidebar').classList.remove('open');
+        }
+    }
+
+    /* ================= PERMISSION MATRIX ================= */
+    function matrixAll(state) {
+        document.querySelectorAll('#page-permissions .perm-check').forEach(cb => cb.checked = state);
+    }
+
+    /* ================= PAGE EDIT ================= */
+    function openPageEdit(mode) {
+        const title = document.getElementById('edit-title');
+        title.textContent = mode === 'create' ? 'Создание страницы' : 'Редактирование страницы';
+        showPage('edit');
+    }
+
+    function toggleCard(cardId) {
+        const card = document.getElementById(cardId);
+        const cb = card.querySelector('.perm-check');
+        card.classList.toggle('selected', cb.checked);
+    }
+
+    function toggleAllPerms(state) {
+        ['guest', 'user', 'editor', 'admin'].forEach(role => {
+            const cb = document.getElementById('perm-' + role);
+            cb.checked = state;
+            document.getElementById('card-' + role).classList.toggle('selected', state);
+        });
+    }
+
+    /* Инициализация карточек при загрузке */
+    document.addEventListener('DOMContentLoaded', () => {
+        ['guest', 'user', 'editor', 'admin'].forEach(role => {
+            const cb = document.getElementById('perm-' + role);
+            const card = document.getElementById('card-' + role);
+            if (cb.checked) card.classList.add('selected');
+        });
+    });
+</script>
+
+</body>
+</html>
