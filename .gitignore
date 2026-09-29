@@ -23,7 +23,8 @@
 # Public build assets
 /public/build/
 /public/hot
-/public/storage/
+/public/storage
+/public/fonts-manifest*.json
 
 # Composer / NPM caches
 /.composer/
