@@ -1,43 +1,54 @@
 # Project Instructions
 
-This project follows the technical specification at `docs/ai/context.md`.
+This project follows the technical specification at `docs/ai/context.md`
+(version 3.8.1, frozen).
 
-## Stack (locked by spec, section 3)
+## Spec and design documents
 
-- PHP 8.4
-- Laravel 13.x (current supported stable major, verified via Packagist)
-- Filament 5.x — preferred; Filament 4.x compared in ADR-001 per section 3
-- Livewire 4.x (explicit require)
+- `docs/ai/context.md` — technical specification (stack, security,
+  deployment, backup, stages).
+- `docs/designreview.md` — public site design.
+- `docs/adminreview.md` — admin panel design.
+- `docs/design/wireframe.html` — public mockup.
+- `docs/design/admin.html` — admin mockup.
+
+Priority on conflict: spec wins for stack/security/deploy; design docs
+win for UI/UX, pages, resources, access matrix. Never invent rules
+missing in either. Ask the user instead.
+
+## Stack (locked, spec section 3)
+
+- PHP 8.4 (`~8.4.0`)
+- Laravel 13.33.0 (`^13.33`)
+- Filament 5.8.4 (`^5.8`)
+- Livewire 4.4.6 (`^4.4`)
+- spatie/laravel-permission 8.3.0 (`^8.3`)
+- intervention/image 4.3.2 (`^4.3`)
+- Pest 5.2.1 + pest-plugin-laravel 5.0
+- Larastan 3.12.2, Pint 1.32.1
 - MySQL 8.4
-- Pest 5.x for testing
-- Laravel Pint + Larastan + composer audit for CI
-- Docker for local dev, Timeweb shared hosting for production
 
-## Excluded from stack (candidates only)
+## Excluded from stack
 
-- laravel/fortify — candidate for stage 4 (MFA), NOT part of the stack.
-  Add only via separate PR with ADR justification if Filament 5 does
-  not provide MFA out of the box.
+- laravel/fortify — candidate for stage 4 (MFA) only.
+- bezhansahu/filament-shield — not used; policies handle authorization.
+- Redis, Memcached, SQLite, Supervisor, pcntl, S3/MinIO.
 
 ## Workflow rules
 
-1. **Always read `docs/ai/context.md` before starting any task.**
-2. Follow the three-step work format from section 34 of the spec:
-   - Step 1 — architecture summary, then wait for confirmation.
-   - Step 2 — after confirmation, generate files one at a time,
-     complete, no placeholders.
-   - Step 3 — if any contradiction, incompatibility, or missing
-     capability is found, STOP and report before continuing.
-3. Generate complete files, no placeholders.
-4. Do not create files without explicit approval after Step 1.
-5. Report contradictions or incompatibilities immediately (Step 3).
-6. Do not invent packages, commands, or APIs.
-7. Check actual package existence and compatibility before proposing.
-8. Do not explore other projects in /home/skyw/projects/*.
-9. Do not research topics not present in docs/ai/context.md.
-10. Only use official sources: packagist.org, repo.packagist.org,
-    official docs (laravel.com, filamentphp.com, livewire.laravel.com),
-    github.com raw files of official repositories.
+1. Read `docs/ai/context.md` and relevant design docs before any task.
+2. Follow the three-step work format (spec section 34):
+   - Step 1 — architecture summary, wait for confirmation.
+   - Step 2 — files one at a time; framework skeleton via official tools.
+   - Step 3 — stop and report any contradiction or risk.
+3. Never generate a file without explicit approval after Step 1.
+4. Never invent packages, commands, or APIs.
+5. Never research topics outside the spec.
+6. Never explore projects in /home/skyw/projects/*.
+7. Only use official sources (packagist.org, laravel.com, filamentphp.com,
+   livewire.laravel.com, github.com raw files of official repositories).
+8. When a spec §38 open question affects security, data, DB schema,
+   dependencies, or public contract — stop and ask the user.
 
 ## Language
 
