@@ -1,6 +1,6 @@
-# ТЗ: сайт (новости, галерея, админка, инфо-страницы) — Laravel + Filament
+# ТЗ: FFXI Phoenix community portal — Laravel + Filament
 
-**Версия:** 3.5 (FINAL)
+**Версия:** 3.8.1 (FINAL)
 **Назначение:** основной технический контекст проекта.
 **Файл:** docs/ai/context.md
 **Статус:** рабочий документ, сопровождается вместе с кодом.
@@ -42,16 +42,27 @@
 
 # 1. КОНТЕКСТ ПРОЕКТА
 
+## Что это
+
+**FFXI Phoenix community portal** — русскоязычное сообщество игроков
+Final Fantasy XI (сервер Phoenix). Реконструкция классического сайта-
+сообщества 2000-х на современном стеке Laravel с сохранением духа
+оригинала и добавлением современных UX-практик.
+
+Публичная часть: новости, галерея, игроки, инфо-страницы, авторизация.
+Административный контур: управление контентом, пользователями, правами,
+журнал действий, backup и обновления.
+
 ## Команда
 
-1 разработчик; 1–2 редактора работают через административную панель.
-Отдельной DevOps-команды нет.
+1 разработчик; 1–2 редактора и 1 администратор работают через
+административную панель. Отдельной DevOps-команды нет.
 
 ## Нагрузка
 
-Около 20 новостей в месяц; до нескольких тысяч фотографий; низкий
-трафик; высокая важность сохранности данных; долгосрочная эксплуатация
-без планового переписывания.
+Низкий трафик информационного сайта сообщества; до нескольких тысяч
+фотографий в галерее; высокая важность сохранности данных; долгосрочная
+эксплуатация без планового переписывания.
 
 ## Разработка
 
@@ -113,53 +124,144 @@ shared-хостинга, а не под Docker: Docker — среда разра
 Приложение готовится не к заморозке на одной версии, а к регулярным
 безопасным обновлениям.
 
+## Принцип совместимости backup и rollback
+
+Backup без проверки совместимости — это не backup. Каждый backup
+фиксирует не только данные, но и версии (PHP, Laravel, Filament,
+schema, extensions). Rollback разрешён только если целевая версия
+совместима с текущей инфраструктурой или инфраструктура может быть
+приведена к ней документированной процедурой.
+
 ---
 
 # 3. ВЫБОР ВЕРСИЙ И СОВМЕСТИМОСТЬ
 
 ## PHP
 
-Базовая целевая версия — PHP 8.4.
+Текущая принятая версия — **PHP 8.4** с constraint `~8.4.0`.
 
-PHP 8.5 допускается только если проверка покажет явные преимущества
-и production Timeweb стабильно поддерживает выбранную конфигурацию.
-Приоритет — не максимальная версия, а стабильная и поддерживаемая
-связка всего стека.
+PHP 8.5 не является частью текущего принятого стека. Его переход
+возможен только как отдельное будущее upgrade-решение после проверки
+совместимости всего стека и production Timeweb с оформлением изменения
+через ADR.
 
 ## Laravel
 
-Актуальная поддерживаемая стабильная major-версия Laravel, совместимая
-с PHP 8.4 и выбранной версией Filament. Не выбирать Laravel только по
-принципу «самая новая версия».
+Принята и зафиксирована конкретная версия Laravel 13.33.0 с
+constraint `^13.33`. Решение оформлено в ADR-001.
 
 ## Filament
 
-Предпочтительно — Filament 5. Допускается Filament 4, если проверка
-покажет, что он даёт более предсказуемую совместимость со стеком,
-обязательными плагинами или production-окружением.
+Принят и зафиксирован Filament 5.8.4 с constraint `^5.8`.
 
-Нельзя заранее считать Filament 4 или 5 более стабильным только по
-номеру версии.
+## Livewire
 
-## Матрица совместимости
+Принят и зафиксирован Livewire 4.4.6 с constraint `^4.4`.
 
-На Шаге 1 (этап 1) обязательно проверить: PHP, Laravel, Filament,
-Livewire, Tailwind CSS, Vite, Node.js, необходимые Filament-плагины.
+## Ядро принятого стека
 
-Проверить: официальную документацию; Composer dependency resolution;
-актуальные требования пакетов; security advisories; наличие нужных
-функций; совместимость с PHP 8.4; совместимость с production Timeweb.
+| Компонент | Версия | Constraint / образ | Источник |
+|---|---|---|---|
+| **PHP** | **8.4** | `~8.4.0` | ADR-001, раздел 2.2 |
+| **Laravel Framework** | **13.33.0** | `^13.33` | ADR-001, раздел 2.2 |
+| **Filament** | **5.8.4** | `^5.8` | ADR-001, раздел 2.2 |
+| **Livewire** | **4.4.6** | `^4.4` | ADR-001, раздел 2.2 |
+| **MySQL** | **8.4** | `mysql:8.4` (Docker) | docker-compose.yml |
 
-Версии фиксируются в composer.json / composer.lock / package.json /
-package-lock.json. Решение — в docs/adr/ADR-001-stack.md, включая
-отклонённые альтернативы и причины (в частности — почему выбранная
-версия PHP, а не соседняя).
+## Роли и права
+
+| Пакет | Версия | Constraint | Источник |
+|---|---|---|---|
+| `spatie/laravel-permission` | **8.3.0** | `^8.3` | ADR-001, раздел 2.2 |
+
+## Обработка изображений
+
+| Пакет | Версия | Constraint | Источник |
+|---|---|---|---|
+| `intervention/image` | **4.3.2** | `^4.3` | ADR-001, раздел 2.2 |
+
+## Dev-инструменты и тестирование
+
+| Пакет | Версия | Constraint | Источник |
+|---|---|---|---|
+| `pestphp/pest` | **5.2.1** | `^5.2` | ADR-001, раздел 2.3 |
+| `pestphp/pest-plugin-laravel` | **5.0** (major) | `^5.0` | composer.json |
+| `larastan/larastan` | **3.12.2** | `^3.12` | ADR-001, раздел 2.3 |
+| `laravel/pint` | **1.32.1** | `^1.32` | ADR-001, раздел 2.3 |
+| `laravel/tinker` | **3.0** | `^3.0` | composer.json |
+| `nunomaduro/collision` | **8.6** | `^8.6` | composer.json |
+| `mockery/mockery` | **1.6** | `^1.6` | composer.json |
+| `fakerphp/faker` | **1.23** | `^1.23` | composer.json |
+
+## Docker-инфраструктура
+
+| Компонент | Версия / образ | Источник |
+|---|---|---|
+| **app** (PHP-FPM) | `docker/php/Dockerfile` (база `php:8.4-fpm`) | docker-compose.yml |
+| **web** (Nginx) | `nginx:1.24-alpine` | docker-compose.yml |
+| **db** (MySQL) | `mysql:8.4` | docker-compose.yml |
+| **node** (Vite) | `node:22-alpine` | docker-compose.yml |
+| **mailpit** | `axllent/mailpit:latest` | docker-compose.yml |
+
+## Порты (наружу / внутри)
+
+| Сервис | Наружу | Внутри | Источник |
+|---|---:|---:|---|
+| **web** | **8080** | 80 | docker-compose.yml |
+| **db** | **3310** | 3306 | docker-compose.yml |
+| **node** | **5173** | 5173 | docker-compose.yml |
+| **mailpit** | **8025** | 8025 | docker-compose.yml |
+| **app** | не пробрасывается | 9000 | docker-compose.yml |
+
+Порты **8080** и **3310** выбраны вместо стандартных **80** и **3309**,
+потому что эти порты заняты другим проектом (Bitrix) на этой же WSL2-машине.
+
+## Runtime-драйверы
+
+| Параметр | Значение | Источник |
+|---|---|---|
+| `CACHE_STORE` | `file` | .env.example, раздел 6 ТЗ |
+| `SESSION_DRIVER` | `database` | .env.example, раздел 6 ТЗ |
+| `QUEUE_CONNECTION` | `database` | .env.example, раздел 6 ТЗ |
+| `MAIL_MAILER` | `smtp` | .env.example, раздел 6 ТЗ |
+| `APP_URL` (dev) | `http://localhost:8080` | .env.example |
+| `APP_URL` (production) | `https://ffxi.ru` | зафиксировано в проекте |
+| `DB_DATABASE` | `laravel_ffxi` | .env.example |
+| `DB_USERNAME` | `laravel` | .env.example |
+| `DB_PASSWORD` | `secret` (placeholder) | .env.example |
+| `DB_ROOT_PASSWORD` | `root_secret` (placeholder) | .env.example |
+
+Сочетание `secret` / `root_secret` является только локальным placeholder
+для `.env.example`; реальные credentials никогда не переносятся из
+него в production.
+
+## Не используется (запрещено ТЗ)
+
+| Компонент | Причина |
+|---|---|
+| **Redis** | ТЗ, раздел 6 — не используется |
+| **Memcached** | ТЗ, раздел 6 — не используется |
+| **SQLite** | ТЗ, разделы 5, 15, 32 — запрещён |
+| **Supervisor / pcntl** | ТЗ, раздел 32 — shared hosting |
+| **S3 / MinIO** | ТЗ, раздел 6 — не в базовой версии |
+| **`laravel/fortify`** | Кандидат на этап 4, не входит в принятый стек |
+| **`bezhansahu/filament-shield`** | Не используется; авторизация через Laravel Policies |
+
+## Итоговая связка
+
+**PHP 8.4 + Laravel 13.33.0 + Filament 5.8.4 + Livewire 4.4.6 +
+MySQL 8.4 + Pest 5.2.1**
+
+Принятые версии зафиксированы в `ADR-001-stack.md`, `composer.json` и
+`composer.lock`. Фактически установленное состояние релиза определяется
+`composer.lock`; при расхождении таблицы и lock-файла приоритет имеет
+актуальный lock-файл после принятого изменения ADR.
 
 ## Правило тай-брейка
 
 Если обе связки технически рабочие, выбирается та, у которой:
 1) дольше окно security-поддержки; 2) шире покрытие нужными плагинами;
-2) проще путь будущих обновлений.
+3) проще путь будущих обновлений.
 
 Не выбирать старую версию только потому, что она «стабильнее по
 ощущениям». Спорные случаи решает владелец проекта, не ИИ.
@@ -174,6 +276,7 @@ WSL2 + Docker Compose. Сервисы:
     web    — Nginx
     db     — MySQL 8.4
     node   — Node.js/Vite
+    mailpit — SMTP для локального тестирования почты
 
 У каждого сервиса — healthcheck; миграции не запускаются раньше
 готовности db (depends_on: condition: service_healthy).
@@ -230,30 +333,33 @@ Production работает без Docker. Все фактические воз�
     php -i | grep -E 'memory_limit|max_execution_time|upload_max_filesize|post_max_size'
     which flock
     which mysqldump
+    which tar
+    which gzip
     composer --version
     git --version
     which proc_open-проверка: php -r 'var_dump(function_exists("proc_open"));'
     структура каталогов (ls -la ~)
     symlink: возможность создания
     cron: доступность и минимальный интервал
+    доступное место на диске (df -h)
 
 Дополнительно:
 
-- доступность PHP CLI и соответствие версии PHP CLI версии PHP web
-  (на shared-хостингах это разные конфигурации; расхождение — риск);
+- доступность PHP CLI и соответствие версии PHP CLI версии PHP web;
 - необходимые PHP extensions (pdo_mysql, mbstring, intl, zip,
   gd или imagick, fileinfo, exif, curl, openssl);
-- ionCube: проверить, что composer и artisan работают под лоадером
-  (лоадер пассивен для незашифрованного кода, но исторически
-  конфликтовал с OPcache и отдельными расширениями);
+- ionCube: проверить, что composer и artisan работают под лоадером;
 - возможность cron-задач с интервалом 1 минута;
-- возможность выполнения mysqldump;
+- возможность выполнения mysqldump (для backup);
+- возможность выполнения tar/gzip (для backup);
 - права на каталоги;
 - работа storage:link;
 - работа /up;
-- подключение MySQL, версия, utf8mb4.
+- подключение MySQL, версия, utf8mb4;
+- возможность записи в каталог backup вне web root;
+- доступное место на диске (важно для backup).
 
-Результаты фиксируются в ADR.
+Результаты фиксируются в ADR-002.
 
 ---
 
@@ -314,8 +420,7 @@ worker; cron запускает worker периодически:
 
 Поэтому: корректно настроить retry_after; ограничивать время
 выполнения; критичные jobs проектировать идемпотентными; учитывать
-возможность повторного запуска; использовать failed_jobs. Не утверждать
-в документации, что database driver полностью исключает дублирование.
+возможность повторного запуска; использовать failed_jobs.
 
 ---
 
@@ -329,9 +434,14 @@ Cron Timeweb (через панель) запускает Laravel Scheduler, о�
 Scheduler не зависит от внешних shell-команд без необходимости.
 Предпочтительно: ->call() и Artisan::call() (выполнение in-process).
 Использование ->command() и ->exec() — только после проверки
-необходимости и реальных возможностей production (обе опции зависят
-от proc_open; его доступность проверяется в аудите, но архитектура
-проекта на proc_open не завязана).
+необходимости и реальных возможностей production.
+
+Scheduler обслуживает:
+
+- queue:work --stop-when-empty --max-time=55 (каждую минуту под flock);
+- backup database (ежедневно, время фиксируется в ADR-004);
+- backup retention cleanup (ежедневно);
+- site health probe (для мониторинга, раздел 18).
 
 ---
 
@@ -370,17 +480,44 @@ CSRF-защита включена для соответствующих web-з�
 Rate limiting обязателен: логин; операции с загрузкой файлов;
 публичные формы после их появления.
 
-## Авторизация
+## Роли и права
 
-Роли: admin, editor. Пакет spatie/laravel-permission — только после
-проверки актуальной совместимости с выбранной версией Laravel.
-Laravel Policies для ресурсов. Не полагаться только на скрытие
-элементов интерфейса Filament.
+Четыре роли:
+
+    admin   — полный доступ ко всему
+    editor  — управление контентом (новости, галерея, страницы, события)
+    user    — авторизованный игрок (просмотр закрытых разделов, чат)
+    guest   — виртуальная роль (не в БД), обозначает «без авторизации»
+
+Реализация:
+
+- spatie/laravel-permission — источник истины по ролям и разрешениям.
+- Laravel Policies — авторизация на уровне ресурсов и действий.
+- Матрица доступа к публичным страницам — таблица `page_role_access`
+  (см. adminreview.md §4). Middleware `EnsurePageAccess` читает
+  page_slug из route name или параметра и сверяет с ролью текущего
+  пользователя или `guest`.
+
+Правила:
+
+- Не полагаться только на скрытие элементов интерфейса Filament.
+- Права проверяются и в UI, и в Policy.
+- Admin не может удалить сам себя и не может снять с себя роль admin
+  через UI.
+- Матрица доступа кэшируется через CACHE_STORE=file; инвалидация при
+  сохранении.
+
+## Регистрация
+
+Регистрация новых пользователей управляется настройкой сайта.
+Текущее состояние: приостановлена (сайт работает как информационный
+ресурс). Возможность включить/выключить — через страницу
+«Настройки → Регистрация и доступ».
 
 ## MFA
 
 Штатные возможности выбранной версии Filament. Конкретная реализация
-проверяется после выбора версии (этап 1).
+проверяется на этапе 4. Применяется к ролям admin и editor.
 
 ## Password hashing
 
@@ -394,17 +531,68 @@ X-Frame-Options. CSP — сначала Report-Only; переход к enforcing
 после проверки совместимости и отсутствия нарушений. HSTS — после
 стабилизации HTTPS production.
 
+## Session security
+
+- Production session cookie: `Secure`, `HttpOnly`, `SameSite` по
+  безопасной конфигурации приложения.
+- После успешного login выполняется session ID regeneration.
+- Logout инвалидирует текущую сессию и регенерирует CSRF/session state
+  по возможностям выбранной версии Laravel.
+- Password reset tokens имеют ограниченный срок действия и одноразовое
+  использование.
+
+## Upload security
+
+- Используется явный allowlist допустимых расширений и MIME/type.
+- Имена загруженных файлов генерируются приложением; исходное имя
+  пользователя не используется как доверенный путь.
+- Каталоги пользовательских загрузок не должны позволять исполнение
+  PHP/CGI-кода.
+- Backup-файлы и manifest хранятся вне HTTP-доступного пути либо
+  дополнительно защищаются серверной конфигурацией.
+
+## Destructive admin actions
+
+Критические destructive-действия (restore, удаление данных и другие
+операции с необратимым эффектом) требуют соответствующих Policy checks,
+повторной аутентификации/MFA и явного подтверждения. ActivityLog
+должен быть доступен для чтения администраторам и редакторам согласно
+матрице доступа, но не должен позволять обычному пользователю изменять
+или удалять записи журнала.
+
 ---
 
 # 14. FILAMENT
 
-Административная панель для: News, Categories, Gallery, Pages, Users.
-Доступ к /admin — только авторизованным пользователям с
-соответствующими permissions.
+Административная панель — отдельный контур на /admin. Не совпадает
+визуально с публичным сайтом.
 
-Для каждого ресурса определены: authorization, policies, permissions,
-validation, правила загрузки файлов, аудит критичных действий при
-необходимости.
+Полный перечень ресурсов и кастомных страниц — в docs/adminreview.md
+(§5, §6, §7). В ТЗ фиксируется только объём и правила:
+
+## Resources
+
+    UserResource          — Users (CRUD, роли, блокировка, аватары)
+    RoleResource          — Roles (только admin)
+    NewsResource          — News (CRUD, публикация, расписание)
+    CommentResource       — Comments (модерация bulk-действиями)
+    GalleryResource       — GalleryItem (загрузка, обработка, presets)
+    PageResource          — Pages (CRUD, матрица доступа, публикация)
+    EventResource         — Events (события / формы, заявки)
+    ActivityLogResource   — ActivityLog (read-only, фильтры)
+
+## Кастомные страницы
+
+    PermissionsMatrixPage — матрица доступа к публичным страницам
+    SettingsPage          — общие, регистрация, логирование
+    BackupPage            — backup и rollback (см. §17, §24)
+    UpdatePage            — обновления и подготовка (см. §20)
+
+## Доступ
+
+- Все ресурсы закрыты Policies.
+- RoleResource, BackupPage, UpdatePage — только admin.
+- ActivityLogResource — admin и editor (просмотр).
 
 Первый администратор создаётся через отдельный production-safe
 механизм; пароль не находится в Git. Демо-seeder отделён от
@@ -414,7 +602,9 @@ production seeders и не запускается случайно на producti
 
 # 15. TESTING
 
-Использовать Pest. Минимальные критичные сценарии:
+Использовать Pest. Тесты выполняются на MySQL 8.4. SQLite запрещён.
+
+Минимальные критичные сценарии:
 
 1. публикация новости;
 2. создание/редактирование новости;
@@ -422,16 +612,23 @@ production seeders и не запускается случайно на producti
 4. валидация изображения;
 5. доступ admin;
 6. доступ editor;
-7. запрет неавторизованного доступа;
-8. работа Filament Resources;
-9. публичный рендер страниц;
-10. 404;
-11. queue job;
-12. failed job;
-13. scheduler;
-14. базовые security-sensitive сценарии.
-
-Тесты выполняются на MySQL 8.4. SQLite запрещён.
+7. доступ user;
+8. запрет неавторизованного доступа к закрытым страницам;
+9. работа Filament Resources;
+10. публичный рендер страниц;
+11. 404;
+12. queue job;
+13. failed job;
+14. scheduler;
+15. матрица доступа: middleware EnsurePageAccess;
+16. матрица доступа: сохранение и инвалидация кэша;
+17. модерация комментариев;
+18. регистрация (когда включена);
+19. смена пароля;
+20. backup: создание, чтение метаданных, верификация;
+21. rollback: проверка совместимости (без реального отката);
+22. backup retention: удаление старых;
+23. базовые security-sensitive сценарии.
 
 ---
 
@@ -450,26 +647,123 @@ Rollback — через предыдущую версию кода, совмес
 
 # 17. BACKUPS
 
-MySQL backup: ежедневно (cron) + перед каждым production deployment.
+## Общее
 
-Ротация: 7 daily / 4 weekly. Обязательна копия вне production-сервера:
-хранение backup только на том же сервере Timeweb полноценной защитой
-не считается. Конкретное внешнее хранилище фиксируется в ADR до
-первого production deployment; направления для выбора: S3-совместимое
-хранилище, restic/borg на внешний хост, регулярное скачивание дампов
-на машину разработчика.
+Backup: ежедневно (cron) + перед каждым production deployment +
+по требованию из админки (страница BackupPage).
+
+**Полный production backup** — это восстанавливаемый снимок, включающий
+дамп БД, пользовательские файлы и manifest. DB-only backup допускается
+как быстрый технический backup, но не считается полноценным
+восстанавливаемым snapshot.
+
+Каждый backup связывается в manifest с конкретным application release
+и состоянием окружения: backup_id, app_version, lock-файлы, версии
+runtime, schema и extensions. Таким образом manifest фиксирует
+совместимость данных и кода на момент создания backup.
+
+Ротация: 7 daily / 4 weekly / 12 monthly. Обязательна копия вне
+production-сервера — хранение только на Timeweb полноценной защитой
+не считается. Внешнее хранилище — ADR-004.
+
+## Метаданные backup
+
+Каждый backup — это не только dump БД, а **версионированный снимок
+системы**. Backup содержит:
+
+    manifest.json:
+    - backup_id           UUID
+    - created_at          ISO-8601
+    - triggered_by        cron | deploy | admin:{user_id}
+    - app_version         git tag или commit SHA
+    - app_changelog_hash  sha256(CHANGELOG.md)
+    - php_version         фактическая версия PHP runtime
+    - laravel_version     фактическая Composer-resolved версия из composer.lock
+    - filament_version    фактическая Composer-resolved версия из composer.lock
+    - livewire_version    фактическая Composer-resolved версия из composer.lock
+    - composer_lock_hash  sha256(composer.lock)
+    - package_lock_hash   sha256(package-lock.json)
+    - db_schema_version   последняя применённая миграция (batch)
+    - db_migrations       список применённых миграций
+    - extensions          {pdo_mysql, mbstring, intl, zip, gd, ...}
+    - db_size_bytes       размер дампа
+    - files:              список файлов в архиве
+    - hash_db             sha256 от dump.sql.gz
+    - hash_files          sha256 от files.tar.gz (если включён)
+    - created_by_user_id  user_id, создавший backup (для admin-triggered; не криптографическая подпись)
+
+manifest.json не шифруется и хранится рядом с дампом.
+
+## Что входит в backup
+
+- Дамп БД (`dump.sql.gz`) — обязательно.
+- `storage/app/` (пользовательские загрузки) — обязательно для полного
+  production backup.
+- `public/img_site/` — если используется как публичные ассеты.
+- Для DB-only технического backup файлы могут отсутствовать, но такой
+  backup явно маркируется как неполный и не подменяет полный snapshot.
+- `.env` — **никогда** (секреты не в backup).
+- `manifest.json` — обязательно.
+
+## Именование
+
+    storage/backups/{YYYY}/{MM}/{backup_id}.{dump|files}.{gz|tar.gz}
+    storage/backups/{YYYY}/{MM}/{backup_id}.manifest.json
+
+`storage/backups/` **не в Git** (см. §32).
+
+## Версионирование и совместимость
+
+Перед rollback (см. §24) система **обязана** проверить:
+
+1. `php_version` backup — доступна ли на production.
+2. `laravel_version` — поддерживается ли текущим PHP.
+3. `extensions` — все ли установлены.
+4. `db_schema_version` — совместима ли схема БД backup с кодом, к
+   которому откатываемся.
+5. `hash_db` — не повреждён ли дамп.
+
+Если проверка не прошла — rollback **запрещён** без явного
+подтверждения и внесения записи в журнал (ActivityLog) с причиной.
+
+## Админ-страница BackupPage
+
+Возможности:
+
+- Список backup'ов по датам (с фильтрами cron / deploy / admin).
+- Просмотр manifest.json каждого backup (раскрывающийся блок).
+- Кнопка «Создать backup сейчас» (ручное).
+- Кнопка «Восстановить» — только для admin; обязательны MFA, повторная
+  аутентификация, явное подтверждение, выбор только по внутреннему
+  `backup_id`, проверка совместимости и запись в ActivityLog.
+- Перед production restore автоматически создаётся backup текущего
+  состояния.
+- На время restore блокируются параллельные deploy/backup/restore
+  операции и включается maintenance mode.
+- Restore выполняется контролируемой CLI/внешней процедурой, а не
+  непосредственно внутри обычного HTTP-запроса админки.
+- После restore обязательны проверка `/up` и smoke-test.
+- Кнопка «Скачать manifest.json» (без dump).
+- Настройка retention (7/4/12).
+
+## Планирование
+
+Cron через Scheduler (раздел 11). Время и частота — ADR-004.
+Retention cleanup — ежедневно.
+
+## Restore-test
 
 Ежемесячно — restore-test в отдельном dev Docker environment.
-Проверяется не наличие dump-файла, а реальная возможность восстановить
-базу.
+Проверяется не наличие dump-файла, а реальная возможность
+восстановить базу. Результат фиксируется в docs/adr.
 
 ---
 
 # 18. MONITORING
 
 Внешний uptime-monitor на endpoint /up. Cron-задачи дополнительно
-контролируются через healthcheck-механизм (например, healthchecks.io
-или аналог — выбор фиксируется в ADR).
+контролируются через healthcheck-механизм (healthchecks.io или
+аналог — ADR-005).
 
 Monitoring не требует Redis, Supervisor или постоянно работающего
 процесса.
@@ -494,10 +788,16 @@ composer update на production запрещён. Все обновления в
 
 # 20. DEPENDENCY UPDATES
 
+## Общее правило
+
+Обновление — это изменение версий PHP-пакетов, JS-пакетов или
+runtime (PHP). Осуществляется контролируемо: dev → CI → staging →
+production.
+
 ## Patch
 
-Автоматизация: Dependabot или Renovate (composer + npm) создают PR
-автоматически; merge при зелёном CI согласно правилам проекта.
+Автоматизация: Dependabot или Renovate (composer + npm) создают PR;
+merge при зелёном CI согласно правилам проекта.
 
 ## Minor
 
@@ -507,17 +807,54 @@ composer update на production запрещён. Все обновления в
 
 ## Major
 
-Отдельная ветка upgrade/<component>-<version>. Обязательно: изучить
-официальную upgrade-документацию; проверить breaking changes; обновить
-код; выполнить CI; ручной smoke-test; проверка на staging (раздел 29);
-подготовить rollback. Major update не выполняется напрямую на
-production.
+Отдельная ветка upgrade/<component>-<version>. Обязательно:
 
-Обязательный триггер major-обновления — приближение EOL
-security-поддержки текущей major-версии: это повод начать обновление
-сразу, не откладывая «до необходимости». Laravel major updates
-выполняются при наличии поддерживаемого upgrade path, плановый
-ориентир — не реже раза в год.
+1. изучение официальной upgrade-документации;
+2. проверка breaking changes;
+3. обновление кода;
+4. CI (полный набор тестов, §21);
+5. ручной smoke-test;
+6. проверка на staging (§29);
+7. подготовка rollback (см. §24);
+8. **backup перед deployment** (§17).
+
+Major update не выполняется напрямую на production.
+
+## Обязательный триггер major-обновления
+
+Приближение EOL security-поддержки текущей major-версии — повод
+начать обновление сразу. Laravel major updates — плановый ориентир
+не реже раза в год.
+
+## Админ-страница UpdatePage
+
+Возможности:
+
+- Просмотр текущих версий (PHP, Laravel, Filament, Node, БД).
+- Просмотр доступных обновлений (через `composer outdated --direct`
+  и `npm outdated` в dev-контейнере; вывод кэшируется).
+- Кнопка «Проверить обновления» (запускает read-only проверку).
+- Список последних успешных обновлений (из ActivityLog).
+- Кнопка «Скачать upgrade-report» — сводка по текущему состоянию.
+
+**Кнопка «Обновить сейчас» отсутствует.** Обновления выполняются
+через dev/CI/staging и деплой. UpdatePage — только информация и
+подготовка, чтобы администратор видел состояние, но не мог
+автоматически обновить production.
+
+## Тесты как подготовка
+
+Скрипт `make upgrade-check <component> <version>`:
+
+1. создаёт ветку upgrade/<component>-<version>;
+2. обновляет composer.json / package.json;
+3. выполняет composer update <package> --with-all-dependencies;
+4. запускает полный набор тестов (§15);
+5. запускает Larastan и Pint;
+6. собирает frontend;
+7. возвращает отчёт: что сломано, что требует ручной правки.
+
+Отчёт сохраняется в docs/adr/upgrades/ для истории.
 
 ---
 
@@ -532,8 +869,8 @@ security-поддержки текущей major-версии: это повод
     Pest
 
 Тесты — на MySQL 8.4. Larastan — актуальный поддерживаемый уровень
-после проверки совместимости (ориентир — level 6). CI использует ту
-же PHP major/minor версию, что и production.
+(ориентир — level 6). CI использует ту же PHP major/minor версию,
+что и production.
 
 ---
 
@@ -559,13 +896,14 @@ Composer и Node не обязаны присутствовать на productio
 
 1. composer install --no-dev --optimize-autoloader — в Docker;
 2. npm ci && npm run build — в Docker;
-3. создать MySQL backup ДО изменения production;
+3. создать MySQL backup ДО изменения production (с фиксацией
+   метаданных, §17);
 4. rsync:
 
        rsync -az --delete --exclude-from=deploy/rsync-exclude.txt
 
    Флаг --delete и исключение storage/app/ — пара, существующая
-   только вместе (см. разделы 23 и 32);
+   только вместе (см. §23 и §32);
 
 5. production-команды: storage:link (идемпотентно);
 6. миграции: php artisan migrate --force;
@@ -574,9 +912,9 @@ Composer и Node не обязаны присутствовать на productio
 8. проверить /up;
 9. smoke-test.
 
-Окно между шагом 4 (новый код на проде) и шагом 6 (миграции) безопасно
-только при соблюдении раздела 16: новый код обязан работать со старой
-схемой БД (expand-contract).
+Окно между шагом 4 (новый код на проде) и шагом 6 (миграции)
+безопасно только при соблюдении §16: новый код обязан работать со
+старой схемой БД (expand-contract).
 
 ---
 
@@ -591,10 +929,16 @@ Composer и Node не обязаны присутствовать на productio
     node_modules/
     storage/app/            ← КРИТИЧНО
     storage/logs/
+    storage/backups/        ← КРИТИЧНО
     storage/framework/cache/
 
-storage/app/ содержит пользовательские загрузки (галерея), которые
+`storage/app/` содержит пользовательские загрузки (галерея), которые
 существуют только на production и никогда не синхронизируются из dev.
+
+`storage/backups/` содержит backup'ы БД и файлов, которые существуют
+только на production. При rsync --delete без этого исключения backup'ы
+будут удалены.
+
 Неполный exclude-список вместе с rsync --delete = потеря данных на
 production. Исключение проверяется в review каждого изменения
 deploy-скрипта.
@@ -609,15 +953,108 @@ public/, resources/, routes/, storage/framework/ (без cache/).
 
 # 24. ROLLBACK
 
-Rollback — не просто git checkout previous. Безопасный rollback
-возможен только при совместимости старого кода с текущей схемой БД.
+## Принцип
 
-Стратегия: откат кода на предыдущий релиз при условии expand-contract
-(раздел 16). Если схема БД уже несовместима — restore database backup
-совместимого релиза. Rollback глубже одного совместимого релиза —
-отдельный аварийный сценарий (только с восстановлением из backup,
-с потерей данных после точки backup — это фиксируется в документации
-как известная цена).
+Rollback — не просто `git checkout previous`. Термин используется для
+двух разных операций:
+
+- **code rollback** — возврат кода на предыдущий release без отката БД,
+  если текущая схема БД остаётся совместимой с предыдущим кодом;
+- **full rollback / restore** — возврат кода, БД и необходимых файлов
+  к согласованному состоянию backup.
+
+Безопасный rollback возможен только при выполнении условий:
+
+1. код предыдущего релиза совместим со схемой БД либо восстанавливается
+   согласованная схема;
+2. инфраструктура (PHP, extensions) способна работать с этим кодом;
+3. для full rollback есть полный backup, содержащий состояние, к которому
+   откатываемся.
+
+## Два сценария
+
+### A. Rollback кода без отката БД
+
+Применимо, если схема БД совместима (expand-contract, §16).
+
+    git checkout <previous-tag>
+    make deploy
+
+БД остаётся текущей, новая схема поддерживает и старый код.
+
+### B. Rollback с восстановлением БД
+
+Применимо, если схема БД несовместима или данные повреждены.
+
+1. Создать автоматический backup текущего production-состояния.
+2. Открыть BackupPage в админке (или использовать CLI).
+3. Выбрать backup только по внутреннему `backup_id`, а не по произвольному
+   пути к файлу.
+4. Система запускает **проверку совместимости** (§17):
+   - PHP version — доступна ли;
+   - Laravel version — поддерживается ли текущим PHP;
+   - extensions — все ли установлены;
+   - db_schema_version — совместима ли схема backup с кодом, к
+     которому откатываемся;
+   - hash_db — целостность дампа.
+5. Если проверка прошла — maintenance mode, блокировка конкурирующих
+   операций, restore БД/файлов и checkout соответствующего git tag.
+6. После restore — `/up`, smoke-test и запись результата в ActivityLog.
+7. Если проверка не прошла — **отказ** с записью причины в ActivityLog.
+   Обход проверки не является штатным сценарием и допускается только
+   по отдельной аварийной процедуре с явным подтверждением администратора.
+
+## Паттерн восстановления на shared hosting
+
+Restore не может быть выполнен:
+- в обычном HTTP-запросе админки (таймаут PHP-FPM);
+- в queue worker (max-time=55 секунд, раздел 10);
+- в scheduler-задании (тот же лимит).
+
+Единственный безопасный путь — управляемая CLI-процедура через SSH.
+
+Поток:
+
+1. Admin в BackupPage выбирает `backup_id`, проходит MFA и повторную
+   аутентификацию.
+2. BackupPage создаёт запись `restore_request`:
+   - `request_id` — UUID
+   - `backup_id` — внутренний ID (никогда не путь)
+   - `admin_user_id`
+   - `created_at`
+   - `token` — HMAC-SHA256(`request_id + backup_id + secret`)
+   - `status` — `pending | applying | done | failed`
+   - `expires_at` — `created_at + 30 минут`
+3. BackupPage показывает admin инструкцию:
+   «SSH на production → `make rollback APPLY <request_id>`».
+4. Admin выполняет команду по SSH. CLI:
+   - проверяет token и срок действия;
+   - блокирует параллельные deploy/backup/restore (file lock);
+   - создаёт backup текущего состояния;
+   - включает maintenance mode;
+   - проверяет совместимость (§17);
+   - восстанавливает БД и файлы;
+   - выключает maintenance;
+   - проверяет `/up`;
+   - пишет результат в ActivityLog;
+   - помечает request как `done` или `failed`.
+5. Если token истёк или проверка не прошла — CLI отказывает без
+   изменений.
+6. Все шаги 4 логируются в ActivityLog и в файл `restore.log`.
+
+Прямой вызов restore из HTTP-запроса админки запрещён (раздел 32).
+
+## Цена
+
+Rollback глубже одного совместимого релиза — потеря данных после
+точки backup. Это фиксируется в документации как известная цена.
+
+## CLI-эквивалент
+
+    make rollback LIST              — список доступных backup'ов
+    make rollback CHECK <id>        — проверка совместимости
+    make rollback APPLY <id>        — применить (с подтверждением)
+    make restore-test <id>          — восстановление в отдельном env
 
 ---
 
@@ -656,21 +1093,28 @@ Production deployment — только по release tag. SemVer: vMAJOR.MINOR.PA
         rsync-exclude.txt
         cron.txt
         deploy.sh
+        upgrade.sh
+        rollback.sh
     docs/
         adr/
+            upgrades/
         ai/
+        design/
+            wireframe.html
+            admin.html
+        designreview.md
+        adminreview.md
     .github/
         workflows/
 
 Структура app/Filament и других framework-specific каталогов
-формируется согласно выбранной версии Filament и Laravel, не
-фиксируется заранее искусственно.
+формируется согласно выбранной версии Filament и Laravel.
 
 ---
 
 # 27. MAKEFILE
 
-Makefile предназначен для WSL2/dev/CI. Минимальные команды:
+Makefile предназначен для WSL2/dev/CI. Команды:
 
     make up
     make down
@@ -682,9 +1126,11 @@ Makefile предназначен для WSL2/dev/CI. Минимальные к�
     make rollback
     make backup
     make restore-test
+    make upgrade-check
 
 Команды реальны и проверены. Не создавать Makefile-команды без
-реальной backend-implementation.
+реальной backend-implementation. Команды backup / rollback /
+restore-test / upgrade-check подключаются на этапах 11 и 20.
 
 ---
 
@@ -698,6 +1144,9 @@ README описывает: требования; запуск на чистой 
 docs/adr/ — архитектурные решения. Каждый ADR короткий: проблема;
 решение; причины; альтернативы; последствия.
 
+docs/designreview.md, docs/adminreview.md — источники истины по
+вёрстке, ролям, страницам и ресурсам админки (см. §37).
+
 ---
 
 # 29. TIMEWEB STAGING
@@ -708,12 +1157,12 @@ environment в середине разработки, а не в конце.
 
 На staging проверяются: PHP, extensions, MySQL, document root, .env,
 storage, queue, cron, scheduler, uploads, mail, /up, permissions,
-cache, deployment, backup, restore.
+cache, deployment, backup, restore, rollback.
 
-Инфраструктура staging — отдельное решение: второй каталог, вторая БД,
-отдельные cron-задачи на том же аккаунте Timeweb. Фиксируется в ADR
-до этапа 12; staging используется также для проверки major-обновлений
-(раздел 20).
+Инфраструктура staging — второй каталог, вторая БД, отдельные
+cron-задачи на том же аккаунте Timeweb. Фиксируется в ADR до
+этапа 12; staging используется также для проверки major-обновлений
+(§20).
 
 ---
 
@@ -722,85 +1171,116 @@ cache, deployment, backup, restore.
 Критерий готовности каждого этапа: make test зелёный; CI зелёный;
 ручная проверка; осмысленный commit.
 
-Порядок этапов определяется зависимостями, а не только нумерацией.
-Этап 0 (аудит Timeweb) — обязателен, но не является блокером для
-этапов 1–11; он блокирует только этапы, связанные с переносом на
-production-хостинг (этапы 12, 13, 14).
+Порядок этапов определяется зависимостями. Этап 0 (аудит Timeweb)
+обязателен, но не блокирует этапы 1–11; блокирует только этапы 12–14.
 
 ## Этап 0 — аудит Timeweb
 
-Выполнить аудит по чек-листу раздела 7. Развернуть чистый Laravel на
-поддомене и проверить /up. Результаты — в ADR.
+Аудит по чек-листу §7. Развернуть чистый Laravel на поддомене,
+проверить /up, проверить доступность mysqldump, tar, gzip, места на
+диске. Результаты — в ADR-002.
 
 Этап 0 блокирует этапы 12–14 и не блокирует этапы 1–11.
 
 ## Этап 1 — выбор и фиксация стека
 
 Проверить связки: PHP 8.4 + Laravel + Filament 5 и PHP 8.4 + Laravel
-+ Filament 4. Выбрать актуальную поддерживаемую совместимую
-комбинацию по правилу тай-брейка (раздел 3). Проверить: Composer,
-PHP extensions, Livewire, Tailwind, Vite, Node, обязательные plugins,
-security advisories. Создать ADR-001 (включая отклонённые
-альтернативы — в частности, почему не соседняя версия PHP).
++ Filament 4. Выбрать по правилу тай-брейка (§3). Создать ADR-001.
 
 ## Этап 2 — Docker dev environment
 
-Создать: PHP, Nginx, MySQL, Node/Vite с healthchecks (раздел 4).
-Проверить /up.
+PHP, Nginx, MySQL, Node/Vite, Mailpit с healthchecks (§4).
+Проверить /up. Развернуть skeleton Laravel.
 
-## Этап 3 — Authentication
+## Этап 3 — Authentication и роли
 
-Роли admin, editor; authorization.
+- Регистрация, логин, восстановление пароля (или отключение
+  регистрации с фича-флагом).
+- Роли admin, editor, user. Guest — виртуальная.
+- Policies и spatie/laravel-permission.
+- Middleware EnsurePageAccess.
+- Матрица доступа (таблица page_role_access).
+- Первый администратор через production-safe механизм.
 
-## Этап 4 — Filament
+## Этап 4 — Filament: каркас админки
 
-Административная панель: login, roles, permissions, MFA, policies.
+- AdminPanelProvider: путь /admin, dark mode, discovery resources.
+- Login, MFA, базовые policies.
+- UserResource, RoleResource.
+- PermissionsMatrixPage.
+- Дашборд с базовыми виджетами.
+- SettingsPage (общие, регистрация, логирование).
 
 ## Этап 5 — Models + migrations
 
-News, Category, Gallery, Page, User. Seeders.
+- News, Category, GalleryItem, Page, User.
+- Comment, Event, ActivityLog, PageRoleAccess.
+- Seeders (демо отдельно от production).
+- SoftDeletes для User, News, Comment, Page.
 
 ## Этап 6 — Filament Resources
 
-News, Categories, Gallery, Pages, Users.
+News, Categories, Comments, Gallery, Pages, Events, Logs.
 
 ## Этап 7 — Public part
 
-Лента новостей, страница новости, галерея, информационные страницы.
-Blade, Tailwind, Alpine, Vite.
+Лента новостей, страница новости, галерея, игроки, инфо-страницы,
+логин, регистрация. Blade + Tailwind + Alpine + Vite.
+Фиксированный header + footer, светлая/тёмная темы.
 
 ## Этап 8 — Images
 
 Upload, validation (MIME, size, megapixel checks), resize, WebP,
-queue, failed jobs (раздел 12).
+queue, failed jobs (§12).
 
 ## Этап 9 — Tests
 
-Критичные Feature/Unit тесты (раздел 15) на MySQL 8.4.
+Критичные Feature/Unit тесты (§15) на MySQL 8.4.
 
 ## Этап 10 — CI
 
 Полная настройка: composer validate, composer audit, Pint, Larastan,
-Pest на MySQL 8.4 (раздел 21).
+Pest на MySQL 8.4 (§21).
 
-## Этап 11 — Backup/restore
+## Этап 11 — Backup/restore/rollback
 
-backup, restore-test. Проверено реальное восстановление (раздел 17).
+- Backup с метаданными (§17).
+- BackupPage в админке.
+- Проверка совместимости.
+- Restore-test.
+- CLI: make backup / make restore-test / make rollback.
 
 ## Этап 12 — промежуточный Timeweb staging
 
-Перенос проекта на поддомен по чек-листу раздела 29.
+Перенос проекта на поддомен по чек-листу §29.
 
 ## Этап 13 — Deployment
 
-Настройка rsync, cron, queue, scheduler, storage, cache — по разделам
-10, 11, 22, 23.
+rsync, cron, queue, scheduler, storage, cache — по §§10, 11, 22, 23.
+
+Устанавливаются CLI-скрипты: deploy.sh, rollback.sh, upgrade.sh.
+
+Базовый update-workflow через CLI (`make upgrade-check`) существует с
+этого этапа. UpdatePage в админке (этап 15) — только информационный
+интерфейс поверх уже работающего CLI.
 
 ## Этап 14 — Production
 
-Перед production: SSL, .env, backup, monitoring, /up, permissions,
-cron, queue, mail, storage, smoke-test. После успешной проверки —
-production domain, первый полный backup, репетиция rollback.
+SSL, .env, backup, monitoring, /up, permissions, cron, queue, mail,
+storage, smoke-test. После проверки — production domain, первый
+полный backup, репетиция rollback.
+
+## Этап 15 — Update mechanism (UI)
+
+Требует уже работающего CLI-workflow с этапа 13.
+
+Добавляется:
+- UpdatePage в админке — только просмотр и подготовка;
+- расширенный отчёт `make upgrade-check` с сохранением в
+  `docs/adr/upgrades/`;
+- регламент минорных и мажорных обновлений (§20).
+
+Кнопка «Обновить сейчас» отсутствует.
 
 ---
 
@@ -818,9 +1298,12 @@ smoke-test.
 
 ## Обязательные возможности
 
-Новости, категории, галерея, инфо-страницы, административная панель,
-роли, MFA, загрузка изображений, очередь, scheduler, backup, restore,
-monitoring, CI, безопасные обновления.
+Новости, галерея, игроки, инфо-страницы, регистрация (управляемая),
+административная панель, роли, матрица доступа, MFA для admin/editor,
+загрузка изображений, комментарии с модерацией, события, журнал
+действий, backup с проверкой совместимости, rollback, restore-test,
+механизм обновлений, scheduler, monitoring, CI, безопасные
+обновления.
 
 ---
 
@@ -832,11 +1315,15 @@ monitoring, CI, безопасные обновления.
 - node_modules/ в Git;
 - backup-файлы в Git;
 - storage-артефакты в Git;
+- storage/backups/ в Git;
 - composer update на production;
 - deployment без зелёного CI;
 - deployment без backup;
+- rollback без проверки совместимости (§17);
+- автообновление production из админки;
+- вызов restore БД из HTTP-запроса админки (только CLI, §24);
 - rsync --delete с неполным exclude-списком (в частности — без
-  storage/app/);
+  storage/app/ и storage/backups/);
 - хардкод секретов;
 - хардкод абсолютных путей Timeweb;
 - SQLite как основная test DB;
@@ -891,6 +1378,13 @@ AI обязан:
 каждый файл полностью; перед файлом — 1–2 строки о назначении; после
 файла — что проверить вручную.
 
+Стандартные файлы framework skeleton (Laravel skeleton, config/*.php,
+bootstrap/*, public/index.php, artisan) создаются официальными
+инструментами (composer create-project, php artisan make:*,
+php artisan vendor:publish) — не вручную и не по одному файлу.
+Правило «по одному файлу» применяется к авторским файлам проекта
+(модели, контроллеры, Resource, миграции, ADR, docker-конфиги).
+
 ## Шаг 3
 
 Если обнаружено: противоречие ТЗ; несовместимость; небезопасное
@@ -906,8 +1400,7 @@ deployment — не продолжать молча. Сначала сообщи
 При начале новой сессии:
 
 1. Запросить у пользователя docs/ai/context.md и текущий статус
-   репозитория (ветка, последние коммиты, выполненные этапы) —
-   самостоятельно прочитать файлы новой сессии ИИ не может;
+   репозитория (ветка, последние коммиты, выполненные этапы);
 2. Определить уже выполненные этапы;
 3. Не начинать проект с нуля;
 4. Не переопределять ранее принятые ADR без причины.
@@ -915,9 +1408,6 @@ deployment — не продолжать молча. Сначала сообщи
 ---
 
 # 36. ГЛАВНЫЙ ПРИНЦИП ПРОЕКТА
-
-Проект создаётся не ради конкретной версии Laravel или Filament.
-Главная цель:
 
 > **Получить безопасное, поддерживаемое и предсказуемое веб-приложение
 > с длительным жизненным циклом, которое разрабатывается в
@@ -930,7 +1420,122 @@ deployment — не продолжать молча. Сначала сообщи
 
 ---
 
+# 37. DESIGN DOCUMENTS
+
+## Назначение
+
+Проект сопровождается четырьмя design-документами. ТЗ **ссылается**
+на них, но **не дублирует** их содержимое. При конфликте:
+
+- по стеку, безопасности, деплою, backup, обновлениям — **приоритет
+  у docs/ai/context.md**;
+- по вёрстке, ролям публичного сайта, страницам, матрице доступа,
+  ресурсам админки — **приоритет у design-документов**.
+
+## Список
+
+| Файл | Назначение |
+|---|---|
+| docs/designreview.md | Публичный сайт: дизайн-токены, каркас, страницы, компоненты, контракт данных |
+| docs/adminreview.md | Админ-контур: роли, права, ресурсы Filament, матрица доступа, структура сайдбара, миграции, политики |
+| docs/design/wireframe.html | HTML-макет публичного сайта — визуальный референс |
+| docs/design/admin.html | HTML-макет админки — визуальный референс |
+
+## Правило
+
+Если AI-агенту нужна информация о вёрстке, страницах, ресурсах
+админки, ролях, матрице доступа — он **читает design-документы**,
+а не действует по памяти. Если design-документ молчит по вопросу —
+вопрос поднимается пользователю до начала генерации файлов.
+
+## Открытые вопросы
+
+Дизайн-документы содержат раздел «Открытые вопросы» (designreview.md
+§11, adminreview.md §13). До их закрытия соответствующие фрагменты
+реализуются по мокам или откладываются. См. §38.
+
+---
+
+# 38. OPEN QUESTIONS
+
+Открытые вопросы проекта. Закрываются через ADR или через
+редактирование design-документов.
+
+## Из designreview.md §11
+
+1. Поля карточки игрока («Data 1 / Data 2», «Calcula / Promathia»,
+   «Robots / Jumxi») — заглушки или реальные данные? Что должен
+   отдавать сервер?
+2. Список имён файлов в public/img_site — заполнить фактическими
+   файлами из архива сайта.
+3. Объём админ-контура первой фазы: только дашборд + пользователи
+   + роли + матрица или сразу все ресурсы?
+4. Tailwind или свои CSS-переменные? В макетах — ванильный CSS.
+   Решение до переноса в Blade-шаблоны.
+
+## Из adminreview.md §13
+
+5. ActivityLog: spatie/laravel-activitylog или своя таблица?
+6. RichEditor: TinyMCE, Tiptap или встроенный Filament RichEditor?
+7. Управление заявками на события: отдельная страница или
+   relation-manager?
+8. Settings: spatie/laravel-settings или key-value таблица?
+9. Мультиязычность в админке: нужна или только RU?
+10. Хранение аватаров: public/img_site/avatars/ или
+    storage/app/public/?
+11. Экспорт данных (CSV, XLSX или визуальная заглушка)?
+
+## Из ТЗ (v3.8)
+
+12. Регистрация: временно приостановлена или отключается навсегда?
+13. Механизм backup: собственный или на базе spatie/laravel-backup?
+14. Объём backup первой фазы: full (БД + файлы + manifest) сразу
+    с этапа 11 или начать с db-only и перейти на full к production?
+    §17 фиксирует, что full — целевой формат; открыт только порядок
+    внедрения.
+15. Внешнее хранилище backup: S3 / restic / скачивание вручную?
+16. Механизм обновлений: только CLI + админ-страница «информация»
+    или ещё что-то?
+
+До закрытия вопроса AI не должен молча выбирать архитектурное решение.
+Если вопрос влияет на безопасность, данные, схему БД, зависимости или
+публичный контракт — реализация останавливается и решение запрашивается
+у владельца проекта. Для низкорисковых визуальных/временных деталей
+допускается временная реализация по явно указанному в design-документе
+макету с записью решения в CHANGELOG/ADR.
+
+---
+
 # ИСТОРИЯ ВЕРСИЙ
+
+**3.8.1** — три уточнения: восстановление на shared hosting выполняется
+только через CLI (паттерн с `restore_request`, §24); §38/Q14 приведён
+в соответствие с §17; разграничены этапы 13 и 15 по времени появления
+update-workflow.
+
+**3.8** — финализация принятого ядра проекта и усиление production
+security/recovery: зафиксированы PHP 8.4, Laravel 13.33.0, Filament 5.8.4,
+Livewire 4.4.6, MySQL 8.4 и ключевые пакеты; добавлены таблицы принятого
+стека, dev-инструментов, Docker и runtime; backup manifest переведён на
+фактические runtime/lock-версии; `signed_by` заменён на
+`created_by_user_id`; полный backup определён как БД + пользовательские
+файлы + manifest; усилены restore/rollback, session/upload security,
+защита destructive-действий и ActivityLog; уточнено правило закрытия
+открытых вопросов.
+
+**3.7** — интеграция design-документов (designreview.md, adminreview.md,
+wireframes) в общую структуру проекта: новый §37 DESIGN DOCUMENTS
+(ссылки вместо дублей), §38 OPEN QUESTIONS. Расширены: §1 (FFXI Phoenix
+community portal), §13 (4 роли + матрица доступа + guest), §14
+(8 Resources + 4 кастомные страницы), §15 (23 сценария), §17 (backup
+с метаданными, проверка совместимости, retention 7/4/12, BackupPage),
+§20 (UpdatePage, make upgrade-check), §22 (backup с метаданными), §23
+(storage/backups/ в exclude), §24 (rollback через BackupPage с
+проверкой совместимости), §26 (docs/design/), §27 (make backup,
+rollback, restore-test, upgrade-check), §30 (переписаны 3–7, добавлен
+15), §31, §32 (новые запреты: rollback без проверки, автообновление
+production из админки, storage/backups/ в Git), §34 (оговорка про
+skeleton).
 
 **3.5** — уточнение раздела 30: зафиксирована зависимость этапов —
 этап 0 (аудит Timeweb) блокирует этапы 12–14 и не блокирует
