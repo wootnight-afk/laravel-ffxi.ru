@@ -56,6 +56,8 @@
     </div>
 </footer>
 
+<x-cookie-banner />
+
 @if (session('status'))
     <div class="form-status" style="position: fixed; top: 90px; left: 16px; right: 16px; max-width: 600px; margin: 0 auto; z-index: 1002;">
         {{ session('status') }}
