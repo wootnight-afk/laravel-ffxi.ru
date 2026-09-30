@@ -1,54 +1,63 @@
 # Project Instructions
 
-This project follows the technical specification at `docs/ai/context.md`
-(version 3.8.1, frozen).
+Project spec: `docs/ai/context.md` v4.0 + `docs/ai/frontend-spec.md` v1.0.
 
-## Spec and design documents
+## Read first
 
-- `docs/ai/context.md` — technical specification (stack, security,
-  deployment, backup, stages).
+- `docs/ai/context.md` — technical spec (stack, security, deploy, backup).
+- `docs/ai/frontend-spec.md` — functional spec (roles, routes, models, UX, acceptance).
 - `docs/designreview.md` — public site design.
 - `docs/adminreview.md` — admin panel design.
-- `docs/design/wireframe.html` — public mockup.
-- `docs/design/admin.html` — admin mockup.
+- `docs/design/wireframe.html`, `docs/design/admin.html` — mockups.
+- `docs/legal/privacy-policy-draft.md` — PD policy draft.
 
-Priority on conflict: spec wins for stack/security/deploy; design docs
-win for UI/UX, pages, resources, access matrix. Never invent rules
-missing in either. Ask the user instead.
+Priority: context.md wins for stack/security/deploy; frontend-spec.md wins
+for functional logic; design docs win for UI/UX. Never invent rules
+missing from either — ask the user instead.
 
-## Stack (locked, spec section 3)
+## Stack (locked by ADR-001)
 
 - PHP 8.4 (`~8.4.0`)
-- Laravel 13.33.0 (`^13.33`)
-- Filament 5.8.4 (`^5.8`)
-- Livewire 4.4.6 (`^4.4`)
-- spatie/laravel-permission 8.3.0 (`^8.3`)
-- intervention/image 4.3.2 (`^4.3`)
-- Pest 5.2.1 + pest-plugin-laravel 5.0
-- Larastan 3.12.2, Pint 1.32.1
+- Laravel 13.33+ (`^13.33`)
+- Filament 5.8+ (`^5.8`)
+- Livewire 4.4+ (`^4.4`)
+- spatie/laravel-permission 8.3 (`^8.3`)
+- intervention/image 4.3 (`^4.3`)
+- Pest 5.2 + pest-plugin-laravel 5.0
+- Larastan 3.12, Pint 1.32
 - MySQL 8.4
 
-## Excluded from stack
+## Excluded
 
-- laravel/fortify — candidate for stage 4 (MFA) only.
-- bezhansahu/filament-shield — not used; policies handle authorization.
+- laravel/fortify — candidate for stage 4 only.
+- bezhansahu/filament-shield — not used.
 - Redis, Memcached, SQLite, Supervisor, pcntl, S3/MinIO.
+
+## Roles
+
+- admin — full access, 2FA required.
+- editor — only "Content" group in admin.
+- user — authorized player.
+- guest — virtual + tracked via `guest_visitors` (cookie 30 days).
+
+Matrix: spatie `section.{key}.view` + `guest_sections` JSON in settings.
+Middleware: `section.access:{key}`, `registration.open`, `IdentifyGuest`.
 
 ## Workflow rules
 
-1. Read `docs/ai/context.md` and relevant design docs before any task.
-2. Follow the three-step work format (spec section 34):
-   - Step 1 — architecture summary, wait for confirmation.
-   - Step 2 — files one at a time; framework skeleton via official tools.
-   - Step 3 — stop and report any contradiction or risk.
-3. Never generate a file without explicit approval after Step 1.
+1. Read `context.md` AND `frontend-spec.md` before any task.
+2. Follow the three-step format (context.md §34):
+   - Step 1: architecture summary, wait.
+   - Step 2: files one at a time; framework skeleton via official tools.
+   - Step 3: stop and report contradictions/risks.
+3. Never create files without explicit approval after Step 1.
 4. Never invent packages, commands, or APIs.
 5. Never research topics outside the spec.
-6. Never explore projects in /home/skyw/projects/*.
-7. Only use official sources (packagist.org, laravel.com, filamentphp.com,
-   livewire.laravel.com, github.com raw files of official repositories).
-8. When a spec §38 open question affects security, data, DB schema,
-   dependencies, or public contract — stop and ask the user.
+6. Never explore projects in `/home/skyw/projects/*`.
+7. Use only official sources (packagist.org, laravel.com, filamentphp.com,
+   livewire.laravel.com, github.com raw files).
+8. When an open question affects security, data, DB schema, dependencies,
+   or public contract — stop and ask the user.
 
 ## Language
 

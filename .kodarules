@@ -1,54 +1,57 @@
 PROJECT CONTEXT — MANDATORY
 
-The full technical specification for this project is located at:
-    docs/ai/context.md
+You MUST read at the start of EVERY session and BEFORE ANY task:
 
-SPEC VERSION: 3.8.1 (FINAL, frozen)
+    1. docs/ai/context.md       — technical spec (stack, security, deploy)
+    2. docs/ai/frontend-spec.md — functional spec (roles, routes, models, UX)
 
-You MUST read docs/ai/context.md at the start of EVERY session and
-BEFORE ANY task, file creation, or code generation.
+SPEC VERSIONS: context.md 4.0 (FINAL), frontend-spec.md 1.0 (FINAL)
 
-DESIGN DOCUMENTS — source of truth for UI/UX (spec section 37):
+If you have not read BOTH files in the current session — you are NOT
+allowed to proceed with any file creation, modification, or code
+generation.
 
-    docs/designreview.md          — public site design (tokens, layout,
-                                    pages, components, data contract)
-    docs/adminreview.md           — admin panel (roles, permissions,
-                                    Filament resources, access matrix,
-                                    sidebar, migrations, policies)
-    docs/design/wireframe.html    — public site HTML mockup
-    docs/design/admin.html        — admin panel HTML mockup
+============================================================
+DESIGN DOCUMENTS — SOURCE OF TRUTH PER DOMAIN
+============================================================
+
+| Файл | Назначение |
+|---|---|
+| docs/ai/context.md | Технический контекст |
+| docs/ai/frontend-spec.md | Функционал (роли, маршруты, модели, UX, приёмки) |
+| docs/designreview.md | Дизайн публичного сайта |
+| docs/adminreview.md | Дизайн админ-контура |
+| docs/design/wireframe.html | Макет публичного сайта |
+| docs/design/admin.html | Макет админки |
+| docs/legal/privacy-policy-draft.md | Заготовка политики ПД |
 
 PRIORITY ON CONFLICT:
-- Stack, security, deploy, backup, updates → docs/ai/context.md
-- UI/UX, public pages, admin resources, access matrix → design docs
+- Стек, безопасность, деплой, backup, обновления → context.md
+- Функционал (роли, маршруты, модели, бизнес-логика, приёмки) →
+  frontend-spec.md
+- Вёрстка, страницы, компоненты, UX → designreview.md + wireframes
+- Админ-ресурсы, матрица, аудит → adminreview.md
 
-If a design document is silent on a question — ASK THE USER before
-generating files. Do NOT invent.
+Если ни один design-документ не даёт ответа — ASK THE USER.
+Do NOT invent.
 
-OPEN QUESTIONS — spec section 38.
-    If a question affects security, data, DB schema, dependencies or
-    public contract — implementation stops and the user decides.
-    Low-risk visual details may be implemented per mockup with a
-    CHANGELOG/ADR note.
+============================================================
+WORK FORMAT (context.md §34)
+============================================================
 
-WORK FORMAT (section 34 of the spec):
-- Step 1 — provide architecture summary and wait for confirmation.
-- Step 2 — after confirmation, generate files one at a time, complete,
-  no placeholders. Framework skeleton files (Laravel skeleton,
-  config/*.php, bootstrap/*, public/index.php, artisan) are created
-  by official tools (composer create-project, php artisan make:*,
-  php artisan vendor:publish) — not manually, not one-by-one.
-  The one-by-one rule applies to AUTHOR files (models, controllers,
-  Resources, migrations, ADRs, docker configs).
-- Step 3 — if any contradiction, incompatibility, or missing capability
-  is found, STOP and report before continuing.
+- Step 1 — architecture summary, wait for confirmation.
+- Step 2 — files one at a time; framework skeleton via official tools
+  (composer create-project, php artisan make:*, php artisan vendor:publish);
+  one-by-one rule applies to author files (models, controllers, migrations,
+  ADRs, docker configs).
+- Step 3 — on contradiction / incompatibility / risk — STOP and report.
 
 LANGUAGE:
 - Communication with the user: Russian.
 - Code, comments, commit messages: English.
 
 ============================================================
-CRITICAL CONSTRAINTS — DO NOT VIOLATE
+CRITICAL CONSTRAINTS
 ============================================================
 
 ## Working directory
@@ -63,60 +66,68 @@ You MUST NOT:
 - attempt to cd to /home/alex/... or any path with a different user,
 - read files outside this project,
 - look at unrelated projects (admin-api, hotel-booking, cloud-storage,
-  bitrix-project) — they exist but are NOT related to this task.
+  bitrix-project) — they exist but are NOT related.
 
 If you need information from outside — ASK the user and WAIT.
 
 ## No unrequested exploration
 
-You MUST NOT ask about or research topics not explicitly present in
-docs/ai/context.md. In particular:
-- Do NOT ask about PHP 8.5 EOL — the spec requires PHP 8.4.
-- Do NOT look at third-party blogs (travisbean.com, medium.com, dev.to, etc.).
-- Only use: packagist.org, repo.packagist.org, official docs
-  (laravel.com/docs, filamentphp.com/docs, livewire.laravel.com),
-  github.com raw files of official repositories.
+Do NOT research topics not present in context.md or frontend-spec.md.
+Do NOT ask about PHP 8.5 EOL — the spec requires PHP 8.4.
+Do NOT look at third-party blogs (travisbean.com, medium.com, dev.to, etc.).
+Allowed sources only: packagist.org, repo.packagist.org, official docs
+(laravel.com/docs, filamentphp.com/docs, livewire.laravel.com),
+github.com raw files of official repositories.
 
 ============================================================
-CONFIRMED STACK (frozen by ADR-001 and spec v3.8.1)
+CONFIRMED STACK (context.md §3, ADR-001)
 ============================================================
 
 - PHP                    8.4              (~8.4.0)
-- laravel/framework      13.33.0          (^13.33)
-- filament/filament      5.8.4            (^5.8)
-- livewire/livewire      4.4.6            (^4.4)
-- spatie/laravel-permission 8.3.0         (^8.3)
-- intervention/image     4.3.2            (^4.3)
-- pestphp/pest           5.2.1            (^5.2, dev)
+- laravel/framework      13.33+           (^13.33)
+- filament/filament      5.8+             (^5.8)
+- livewire/livewire      4.4+             (^4.4)
+- spatie/laravel-permission 8.3           (^8.3)
+- intervention/image     4.3              (^4.3)
+- pestphp/pest           5.2              (^5.2, dev)
 - pestphp/pest-plugin-laravel 5.0         (^5.0, dev)
-- larastan/larastan      3.12.2           (^3.12, dev)
-- laravel/pint           1.32.1           (^1.32, dev)
+- larastan/larastan      3.12             (^3.12, dev)
+- laravel/pint           1.32             (^1.32, dev)
 - MySQL                  8.4
 
-EXCLUDED (do NOT add to composer.json):
-- laravel/fortify — candidate for stage 4 (MFA), add only via separate
-  PR with ADR justification if Filament 5 does not provide MFA.
+EXCLUDED from composer.json:
+- laravel/fortify — candidate for stage 4 (MFA) only, via separate PR + ADR.
 - bezhansahu/filament-shield — not used; policies handle authorization.
 
 FORBIDDEN:
-- Redis, Memcached, SQLite, Supervisor, pcntl, S3/MinIO (spec §6, §32)
+- Redis, Memcached, SQLite, Supervisor, pcntl, S3/MinIO
 - Wildcard `*` in versions
 - composer update on production
-- restore DB from HTTP admin request (only CLI, spec §24)
-- rollback without compatibility check (spec §17)
+- restore DB from HTTP admin request (only CLI, context.md §24)
+- rollback without compatibility check (context.md §17)
 
 ============================================================
-CURRENT STATE (as of this session)
+ROLES (frontend-spec.md §3.1)
+============================================================
+
+- admin   — full access, 2FA required
+- editor  — only "Content" group in admin
+- user    — authorized player
+- guest   — virtual role + tracked via guest_visitors (cookie 30 days)
+
+Matrix: spatie section.{key}.view + guest-JSON in settings.
+Middleware: section.access:{key}, registration.open, IdentifyGuest.
+
+============================================================
+CURRENT STATE (after stage 2)
 ============================================================
 
 Completed:
-- ADR-001 stack decision
-- composer.json with locked stack
-- .editorconfig, .env.example, .gitignore, .gitattributes
-- docker-compose.yml, docker/php/Dockerfile, php.ini, nginx/default.conf,
-  mysql/my.cnf
-- Makefile (dev + quality targets)
-- docs/designreview.md, docs/adminreview.md, docs/design/*.html
-- docs/ai/context.md (v3.8.1 FINAL)
+- Stage 0: Timeweb audit — pending (owner does it).
+- Stage 1: ADR-001 stack — done.
+- Stage 2: Docker dev + Laravel 13.34 skeleton + /up — done.
+  Commits: 7dd28fc (healthcheck), d692e94 (skeleton).
+- v4.0 documentation:
+  733694e (context.md v4.0), 91643d3 (frontend-spec.md v1.0).
 
-Next: Stage 2 — docker make up + Laravel skeleton + /up check.
+Next: Stage 3 — Auth, roles, foundation (context.md §30, frontend-spec.md §6.1).
