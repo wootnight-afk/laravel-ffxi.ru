@@ -77,30 +77,10 @@ class RoleAndPermissionSeeder extends Seeder
         $editor = Role::firstOrCreate(['name' => 'editor', 'guard_name' => 'web']);
         $user = Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
 
+        // Admin — все права
         $admin->syncPermissions($permissions);
 
-        $editorPermissions = [
-            'section.home.view',
-            'section.news.view',
-            'section.gallery.view',
-            'section.contacts.view',
-            'section.events.view',
-            'news.manage_site',
-            'news.edit_any',
-            'news.delete_any',
-            'news.moderate',
-            'albums.manage_site',
-            'photos.delete_any',
-            'comments.moderate',
-            'events.manage_any',
-            'pages.manage',
-            'dashboard.view',
-            'panel.access',
-            'profile.edit_own',
-        ];
-
-        $editor->syncPermissions($editorPermissions);
-
+        // User — базовый набор
         $userPermissions = [
             'section.home.view',
             'section.news.view',
@@ -126,6 +106,22 @@ class RoleAndPermissionSeeder extends Seeder
         ];
 
         $user->syncPermissions($userPermissions);
+
+        // Editor = User + контентные права (per frontend-spec §3.1)
+        $editorContentPermissions = [
+            'news.manage_site',
+            'news.edit_any',
+            'news.delete_any',
+            'news.moderate',
+            'albums.manage_site',
+            'photos.delete_any',
+            'comments.moderate',
+            'events.manage_any',
+            'pages.manage',
+            'panel.access',
+        ];
+
+        $editor->syncPermissions(array_merge($userPermissions, $editorContentPermissions));
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
