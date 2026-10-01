@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\PageController;
@@ -22,11 +23,16 @@ Route::get('/privacy', fn () => view('privacy'))->name('privacy');
 Route::get('/news', [NewsController::class, 'index'])->name('news.index');
 Route::get('/news/{slug}', [NewsController::class, 'show'])->name('news.show');
 
+Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery.index');
+Route::get('/gallery/{album:slug}', [GalleryController::class, 'showAlbum'])->name('gallery.album');
+Route::get('/gallery/{album:slug}/{photo}', [GalleryController::class, 'showPhoto'])
+    ->whereNumber('photo')
+    ->name('gallery.photo');
+
 // ------------------------------------------------------------------
-// Заглушки для будущих этапов (5–7)
+// Заглушки для будущих этапов (6–7)
 // ------------------------------------------------------------------
 
-Route::get('/gallery', fn () => view('stubs.coming-soon'))->name('gallery.index');
 Route::get('/players', fn () => view('stubs.coming-soon'))->name('players.dashboard');
 Route::get('/contacts', fn () => view('stubs.coming-soon'))->name('contacts');
 Route::get('/cabinet/profile', fn () => view('stubs.coming-soon'))->name('cabinet.profile');
@@ -41,7 +47,7 @@ Route::middleware(['guest', 'registration.open'])->group(function () {
 });
 
 // ------------------------------------------------------------------
-// Auth: логин, пароль (guest, без registration.open)
+// Auth: логин, пароль (guest)
 // ------------------------------------------------------------------
 
 Route::middleware('guest')->group(function () {
