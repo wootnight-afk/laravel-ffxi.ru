@@ -7,7 +7,6 @@ use App\Models\User;
 use App\Services\NicknameSuggester;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 class CreateFirstAdmin extends Command
@@ -66,14 +65,14 @@ class CreateFirstAdmin extends Command
                 $user = User::create([
                     'name' => $name,
                     'email' => $email,
-                    'password' => Hash::make($password),
+                    'password' => $password,
                     'status' => UserStatus::Active,
-                    'email_verified_at' => now(),
                     'pd_consent_at' => now(),
                     'pd_policy_version' => 'admin-bootstrap',
                     'is_profile_public' => false,
                 ]);
 
+                $user->forceFill(['email_verified_at' => now()])->save();
                 $user->assignRole('admin');
 
                 return $user;
@@ -99,7 +98,6 @@ class CreateFirstAdmin extends Command
 
     protected function generatePassword(): string
     {
-        // 16 символов: буквы, цифры, спецсимволы
         $alphabet = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*';
 
         return substr(str_shuffle(str_repeat($alphabet, 4)), 0, 16);
