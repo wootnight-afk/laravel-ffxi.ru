@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\User;
@@ -8,6 +10,10 @@ use Illuminate\Validation\ValidationException;
 
 class SocialLinkService
 {
+    public function __construct(
+        private readonly SettingsRepository $settings,
+    ) {}
+
     /**
      * @return array<int, string>
      */
@@ -92,7 +98,11 @@ class SocialLinkService
      */
     public function ensureLimit(User $user): void
     {
-        $limit = (int) config('social.max_links_per_user', 10);
+        $limit = $this->settings->int(
+            'social_max_links_per_user',
+            (int) config('social.max_links_per_user', 10),
+        );
+
         $count = $user->socialLinks()->count();
 
         if ($count >= $limit) {

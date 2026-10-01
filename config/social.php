@@ -1,6 +1,8 @@
 <?php
 
 return [
+    // Fallback only. Primary source: settings.social_max_links_per_user
+    // (SettingsSeeder + SettingsRepository), editable from the admin panel.
     'max_links_per_user' => 10,
 
     'platforms' => [

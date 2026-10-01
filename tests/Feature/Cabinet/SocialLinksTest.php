@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\UserSocialLink;
+use App\Services\SettingsRepository;
+use Illuminate\Support\Facades\Cache;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\delete;
@@ -24,7 +27,11 @@ function makeRegisteredUser(): User
 }
 
 beforeEach(function () {
-    config()->set('social.max_links_per_user', 10);
+    // SettingsRepository caches values forever; RefreshDatabase does not
+    // clear the cache, so flush it explicitly to isolate tests.
+    Cache::flush();
+
+    app(SettingsRepository::class)->set('social_max_links_per_user', 10);
 });
 
 // ------------------------------------------------------------------
@@ -124,11 +131,11 @@ it('rejects unknown platform', function () {
 });
 
 // ------------------------------------------------------------------
-// Лимит ссылок (spec §6.14)
+// Лимит ссылок (spec §6.14 + §7.5: settings, не config)
 // ------------------------------------------------------------------
 
-it('enforces max links limit', function () {
-    config()->set('social.max_links_per_user', 3);
+it('enforces max links limit from settings', function () {
+    app(SettingsRepository::class)->set('social_max_links_per_user', 3);
 
     $user = makeRegisteredUser();
     actingAs($user);
@@ -150,6 +157,61 @@ it('enforces max links limit', function () {
 
     $response->assertSessionHasErrors('url');
     expect(UserSocialLink::where('user_id', $user->id)->count())->toBe(3);
+});
+
+it('uses settings value over config fallback', function () {
+    // B4: settings must win over config.
+    config()->set('social.max_links_per_user', 100);
+    app(SettingsRepository::class)->set('social_max_links_per_user', 2);
+
+    $user = makeRegisteredUser();
+    actingAs($user);
+
+    for ($i = 0; $i < 2; $i++) {
+        UserSocialLink::create([
+            'user_id' => $user->id,
+            'type' => 'other',
+            'url' => "https://example.com/{$i}",
+            'is_visible' => false,
+            'sort_order' => $i,
+        ]);
+    }
+
+    $response = post(route('cabinet.social.store'), [
+        'type' => 'other',
+        'url' => 'https://example.com/overflow',
+    ]);
+
+    $response->assertSessionHasErrors('url');
+    expect(UserSocialLink::where('user_id', $user->id)->count())->toBe(2);
+});
+
+it('falls back to config when setting is missing', function () {
+    // Remove setting entirely; config becomes the effective limit.
+    Setting::query()->where('key', 'social_max_links_per_user')->delete();
+    Cache::flush();
+    config()->set('social.max_links_per_user', 5);
+
+    $user = makeRegisteredUser();
+    actingAs($user);
+
+    for ($i = 0; $i < 5; $i++) {
+        UserSocialLink::create([
+            'user_id' => $user->id,
+            'type' => 'other',
+            'url' => "https://example.com/{$i}",
+            'is_visible' => false,
+            'sort_order' => $i,
+        ]);
+    }
+
+    $response = post(route('cabinet.social.store'), [
+        'type' => 'other',
+        'url' => 'https://example.com/overflow',
+    ]);
+
+    $response->assertSessionHasErrors('url');
+    expect(UserSocialLink::where('user_id', $user->id)->count())->toBe(5);
 });
 
 // ------------------------------------------------------------------
@@ -270,7 +332,6 @@ it('redirects unverified user away from social link store', function () {
 
 it('forbids store for verified user without profile.edit_own permission', function () {
     $user = User::factory()->create();
-    // Роль `user` не назначаем — у голого пользователя нет разрешений.
     actingAs($user);
 
     $response = post(route('cabinet.social.store'), [
