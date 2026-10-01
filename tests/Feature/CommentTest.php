@@ -10,8 +10,8 @@ function makeNews(User $author): News
     return News::create([
         'user_id' => $author->id,
         'scope' => News::SCOPE_SITE,
-        'title' => 'Test news ' . uniqid(),
-        'slug' => 'test-news-' . uniqid(),
+        'title' => 'Test news '.uniqid(),
+        'slug' => 'test-news-'.uniqid(),
         'body' => 'Body text',
         'status' => News::STATUS_PUBLISHED,
         'published_at' => now()->subHour(),
@@ -89,7 +89,7 @@ it('auto-approves after five approved comments', function () {
             'user_id' => $user->id,
             'commentable_type' => News::class,
             'commentable_id' => $news->id,
-            'body' => 'Approved comment ' . $i,
+            'body' => 'Approved comment '.$i,
             'status' => Comment::STATUS_APPROVED,
         ]);
     }

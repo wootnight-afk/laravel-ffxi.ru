@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Comment;
 use App\Models\News;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -44,21 +45,21 @@ class NewsController extends Controller
         $comments = $news->comments()
             ->whereNull('parent_id')
             ->where(function ($q) use ($user) {
-                $q->where('status', \App\Models\Comment::STATUS_APPROVED);
+                $q->where('status', Comment::STATUS_APPROVED);
 
                 if ($user !== null) {
                     $q->orWhere(function ($q2) use ($user) {
                         $q2->where('user_id', $user->id)
                             ->whereIn('status', [
-                                \App\Models\Comment::STATUS_PENDING,
-                                \App\Models\Comment::STATUS_REJECTED,
+                                Comment::STATUS_PENDING,
+                                Comment::STATUS_REJECTED,
                             ]);
                     });
                 }
             })
             ->with([
                 'user',
-                'replies' => fn ($q) => $q->where('status', \App\Models\Comment::STATUS_APPROVED)
+                'replies' => fn ($q) => $q->where('status', Comment::STATUS_APPROVED)
                     ->with('user')
                     ->orderBy('created_at'),
             ])
@@ -71,4 +72,3 @@ class NewsController extends Controller
         ]);
     }
 }
-
