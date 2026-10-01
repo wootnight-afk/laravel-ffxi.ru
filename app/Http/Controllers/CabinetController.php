@@ -56,7 +56,7 @@ class CabinetController extends Controller
         $user->save();
 
         return redirect()
-            ->route('cabinet.show', ['tab' => 'profile'])
+            ->route('cabinet.tab', ['tab' => 'profile'])
             ->with('status', 'Профиль сохранён.');
     }
 
@@ -73,7 +73,7 @@ class CabinetController extends Controller
         }
 
         return redirect()
-            ->route('cabinet.show', ['tab' => 'profile'])
+            ->route('cabinet.tab', ['tab' => 'profile'])
             ->with('status', 'Аватар обновлён.');
     }
 
@@ -82,7 +82,7 @@ class CabinetController extends Controller
         $this->uploader->remove(auth()->user());
 
         return redirect()
-            ->route('cabinet.show', ['tab' => 'profile'])
+            ->route('cabinet.tab', ['tab' => 'profile'])
             ->with('status', 'Аватар удалён.');
     }
 }
