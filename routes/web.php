@@ -15,7 +15,7 @@ use App\Http\Controllers\SocialLinkController;
 use Illuminate\Support\Facades\Route;
 
 // ------------------------------------------------------------------
-// Публичные
+// Public
 // ------------------------------------------------------------------
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -33,7 +33,7 @@ Route::get('/gallery/{album:slug}/{photo}', [GalleryController::class, 'showPhot
     ->name('gallery.photo');
 
 // ------------------------------------------------------------------
-// Игроки (auth)
+// Players (auth)
 // ------------------------------------------------------------------
 
 Route::middleware('auth')->group(function () {
@@ -43,29 +43,33 @@ Route::middleware('auth')->group(function () {
 });
 
 // ------------------------------------------------------------------
-// Кабинет (auth)
+// Cabinet (auth; write actions require verified email)
 // ------------------------------------------------------------------
 
 Route::middleware('auth')->prefix('cabinet')->name('cabinet.')->group(function () {
+    // Reading — any authenticated user (frontend-spec §3.2).
     Route::get('/', [CabinetController::class, 'show'])->name('show');
     Route::get('/{tab}', [CabinetController::class, 'show'])
         ->whereIn('tab', CabinetController::TABS)
         ->name('tab');
 
-    Route::post('/profile', [CabinetController::class, 'updateProfile'])->name('profile.update');
-    Route::post('/avatar', [CabinetController::class, 'uploadAvatar'])
-        ->middleware('throttle:10,60')
-        ->name('avatar.upload');
-    Route::delete('/avatar', [CabinetController::class, 'deleteAvatar'])->name('avatar.delete');
+    // Writing — requires a verified email (frontend-spec §3.1).
+    Route::middleware('verified')->group(function () {
+        Route::post('/profile', [CabinetController::class, 'updateProfile'])->name('profile.update');
+        Route::post('/avatar', [CabinetController::class, 'uploadAvatar'])
+            ->middleware('throttle:10,60')
+            ->name('avatar.upload');
+        Route::delete('/avatar', [CabinetController::class, 'deleteAvatar'])->name('avatar.delete');
 
-    Route::post('/social', [SocialLinkController::class, 'store'])->name('social.store');
-    Route::patch('/social/{link}', [SocialLinkController::class, 'update'])->name('social.update');
-    Route::post('/social/{link}/toggle', [SocialLinkController::class, 'toggle'])->name('social.toggle');
-    Route::delete('/social/{link}', [SocialLinkController::class, 'destroy'])->name('social.destroy');
+        Route::post('/social', [SocialLinkController::class, 'store'])->name('social.store');
+        Route::patch('/social/{link}', [SocialLinkController::class, 'update'])->name('social.update');
+        Route::post('/social/{link}/toggle', [SocialLinkController::class, 'toggle'])->name('social.toggle');
+        Route::delete('/social/{link}', [SocialLinkController::class, 'destroy'])->name('social.destroy');
+    });
 });
 
 // ------------------------------------------------------------------
-// Заглушки
+// Stubs
 // ------------------------------------------------------------------
 
 Route::get('/contacts', fn () => view('stubs.coming-soon'))->name('contacts');

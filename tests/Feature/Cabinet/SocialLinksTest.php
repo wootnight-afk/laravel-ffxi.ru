@@ -249,3 +249,52 @@ it('allows owner to toggle visibility', function () {
 
     expect($link->fresh()->is_visible)->toBeTrue();
 });
+
+// ------------------------------------------------------------------
+// Verified email + Policy (A.8: B1–B3)
+// ------------------------------------------------------------------
+
+it('redirects unverified user away from social link store', function () {
+    $user = User::factory()->create(['email_verified_at' => null]);
+    $user->assignRole('user');
+    actingAs($user);
+
+    $response = post(route('cabinet.social.store'), [
+        'type' => 'other',
+        'url' => 'https://example.com/profile',
+    ]);
+
+    $response->assertRedirect(route('verification.notice'));
+    expect(UserSocialLink::where('user_id', $user->id)->count())->toBe(0);
+});
+
+it('forbids store for verified user without profile.edit_own permission', function () {
+    $user = User::factory()->create();
+    // Роль `user` не назначаем — у голого пользователя нет разрешений.
+    actingAs($user);
+
+    $response = post(route('cabinet.social.store'), [
+        'type' => 'other',
+        'url' => 'https://example.com/profile',
+    ]);
+
+    $response->assertForbidden();
+    expect(UserSocialLink::where('user_id', $user->id)->count())->toBe(0);
+});
+
+it('forbids toggle for verified user without profile.edit_own permission', function () {
+    $user = User::factory()->create();
+    actingAs($user);
+
+    $link = UserSocialLink::create([
+        'user_id' => $user->id,
+        'type' => 'other',
+        'url' => 'https://example.com/profile',
+        'is_visible' => false,
+        'sort_order' => 0,
+    ]);
+
+    post(route('cabinet.social.toggle', $link))->assertForbidden();
+
+    expect($link->fresh()->is_visible)->toBeFalse();
+});

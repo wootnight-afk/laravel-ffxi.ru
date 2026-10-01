@@ -16,6 +16,8 @@ class SocialLinkController extends Controller
 
     public function store(StoreSocialLinkRequest $request): RedirectResponse
     {
+        Gate::authorize('create', UserSocialLink::class);
+
         $user = $request->user();
         $data = $request->validated();
 

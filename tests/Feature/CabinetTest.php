@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -138,4 +140,33 @@ it('deletes avatar', function () {
     Storage::disk('public')->assertMissing($storedPath);
 
     @unlink($path);
+});
+
+// ------------------------------------------------------------------
+// Verified email — cabinet write routes (A.8: B3)
+// ------------------------------------------------------------------
+
+it('allows unverified user to read cabinet', function () {
+    $user = User::factory()->create(['email_verified_at' => null]);
+    $user->assignRole('user');
+
+    $this->actingAs($user)
+        ->get(route('cabinet.tab', ['tab' => 'profile']))
+        ->assertOk();
+});
+
+it('redirects unverified user from cabinet write to verification notice', function () {
+    $user = User::factory()->create(['email_verified_at' => null]);
+    $user->assignRole('user');
+
+    $response = $this->actingAs($user)->post(route('cabinet.profile.update'), [
+        'race' => 'elvaan',
+        'main_job' => 'PLD',
+    ]);
+
+    $response->assertRedirect(route('verification.notice'));
+
+    $user->refresh();
+    expect($user->race)->toBeNull();
+    expect($user->main_job)->toBeNull();
 });
