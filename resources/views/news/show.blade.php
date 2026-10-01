@@ -38,31 +38,8 @@
         <section style="margin-top: 48px;">
             <h2 class="section-title">Комментарии</h2>
 
-            @if ($news->comments->isEmpty())
-                <p style="color: var(--text-muted); font-size: 14px;">
-                    Пока комментариев нет. Будьте первым!
-                </p>
-            @else
-                @foreach ($news->comments as $comment)
-                    <div style="padding: 12px 0; border-bottom: 1px solid var(--border-color);">
-                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">
-                            {{ $comment->user?->name ?? '[аккаунт удалён]' }} ·
-                            {{ $comment->created_at->format('d.m.Y H:i') }}
-                        </div>
-                        <div style="font-size: 14px; line-height: 1.6;">
-                            {{ $comment->body }}
-                        </div>
-                    </div>
-                @endforeach
-            @endif
-
-            <div style="margin-top: 16px; padding: 12px; background: var(--bg-light); border-radius: 4px; font-size: 13px; color: var(--text-muted);">
-                @auth
-                    Форма комментариев появится в следующем обновлении.
-                @else
-                    <a href="{{ route('login') }}">Войдите</a>, чтобы оставить комментарий.
-                @endauth
-            </div>
+            <x-comment-thread :comments="$news->comments" :news="$news" />
+            <x-comment-form :news="$news" />
         </section>
     @endif
 @endsection

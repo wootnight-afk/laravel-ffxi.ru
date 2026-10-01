@@ -27,7 +27,7 @@ class NewsController extends Controller
         $news = News::query()
             ->site()
             ->where('slug', $slug)
-            ->with(['user', 'comments' => fn ($q) => $q->visible()->with('user')->latest()])
+            ->with(['user'])
             ->firstOrFail();
 
         if (! $news->isPublished()) {
@@ -37,11 +37,38 @@ class NewsController extends Controller
             }
         }
 
-        // Инкремент просмотров — простой, без атомарности. Допустимо для блога.
         $news->increment('views');
+
+        $user = request()->user();
+
+        $comments = $news->comments()
+            ->whereNull('parent_id')
+            ->where(function ($q) use ($user) {
+                $q->where('status', \App\Models\Comment::STATUS_APPROVED);
+
+                if ($user !== null) {
+                    $q->orWhere(function ($q2) use ($user) {
+                        $q2->where('user_id', $user->id)
+                            ->whereIn('status', [
+                                \App\Models\Comment::STATUS_PENDING,
+                                \App\Models\Comment::STATUS_REJECTED,
+                            ]);
+                    });
+                }
+            })
+            ->with([
+                'user',
+                'replies' => fn ($q) => $q->where('status', \App\Models\Comment::STATUS_APPROVED)
+                    ->with('user')
+                    ->orderBy('created_at'),
+            ])
+            ->orderBy('created_at')
+            ->get();
 
         return view('news.show', [
             'news' => $news,
+            'comments' => $comments,
         ]);
     }
 }
+

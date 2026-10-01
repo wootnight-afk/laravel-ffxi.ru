@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\PageController;
@@ -79,6 +80,23 @@ Route::middleware('auth')->group(function () {
     Route::post('/email/resend', [EmailVerificationController::class, 'resend'])
         ->middleware('throttle:3,1440')
         ->name('verification.resend');
+});
+
+// ------------------------------------------------------------------
+// Комментарии (auth)
+// ------------------------------------------------------------------
+
+Route::middleware('auth')->group(function () {
+    Route::post('/news/{news:slug}/comments', [CommentController::class, 'store'])
+        ->middleware('throttle:20,60')
+        ->name('comments.store');
+    Route::patch('/comments/{comment}', [CommentController::class, 'update'])
+        ->name('comments.update');
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])
+        ->name('comments.destroy');
+    Route::post('/comments/{comment}/report', [CommentController::class, 'report'])
+        ->middleware('throttle:10,60')
+        ->name('comments.report');
 });
 
 // ------------------------------------------------------------------

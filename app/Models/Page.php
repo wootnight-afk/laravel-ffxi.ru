@@ -31,7 +31,7 @@ class Page extends Model
     {
         static::saving(function (self $page) {
             if (empty($page->slug) && ! empty($page->title)) {
-                $page->slug = Str::slug($page->title);
+                $page->slug = Str::slug($page->title, '-', 'ru');
             }
 
             if ($page->isDirty('body')) {

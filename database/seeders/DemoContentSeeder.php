@@ -18,7 +18,6 @@ class DemoContentSeeder extends Seeder
 
         if ($admin === null) {
             $this->command->warn('Нет администратора — DemoContentSeeder пропущен.');
-
             return;
         }
 
@@ -47,8 +46,10 @@ class DemoContentSeeder extends Seeder
         ];
 
         foreach ($news as $item) {
+            $slug = Str::slug($item['title'], '-', 'ru');
+
             News::updateOrCreate(
-                ['slug' => Str::slug($item['title'])],
+                ['slug' => $slug],
                 [
                     'user_id' => $admin->id,
                     'scope' => News::SCOPE_SITE,
@@ -79,8 +80,10 @@ class DemoContentSeeder extends Seeder
         ];
 
         foreach ($pages as $item) {
+            $slug = Str::slug($item['title'], '-', 'ru');
+
             Page::updateOrCreate(
-                ['slug' => Str::slug($item['title'])],
+                ['slug' => $slug],
                 [
                     'title' => $item['title'],
                     'body' => $item['body'],
