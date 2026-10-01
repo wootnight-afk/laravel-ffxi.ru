@@ -3,7 +3,7 @@
 use App\Services\HtmlSanitizer;
 
 beforeEach(function () {
-    $this->sanitizer = new HtmlSanitizer();
+    $this->sanitizer = new HtmlSanitizer;
 });
 
 it('strips script tags with content', function () {

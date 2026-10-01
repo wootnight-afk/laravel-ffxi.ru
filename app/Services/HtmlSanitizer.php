@@ -36,7 +36,7 @@ class HtmlSanitizer
 
         $previous = libxml_use_internal_errors(true);
 
-        $wrapped = '<?xml encoding="UTF-8"><div id="__ffxi_root__">' . $html . '</div>';
+        $wrapped = '<?xml encoding="UTF-8"><div id="__ffxi_root__">'.$html.'</div>';
         $doc->loadHTML($wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
 
         libxml_clear_errors();
@@ -77,6 +77,7 @@ class HtmlSanitizer
 
         if (! $node instanceof DOMElement) {
             $node->parentNode?->removeChild($node);
+
             return;
         }
 
@@ -84,12 +85,14 @@ class HtmlSanitizer
 
         if (in_array($name, self::DROP_WITH_CONTENT, true)) {
             $node->parentNode?->removeChild($node);
+
             return;
         }
 
         if (! in_array($name, self::ALLOWED_TAGS, true)) {
             // Заменяем тег на его текстовое содержимое.
             $this->unwrap($node);
+
             return;
         }
 
@@ -117,10 +120,12 @@ class HtmlSanitizer
 
                 if (! $this->isSafeHref($href)) {
                     $element->removeAttribute('href');
+
                     continue;
                 }
 
                 $element->setAttribute('href', $href);
+
                 continue;
             }
 

@@ -18,6 +18,7 @@ class DemoContentSeeder extends Seeder
 
         if ($admin === null) {
             $this->command->warn('Нет администратора — DemoContentSeeder пропущен.');
+
             return;
         }
 

@@ -39,9 +39,9 @@ class ContentRenderer
             'max_nesting_level' => 20,
         ]);
 
-        $environment->addExtension(new CommonMarkCoreExtension());
-        $environment->addExtension(new AutolinkExtension());
-        $environment->addExtension(new StrikethroughExtension());
+        $environment->addExtension(new CommonMarkCoreExtension);
+        $environment->addExtension(new AutolinkExtension);
+        $environment->addExtension(new StrikethroughExtension);
 
         $this->converter = new MarkdownConverter($environment);
 

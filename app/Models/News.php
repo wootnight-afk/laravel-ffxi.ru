@@ -22,12 +22,17 @@ class News extends Model
     use SoftDeletes;
 
     public const SCOPE_SITE = 'site';
+
     public const SCOPE_PLAYER = 'player';
 
     public const STATUS_DRAFT = 'draft';
+
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_PUBLISHED = 'published';
+
     public const STATUS_REJECTED = 'rejected';
+
     public const STATUS_ARCHIVED = 'archived';
 
     protected function casts(): array
