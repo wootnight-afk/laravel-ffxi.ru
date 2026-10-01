@@ -5,8 +5,8 @@ namespace App\Http\Middleware;
 use App\Models\GuestVisitor;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\Cookie as SymfonyCookie;
 use Symfony\Component\HttpFoundation\Response;
 
 class IdentifyGuest
@@ -21,10 +21,11 @@ class IdentifyGuest
         }
 
         $uuid = $request->cookie(self::COOKIE);
-
         $visitor = $uuid !== null
             ? GuestVisitor::query()->where('uuid', $uuid)->first()
             : null;
+
+        $setCookie = null;
 
         if ($visitor === null) {
             $uuid = (string) Str::uuid();
@@ -42,16 +43,7 @@ class IdentifyGuest
             $visitor->display_name = 'guest' . str_pad((string) $visitor->id, 3, '0', STR_PAD_LEFT);
             $visitor->save();
 
-            Cookie::queue(Cookie::make(
-                name: self::COOKIE,
-                value: $uuid,
-                minutes: self::COOKIE_MINUTES,
-                path: '/',
-                secure: $request->isSecure(),
-                httpOnly: true,
-                raw: false,
-                sameSite: 'lax',
-            ));
+            $setCookie = $uuid;
         } else {
             if ($visitor->last_seen_at === null || $visitor->last_seen_at->diffInSeconds(now()) >= 60) {
                 $visitor->forceFill([
@@ -63,7 +55,22 @@ class IdentifyGuest
 
         $request->attributes->set('guest_visitor', $visitor);
 
-        return $next($request);
+        $response = $next($request);
+
+        if ($setCookie !== null) {
+            $response->headers->setCookie(new SymfonyCookie(
+                name: self::COOKIE,
+                value: $setCookie,
+                expire: time() + (self::COOKIE_MINUTES * 60),
+                path: '/',
+                secure: $request->isSecure(),
+                httpOnly: true,
+                raw: false,
+                sameSite: 'lax',
+            ));
+        }
+
+        return $response;
     }
 
     protected function hashIp(?string $ip): string
