@@ -15,5 +15,10 @@ class DatabaseSeeder extends Seeder
             EventTypeSeeder::class,
             DashboardWidgetSeeder::class,
         ]);
+
+        // Демо-контент — только в local/testing, никогда на production.
+        if (app()->environment('local', 'testing')) {
+            $this->call(DemoContentSeeder::class);
+        }
     }
 }

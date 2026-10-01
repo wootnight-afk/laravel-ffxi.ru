@@ -8,7 +8,8 @@ use Illuminate\Contracts\View\View;
 class PageController extends Controller
 {
     /**
-     * Список slug'ов, которые не должны попадать в catch-all роут.
+     * Slug'и, зарезервированные под системные роуты.
+     * Catch-all /{page:slug} не должен их перехватывать.
      */
     public const RESERVED_SLUGS = [
         'admin', 'guest', 'login', 'logout', 'register',
@@ -17,16 +18,15 @@ class PageController extends Controller
         'players', 'password', 'email', 'up',
     ];
 
-    public function show(string $slug): View
+    public function show(Page $page): View
     {
-        if (in_array($slug, self::RESERVED_SLUGS, true)) {
+        if (in_array($page->slug, self::RESERVED_SLUGS, true)) {
             abort(404);
         }
 
-        $page = Page::query()
-            ->published()
-            ->where('slug', $slug)
-            ->firstOrFail();
+        if (! $page->is_published) {
+            abort(404);
+        }
 
         return view('pages.show', [
             'page' => $page,
