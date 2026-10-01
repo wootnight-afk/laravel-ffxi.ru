@@ -18,7 +18,10 @@ class DatabaseSeeder extends Seeder
 
         // Демо-контент — только в local/testing, никогда на production.
         if (app()->environment('local', 'testing')) {
-            $this->call(DemoContentSeeder::class);
+            $this->call([
+                DemoContentSeeder::class,
+                GalleryDemoSeeder::class,
+            ]);
         }
     }
 }
