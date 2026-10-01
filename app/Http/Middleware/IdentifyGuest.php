@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 class IdentifyGuest
 {
     public const COOKIE = 'guest_uid';
+
     public const COOKIE_MINUTES = 60 * 24 * 30; // 30 days
 
     public function handle(Request $request, Closure $next): Response
@@ -40,7 +41,7 @@ class IdentifyGuest
                 'hits' => 1,
             ]);
 
-            $visitor->display_name = 'guest' . str_pad((string) $visitor->id, 3, '0', STR_PAD_LEFT);
+            $visitor->display_name = 'guest'.str_pad((string) $visitor->id, 3, '0', STR_PAD_LEFT);
             $visitor->save();
 
             $setCookie = $uuid;
@@ -77,6 +78,6 @@ class IdentifyGuest
     {
         $key = (string) config('app.key');
 
-        return hash('sha256', ($ip ?? '') . $key);
+        return hash('sha256', ($ip ?? '').$key);
     }
 }

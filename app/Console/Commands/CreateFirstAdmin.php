@@ -37,26 +37,31 @@ class CreateFirstAdmin extends Command
             foreach ($validator->errors()->all() as $error) {
                 $this->error($error);
             }
+
             return self::FAILURE;
         }
 
         if (! $suggester->passesFormat($name)) {
             $this->error('Ник не соответствует формату (3–24 символа, латиница/цифры/-/_ , начинается с буквы).');
+
             return self::FAILURE;
         }
 
         if ($suggester->isBlacklisted($name)) {
             $this->error('Этот ник в чёрном списке.');
+
             return self::FAILURE;
         }
 
         if (User::query()->where('name', $name)->exists()) {
             $this->error("Ник '{$name}' уже занят.");
+
             return self::FAILURE;
         }
 
         if (User::query()->where('email', $email)->exists()) {
             $this->error("Email '{$email}' уже занят.");
+
             return self::FAILURE;
         }
 
@@ -78,17 +83,18 @@ class CreateFirstAdmin extends Command
                 return $user;
             });
         } catch (\Throwable $e) {
-            $this->error('Ошибка создания: ' . $e->getMessage());
+            $this->error('Ошибка создания: '.$e->getMessage());
+
             return self::FAILURE;
         }
 
         $this->newLine();
         $this->info('Администратор создан успешно.');
         $this->newLine();
-        $this->line('  ID:     <fg=yellow>' . $user->id . '</>');
-        $this->line('  Ник:    <fg=yellow>' . $user->name . '</>');
-        $this->line('  Email:  <fg=yellow>' . $user->email . '</>');
-        $this->line('  Пароль: <fg=red;options=bold>' . $password . '</>');
+        $this->line('  ID:     <fg=yellow>'.$user->id.'</>');
+        $this->line('  Ник:    <fg=yellow>'.$user->name.'</>');
+        $this->line('  Email:  <fg=yellow>'.$user->email.'</>');
+        $this->line('  Пароль: <fg=red;options=bold>'.$password.'</>');
         $this->newLine();
         $this->warn('Сохраните пароль в защищённом месте. Он больше не будет показан.');
         $this->newLine();

@@ -29,7 +29,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasRoles, SoftDeletes;
+    use HasFactory, HasRoles, Notifiable, SoftDeletes;
 
     protected function casts(): array
     {
@@ -104,13 +104,13 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $query->where(function ($q) {
             $q->whereNull('banned_until')
-              ->orWhere('banned_until', '<=', now());
+                ->orWhere('banned_until', '<=', now());
         });
     }
 
     public function scopePublicProfile($query)
     {
         return $query->where('is_profile_public', true)
-                     ->where('status', UserStatus::Active);
+            ->where('status', UserStatus::Active);
     }
 }

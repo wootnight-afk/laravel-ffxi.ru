@@ -9,10 +9,13 @@ use Illuminate\Database\Eloquent\Model;
 class Setting extends Model
 {
     protected $primaryKey = 'key';
+
     protected $keyType = 'string';
+
     public $incrementing = false;
 
     const CREATED_AT = null;
+
     const UPDATED_AT = 'updated_at';
 
     protected function casts(): array

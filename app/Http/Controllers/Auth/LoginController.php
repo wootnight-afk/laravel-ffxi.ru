@@ -35,7 +35,7 @@ class LoginController extends Controller
         if ($user->isBanned()) {
             Auth::logout();
             throw ValidationException::withMessages([
-                'email' => 'Аккаунт заблокирован до ' . $user->banned_until->format('d.m.Y H:i') . '.',
+                'email' => 'Аккаунт заблокирован до '.$user->banned_until->format('d.m.Y H:i').'.',
             ]);
         }
 

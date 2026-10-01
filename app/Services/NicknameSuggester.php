@@ -99,14 +99,14 @@ class NicknameSuggester
             $attempts++;
 
             $digits = random_int($minDigits, $maxDigits);
-            $min = (int) ('1' . str_repeat('0', $digits - 1));
+            $min = (int) ('1'.str_repeat('0', $digits - 1));
             $max = (int) str_repeat('9', $digits);
             $number = random_int($min, $max);
             $suffix = (string) $number;
 
             $baseLen = $maxLen - mb_strlen($suffix);
             $truncated = mb_substr($cleanBase, 0, max(1, $baseLen));
-            $candidate = $truncated . $suffix;
+            $candidate = $truncated.$suffix;
 
             if (mb_strlen($candidate) < (int) config('nickname.min', 3)) {
                 continue;
