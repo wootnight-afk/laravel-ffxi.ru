@@ -18,7 +18,7 @@ function makeAvatarJpeg(int $width = 400, int $height = 400): string
     $color = imagecolorallocate($image, 200, 100, 50);
     imagefill($image, 0, 0, $color);
 
-    $path = tempnam(sys_get_temp_dir(), 'avatar_') . '.jpg';
+    $path = tempnam(sys_get_temp_dir(), 'avatar_').'.jpg';
     imagejpeg($image, $path, 90);
     imagedestroy($image);
 
@@ -105,7 +105,7 @@ it('uploads avatar and creates two webp variants', function () {
 it('rejects non-image avatar', function () {
     $user = makeCabinetUser();
 
-    $path = tempnam(sys_get_temp_dir(), 'txt_') . '.txt';
+    $path = tempnam(sys_get_temp_dir(), 'txt_').'.txt';
     file_put_contents($path, 'not an image');
 
     $file = new UploadedFile($path, 'avatar.txt', 'text/plain', null, true);

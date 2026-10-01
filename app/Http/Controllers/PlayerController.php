@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserStatus;
 use App\Models\News;
 use App\Models\Photo;
 use App\Models\User;
@@ -23,11 +24,11 @@ class PlayerController extends Controller
     public function directory(Request $request): View
     {
         $query = User::query()
-            ->where('status', \App\Enums\UserStatus::Active);
+            ->where('status', UserStatus::Active);
 
         $search = trim((string) $request->query('q', ''));
         if ($search !== '') {
-            $query->where('name', 'like', '%' . $search . '%');
+            $query->where('name', 'like', '%'.$search.'%');
         }
 
         $users = $query

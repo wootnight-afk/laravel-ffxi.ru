@@ -13,9 +13,13 @@ use Throwable;
 class AvatarUploader
 {
     public const MAX_BYTES = 4 * 1024 * 1024; // 4 MB
+
     public const MAX_PIXELS = 25_000_000;      // 25 Mp
+
     public const MIN_SIDE = 50;
+
     public const FULL_SIDE = 256;
+
     public const THUMB_SIDE = 64;
 
     /** @var array<int, string> */
@@ -33,8 +37,8 @@ class AvatarUploader
     {
         $this->validate($file);
 
-        $hash = Str::random(12) . '-' . substr(sha1_file($file->getRealPath()) ?: '', 0, 8);
-        $dir = 'avatars/' . $user->id;
+        $hash = Str::random(12).'-'.substr(sha1_file($file->getRealPath()) ?: '', 0, 8);
+        $dir = 'avatars/'.$user->id;
 
         $fullPath = "{$dir}/{$hash}_full.webp";
         $thumbPath = "{$dir}/{$hash}_thumb.webp";
@@ -58,7 +62,7 @@ class AvatarUploader
             $disk->put($thumbPath, (string) $thumb->encodeUsingFileExtension('webp', quality: 80));
         } catch (Throwable $e) {
             $disk->delete([$fullPath, $thumbPath]);
-            throw new ImageProcessingException('Ошибка обработки аватара: ' . $e->getMessage(), 0, $e);
+            throw new ImageProcessingException('Ошибка обработки аватара: '.$e->getMessage(), 0, $e);
         }
 
         // Удаляем старый аватар
