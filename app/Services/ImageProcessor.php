@@ -6,6 +6,7 @@ use App\Exceptions\ImageProcessingException;
 use App\Models\Album;
 use App\Models\Photo;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
@@ -14,11 +15,15 @@ use Throwable;
 class ImageProcessor
 {
     public const MAX_BYTES = 8 * 1024 * 1024; // 8 MB
+
     public const MAX_PIXELS = 50_000_000;      // 50 Mp
+
     public const MIN_SIDE = 50;
 
     public const ORIGINAL_MAX_WIDTH = 2560;
+
     public const MEDIUM_WIDTH = 1280;
+
     public const THUMB_SIDE = 480;
 
     /** @var array<int, string> */
@@ -39,8 +44,8 @@ class ImageProcessor
 
         $meta = $this->extractMeta($file);
 
-        $hash = Str::random(16) . '-' . substr(sha1_file($file->getRealPath()) ?: '', 0, 12);
-        $dir = 'photos/' . now()->format('Y/m');
+        $hash = Str::random(16).'-'.substr(sha1_file($file->getRealPath()) ?: '', 0, 12);
+        $dir = 'photos/'.now()->format('Y/m');
 
         $paths = [
             'original' => "{$dir}/{$hash}_orig.webp",
@@ -70,7 +75,7 @@ class ImageProcessor
             $disk->put($paths['thumb'], (string) $image->encodeUsingFileExtension('webp', quality: 75));
         } catch (Throwable $e) {
             $disk->delete(array_values($paths));
-            throw new ImageProcessingException('Ошибка обработки изображения: ' . $e->getMessage(), 0, $e);
+            throw new ImageProcessingException('Ошибка обработки изображения: '.$e->getMessage(), 0, $e);
         }
 
         $sortOrder = (int) Photo::query()->where('album_id', $album->id)->max('sort_order') + 1;
@@ -151,7 +156,7 @@ class ImageProcessor
 
             if (is_string($dateTime) && $dateTime !== '') {
                 try {
-                    $takenAt = \Illuminate\Support\Carbon::createFromFormat('Y:m:d H:i:s', $dateTime)?->toDateTimeString();
+                    $takenAt = Carbon::createFromFormat('Y:m:d H:i:s', $dateTime)?->toDateTimeString();
                 } catch (Throwable) {
                     // некорректная дата EXIF — игнорируем
                 }

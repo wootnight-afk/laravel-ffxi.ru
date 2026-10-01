@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Album;
+use App\Models\Comment;
 use App\Models\Photo;
 use Illuminate\Contracts\View\View;
 
@@ -57,8 +58,8 @@ class GalleryController extends Controller
 
         $comments = $photo->comments()
             ->whereNull('parent_id')
-            ->where('status', \App\Models\Comment::STATUS_APPROVED)
-            ->with(['user', 'replies' => fn ($q) => $q->where('status', \App\Models\Comment::STATUS_APPROVED)->with('user')])
+            ->where('status', Comment::STATUS_APPROVED)
+            ->with(['user', 'replies' => fn ($q) => $q->where('status', Comment::STATUS_APPROVED)->with('user')])
             ->orderBy('created_at')
             ->get();
 

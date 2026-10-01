@@ -3,11 +3,11 @@
 namespace App\Jobs;
 
 use App\Models\Album;
-use App\Models\Photo;
 use App\Services\ImageProcessor;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
@@ -22,6 +22,7 @@ class ProcessPhotoJob implements ShouldQueue
     use SerializesModels;
 
     public int $tries = 2;
+
     public int $timeout = 55;
 
     public function __construct(
@@ -47,7 +48,7 @@ class ProcessPhotoJob implements ShouldQueue
             return;
         }
 
-        $uploadedFile = new \Illuminate\Http\UploadedFile(
+        $uploadedFile = new UploadedFile(
             $absolutePath,
             basename($absolutePath),
             null,

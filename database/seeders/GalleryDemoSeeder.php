@@ -84,7 +84,7 @@ class GalleryDemoSeeder extends Seeder
             );
 
             foreach ($albumData['photos'] as $index => $photoData) {
-                $tmpPath = $tmpDir . '/' . uniqid('seed-', true) . '.jpg';
+                $tmpPath = $tmpDir.'/'.uniqid('seed-', true).'.jpg';
 
                 $this->generatePlaceholder(
                     $tmpPath,
@@ -146,7 +146,7 @@ class GalleryDemoSeeder extends Seeder
 
         // Номер в центре
         $textColor = imagecolorallocate($image, 255, 255, 255);
-        $text = '#' . $number;
+        $text = '#'.$number;
         $fontSize = 5;
         $textWidth = imagefontwidth($fontSize) * strlen($text);
         $textHeight = imagefontheight($fontSize);

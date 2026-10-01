@@ -19,6 +19,7 @@ class Album extends Model
     use SoftDeletes;
 
     public const SCOPE_SITE = 'site';
+
     public const SCOPE_PLAYER = 'player';
 
     protected function casts(): array

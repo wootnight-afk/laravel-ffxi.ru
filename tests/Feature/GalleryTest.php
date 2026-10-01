@@ -14,14 +14,14 @@ function makeJpeg(int $width = 800, int $height = 600, int $bytes = 0): string
     $color = imagecolorallocate($image, 100, 150, 200);
     imagefill($image, 0, 0, $color);
 
-    $path = tempnam(sys_get_temp_dir(), 'test_') . '.jpg';
+    $path = tempnam(sys_get_temp_dir(), 'test_').'.jpg';
     imagejpeg($image, $path, 90);
     imagedestroy($image);
 
     if ($bytes > 0 && filesize($path) < $bytes) {
         // Наращиваем комментарием в EXIF-совместимом сегменте
         $data = file_get_contents($path);
-        $data .= str_repeat("\xFF\xFE\x00\x10" . str_repeat('x', 14), (int) ceil(($bytes - strlen($data)) / 18));
+        $data .= str_repeat("\xFF\xFE\x00\x10".str_repeat('x', 14), (int) ceil(($bytes - strlen($data)) / 18));
         file_put_contents($path, $data);
     }
 
@@ -38,8 +38,8 @@ function makeAlbum(User $admin, array $overrides = []): Album
     return Album::create(array_merge([
         'user_id' => $admin->id,
         'scope' => Album::SCOPE_SITE,
-        'title' => 'Test Album ' . uniqid(),
-        'slug' => 'test-album-' . uniqid(),
+        'title' => 'Test Album '.uniqid(),
+        'slug' => 'test-album-'.uniqid(),
         'is_published' => true,
     ], $overrides));
 }
@@ -100,7 +100,7 @@ it('rejects non-image files', function () {
     $admin->assignRole('admin');
     $album = makeAlbum($admin);
 
-    $path = tempnam(sys_get_temp_dir(), 'txt_') . '.txt';
+    $path = tempnam(sys_get_temp_dir(), 'txt_').'.txt';
     file_put_contents($path, 'not an image');
 
     $file = makeUploaded($path, 'text/plain');
