@@ -38,6 +38,8 @@
         <div style="flex: 1; min-width: 0;">
             @if ($tab === 'profile')
                 @include('cabinet.tabs.profile', ['user' => $user])
+            @elseif ($tab === 'social')
+                @include('cabinet.tabs.social', ['user' => $user])
             @else
                 <div class="content-text">
                     <h2 class="section-title">{{ $tabs[$tab] }}</h2>

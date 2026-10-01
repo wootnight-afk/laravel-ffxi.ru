@@ -11,6 +11,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PlayerController;
+use App\Http\Controllers\SocialLinkController;
 use Illuminate\Support\Facades\Route;
 
 // ------------------------------------------------------------------
@@ -32,16 +33,13 @@ Route::get('/gallery/{album:slug}/{photo}', [GalleryController::class, 'showPhot
     ->name('gallery.photo');
 
 // ------------------------------------------------------------------
-// Игроки (auth-only). Порядок: /directory до /{user}
+// Игроки (auth)
 // ------------------------------------------------------------------
 
 Route::middleware('auth')->group(function () {
-    Route::get('/players', [PlayerController::class, 'dashboard'])
-        ->name('players.dashboard');
-    Route::get('/players/directory', [PlayerController::class, 'directory'])
-        ->name('players.directory');
-    Route::get('/players/{user:name}', [PlayerController::class, 'show'])
-        ->name('players.show');
+    Route::get('/players', [PlayerController::class, 'dashboard'])->name('players.dashboard');
+    Route::get('/players/directory', [PlayerController::class, 'directory'])->name('players.directory');
+    Route::get('/players/{user:name}', [PlayerController::class, 'show'])->name('players.show');
 });
 
 // ------------------------------------------------------------------
@@ -49,19 +47,21 @@ Route::middleware('auth')->group(function () {
 // ------------------------------------------------------------------
 
 Route::middleware('auth')->prefix('cabinet')->name('cabinet.')->group(function () {
-    Route::get('/', [CabinetController::class, 'show'])
-        ->name('show');
+    Route::get('/', [CabinetController::class, 'show'])->name('show');
     Route::get('/{tab}', [CabinetController::class, 'show'])
         ->whereIn('tab', CabinetController::TABS)
         ->name('tab');
 
-    Route::post('/profile', [CabinetController::class, 'updateProfile'])
-        ->name('profile.update');
+    Route::post('/profile', [CabinetController::class, 'updateProfile'])->name('profile.update');
     Route::post('/avatar', [CabinetController::class, 'uploadAvatar'])
         ->middleware('throttle:10,60')
         ->name('avatar.upload');
-    Route::delete('/avatar', [CabinetController::class, 'deleteAvatar'])
-        ->name('avatar.delete');
+    Route::delete('/avatar', [CabinetController::class, 'deleteAvatar'])->name('avatar.delete');
+
+    Route::post('/social', [SocialLinkController::class, 'store'])->name('social.store');
+    Route::patch('/social/{link}', [SocialLinkController::class, 'update'])->name('social.update');
+    Route::post('/social/{link}/toggle', [SocialLinkController::class, 'toggle'])->name('social.toggle');
+    Route::delete('/social/{link}', [SocialLinkController::class, 'destroy'])->name('social.destroy');
 });
 
 // ------------------------------------------------------------------
@@ -71,7 +71,7 @@ Route::middleware('auth')->prefix('cabinet')->name('cabinet.')->group(function (
 Route::get('/contacts', fn () => view('stubs.coming-soon'))->name('contacts');
 
 // ------------------------------------------------------------------
-// Auth: регистрация (guest + registration.open)
+// Auth
 // ------------------------------------------------------------------
 
 Route::middleware(['guest', 'registration.open'])->group(function () {
@@ -79,75 +79,37 @@ Route::middleware(['guest', 'registration.open'])->group(function () {
     Route::post('/register', [RegisterController::class, 'store'])->name('register.store');
 });
 
-// ------------------------------------------------------------------
-// Auth: логин, пароль (guest)
-// ------------------------------------------------------------------
-
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'show'])->name('login');
     Route::post('/login', [LoginController::class, 'authenticate'])->name('login.post');
 
-    Route::get('/password/reset', [PasswordResetController::class, 'showRequestForm'])
-        ->name('password.request');
+    Route::get('/password/reset', [PasswordResetController::class, 'showRequestForm'])->name('password.request');
     Route::post('/password/email', [PasswordResetController::class, 'sendResetLink'])
-        ->middleware('throttle:3,60')
-        ->name('password.email');
-    Route::get('/password/reset/{token}', [PasswordResetController::class, 'showResetForm'])
-        ->name('password.reset');
-    Route::post('/password/reset', [PasswordResetController::class, 'reset'])
-        ->name('password.update');
+        ->middleware('throttle:3,60')->name('password.email');
+    Route::get('/password/reset/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/password/reset', [PasswordResetController::class, 'reset'])->name('password.update');
 });
 
-// ------------------------------------------------------------------
-// Logout (auth)
-// ------------------------------------------------------------------
-
-Route::post('/logout', [LoginController::class, 'logout'])
-    ->middleware('auth')
-    ->name('logout');
-
-// ------------------------------------------------------------------
-// Email verification (auth)
-// ------------------------------------------------------------------
+Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/email/verify', [EmailVerificationController::class, 'notice'])
-        ->name('verification.notice');
+    Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
     Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
-        ->middleware('signed')
-        ->name('verification.verify');
+        ->middleware('signed')->name('verification.verify');
     Route::post('/email/resend', [EmailVerificationController::class, 'resend'])
-        ->middleware('throttle:3,1440')
-        ->name('verification.resend');
+        ->middleware('throttle:3,1440')->name('verification.resend');
 });
-
-// ------------------------------------------------------------------
-// Комментарии (auth)
-// ------------------------------------------------------------------
 
 Route::middleware('auth')->group(function () {
     Route::post('/news/{news:slug}/comments', [CommentController::class, 'store'])
-        ->middleware('throttle:20,60')
-        ->name('comments.store');
-    Route::patch('/comments/{comment}', [CommentController::class, 'update'])
-        ->name('comments.update');
-    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])
-        ->name('comments.destroy');
+        ->middleware('throttle:20,60')->name('comments.store');
+    Route::patch('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
     Route::post('/comments/{comment}/report', [CommentController::class, 'report'])
-        ->middleware('throttle:10,60')
-        ->name('comments.report');
+        ->middleware('throttle:10,60')->name('comments.report');
 });
 
-// ------------------------------------------------------------------
-// API
-// ------------------------------------------------------------------
-
 Route::post('/api/nickname/check', [RegisterController::class, 'checkNickname'])
-    ->middleware('guest')
-    ->name('api.nickname.check');
-
-// ------------------------------------------------------------------
-// Catch-all для статических страниц (должен быть последним)
-// ------------------------------------------------------------------
+    ->middleware('guest')->name('api.nickname.check');
 
 Route::get('/{page:slug}', [PageController::class, 'show'])->name('page.show');
