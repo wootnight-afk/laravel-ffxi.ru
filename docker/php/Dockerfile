@@ -18,34 +18,39 @@ ARG GID=1000
 # - libpng-dev          -> gd (png)
 # - libjpeg62-turbo-dev -> gd (jpeg)
 # - libfreetype6-dev    -> gd (freetype)
+# - libwebp-dev         -> gd (webp)
 # - libzip-dev          -> zip
 # - libonig-dev         -> mbstring
 # - libxml2-dev         -> xml
 # - git, unzip          -> Composer (dev only)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        git \
-        unzip \
-        libicu-dev \
-        libpng-dev \
-        libjpeg62-turbo-dev \
-        libfreetype6-dev \
-        libzip-dev \
-        libonig-dev \
-        libxml2-dev \
+    git \
+    unzip \
+    libicu-dev \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    libwebp-dev \
+    libzip-dev \
+    libonig-dev \
+    libxml2-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # PHP extensions required by Laravel 13, Filament 5, Pest and
 # intervention/image. pcntl and redis are intentionally NOT installed
 # (spec sections 6, 32: no Redis, no long-running workers).
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+RUN docker-php-ext-configure gd \
+    --with-freetype \
+    --with-jpeg \
+    --with-webp \
     && docker-php-ext-install -j"$(nproc)" \
-        bcmath \
-        exif \
-        gd \
-        intl \
-        opcache \
-        pdo_mysql \
-        zip
+    bcmath \
+    exif \
+    gd \
+    intl \
+    opcache \
+    pdo_mysql \
+    zip
 
 # Composer binary from the official image (dev only; production uses
 # pre-built vendor/ shipped by rsync per spec section 22).
