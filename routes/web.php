@@ -5,6 +5,8 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NewsController;
+use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
 
 // ------------------------------------------------------------------
@@ -16,13 +18,13 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/cookie', fn () => view('cookie'))->name('cookie');
 Route::get('/privacy', fn () => view('privacy'))->name('privacy');
 
+Route::get('/news', [NewsController::class, 'index'])->name('news.index');
+Route::get('/news/{slug}', [NewsController::class, 'show'])->name('news.show');
+
 // ------------------------------------------------------------------
-// Заглушки для будущих этапов (4–7).
-// Полноценные контроллеры добавятся на своих этапах.
-// Нужны, чтобы layout не падал на route().
+// Заглушки для будущих этапов (5–7)
 // ------------------------------------------------------------------
 
-Route::get('/news', fn () => view('stubs.coming-soon'))->name('news.index');
 Route::get('/gallery', fn () => view('stubs.coming-soon'))->name('gallery.index');
 Route::get('/players', fn () => view('stubs.coming-soon'))->name('players.dashboard');
 Route::get('/contacts', fn () => view('stubs.coming-soon'))->name('contacts');
@@ -80,9 +82,15 @@ Route::middleware('auth')->group(function () {
 });
 
 // ------------------------------------------------------------------
-// API: проверка ника (для live-валидации формы регистрации)
+// API
 // ------------------------------------------------------------------
 
 Route::post('/api/nickname/check', [RegisterController::class, 'checkNickname'])
     ->middleware('guest')
     ->name('api.nickname.check');
+
+// ------------------------------------------------------------------
+// Catch-all для статических страниц (должен быть последним)
+// ------------------------------------------------------------------
+
+Route::get('/{page:slug}', [PageController::class, 'show'])->name('page.show');
