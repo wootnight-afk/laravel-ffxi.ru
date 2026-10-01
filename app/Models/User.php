@@ -65,6 +65,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(GuestVisitor::class, 'converted_user_id');
     }
 
+    public function news(): HasMany
+    {
+        return $this->hasMany(News::class);
+    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class);
+    }
+
     public function isAdmin(): bool
     {
         return $this->hasRole('admin');
@@ -110,7 +120,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function scopePublicProfile($query)
     {
-        return $query->where('is_profile_public', true)
+        return $this->where('is_profile_public', true)
             ->where('status', UserStatus::Active);
     }
 }
