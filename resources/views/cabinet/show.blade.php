@@ -40,6 +40,8 @@
                 @include('cabinet.tabs.profile', ['user' => $user])
             @elseif ($tab === 'social')
                 @include('cabinet.tabs.social', ['user' => $user])
+            @elseif ($tab === 'security')
+                @include('cabinet.tabs.security', ['user' => $user])
             @else
                 <div class="content-text">
                     <h2 class="section-title">{{ $tabs[$tab] }}</h2>
