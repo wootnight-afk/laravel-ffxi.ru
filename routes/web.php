@@ -9,6 +9,7 @@ use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PlayerController;
 use Illuminate\Support\Facades\Route;
 
 // ------------------------------------------------------------------
@@ -30,10 +31,22 @@ Route::get('/gallery/{album:slug}/{photo}', [GalleryController::class, 'showPhot
     ->name('gallery.photo');
 
 // ------------------------------------------------------------------
-// Заглушки для будущих этапов (6–7)
+// Игроки (auth-only). Порядок: /directory до /{user}
 // ------------------------------------------------------------------
 
-Route::get('/players', fn () => view('stubs.coming-soon'))->name('players.dashboard');
+Route::middleware('auth')->group(function () {
+    Route::get('/players', [PlayerController::class, 'dashboard'])
+        ->name('players.dashboard');
+    Route::get('/players/directory', [PlayerController::class, 'directory'])
+        ->name('players.directory');
+    Route::get('/players/{user:name}', [PlayerController::class, 'show'])
+        ->name('players.show');
+});
+
+// ------------------------------------------------------------------
+// Заглушки для будущих этапов
+// ------------------------------------------------------------------
+
 Route::get('/contacts', fn () => view('stubs.coming-soon'))->name('contacts');
 Route::get('/cabinet/profile', fn () => view('stubs.coming-soon'))->name('cabinet.profile');
 
