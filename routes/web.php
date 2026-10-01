@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\CabinetController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\HomeController;
@@ -44,11 +45,30 @@ Route::middleware('auth')->group(function () {
 });
 
 // ------------------------------------------------------------------
-// Заглушки для будущих этапов
+// Кабинет (auth)
+// ------------------------------------------------------------------
+
+Route::middleware('auth')->prefix('cabinet')->name('cabinet.')->group(function () {
+    Route::get('/', [CabinetController::class, 'show'])
+        ->name('show');
+    Route::get('/{tab}', [CabinetController::class, 'show'])
+        ->whereIn('tab', CabinetController::TABS)
+        ->name('tab');
+
+    Route::post('/profile', [CabinetController::class, 'updateProfile'])
+        ->name('profile.update');
+    Route::post('/avatar', [CabinetController::class, 'uploadAvatar'])
+        ->middleware('throttle:10,60')
+        ->name('avatar.upload');
+    Route::delete('/avatar', [CabinetController::class, 'deleteAvatar'])
+        ->name('avatar.delete');
+});
+
+// ------------------------------------------------------------------
+// Заглушки
 // ------------------------------------------------------------------
 
 Route::get('/contacts', fn () => view('stubs.coming-soon'))->name('contacts');
-Route::get('/cabinet/profile', fn () => view('stubs.coming-soon'))->name('cabinet.profile');
 
 // ------------------------------------------------------------------
 // Auth: регистрация (guest + registration.open)

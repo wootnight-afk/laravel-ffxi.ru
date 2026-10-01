@@ -28,7 +28,7 @@
             </button>
 
             @auth
-                <a href="{{ route('cabinet.profile') }}" class="login-link">{{ auth()->user()->name }}</a>
+                <a href="{{ route('cabinet.show') }}" class="login-link">{{ auth()->user()->name }}</a>
                 <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                     @csrf
                     <button type="submit" class="login-link" style="background: none; border: none; cursor: pointer; font: inherit;">Выход</button>

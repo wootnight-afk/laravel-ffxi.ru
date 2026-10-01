@@ -41,7 +41,7 @@
 
             @if ($isOwner)
                 <div style="margin-top: 16px;">
-                    <a href="{{ route('cabinet.profile') }}" class="btn">Редактировать</a>
+                    <a href="{{ route('cabinet.show') }}" class="btn">Редактировать</a>
                 </div>
             @endif
         </div>
