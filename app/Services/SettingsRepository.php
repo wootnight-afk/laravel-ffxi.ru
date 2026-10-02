@@ -24,6 +24,9 @@ class SettingsRepository
         $this->flush();
     }
 
+    /**
+     * @param  array<string, mixed>  $values
+     */
     public function setMany(array $values): void
     {
         foreach ($values as $key => $value) {

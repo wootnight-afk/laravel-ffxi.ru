@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,8 +15,20 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * @property UserStatus $status
+ * @property Carbon|null $banned_until
+ * @property Carbon|null $chat_banned_until
+ * @property Carbon|null $deletion_requested_at
+ * @property Carbon|null $email_verified_at
+ * @property Carbon|null $last_seen_at
+ * @property Carbon|null $last_activity_seen_at
+ * @property Carbon|null $pd_consent_at
+ * @property Carbon|null $marketing_consent_at
+ */
 #[Fillable([
     'name', 'email', 'password',
     'rank_id', 'phone', 'phone_is_public', 'avatar_path',
@@ -50,26 +63,41 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
+    /**
+     * @return BelongsTo<UserRank, $this>
+     */
     public function rank(): BelongsTo
     {
         return $this->belongsTo(UserRank::class);
     }
 
+    /**
+     * @return HasMany<UserSocialLink, $this>
+     */
     public function socialLinks(): HasMany
     {
         return $this->hasMany(UserSocialLink::class)->orderBy('sort_order');
     }
 
+    /**
+     * @return HasOne<GuestVisitor, $this>
+     */
     public function guestVisitor(): HasOne
     {
         return $this->hasOne(GuestVisitor::class, 'converted_user_id');
     }
 
+    /**
+     * @return HasMany<News, $this>
+     */
     public function news(): HasMany
     {
         return $this->hasMany(News::class);
     }
 
+    /**
+     * @return HasMany<Comment, $this>
+     */
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);
@@ -105,22 +133,34 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->is_profile_public && ! $this->isDeletionRequested();
     }
 
-    public function scopeActive($query)
+    /**
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
+    public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', UserStatus::Active);
     }
 
-    public function scopeNotBanned($query)
+    /**
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
+    public function scopeNotBanned(Builder $query): Builder
     {
-        return $query->where(function ($q) {
+        return $query->where(function (Builder $q) {
             $q->whereNull('banned_until')
                 ->orWhere('banned_until', '<=', now());
         });
     }
 
-    public function scopePublicProfile($query)
+    /**
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
+    public function scopePublicProfile(Builder $query): Builder
     {
-        return $this->where('is_profile_public', true)
+        return $query->where('is_profile_public', true)
             ->where('status', UserStatus::Active);
     }
 }

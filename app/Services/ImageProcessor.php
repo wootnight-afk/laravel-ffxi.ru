@@ -132,7 +132,7 @@ class ImageProcessor
     }
 
     /**
-     * @return array{taken_at: ?string, exif: ?array, width: int, height: int}
+     * @return array{taken_at: ?string, exif: array<string, string>|null, width: int, height: int}
      */
     private function extractMeta(UploadedFile $file): array
     {

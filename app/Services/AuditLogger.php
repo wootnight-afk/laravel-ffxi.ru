@@ -15,8 +15,8 @@ class AuditLogger
      *
      * @param  string  $action  Dot-separated code, e.g. 'password.changed'.
      * @param  Model|null  $subject  Target entity; defaults to null for pure events.
-     * @param  array|null  $old  Prior state snapshot (never secrets).
-     * @param  array|null  $new  New state snapshot (never secrets).
+     * @param  array<string, mixed>|null  $old  Prior state snapshot (never secrets).
+     * @param  array<string, mixed>|null  $new  New state snapshot (never secrets).
      * @param  User|null  $actor  Explicit actor; defaults to the authenticated user.
      */
     public function log(

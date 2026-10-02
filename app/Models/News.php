@@ -9,8 +9,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
+/**
+ * @property Carbon|null $published_at
+ */
 #[Fillable([
     'user_id', 'scope', 'title', 'slug', 'excerpt',
     'body', 'body_html', 'cover_path',
@@ -64,11 +68,17 @@ class News extends Model
         });
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return MorphMany<Comment, $this>
+     */
     public function comments(): MorphMany
     {
         return $this->morphMany(Comment::class, 'commentable');
@@ -91,6 +101,10 @@ class News extends Model
             && $this->published_at->isPast();
     }
 
+    /**
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
     public function scopePublished(Builder $query): Builder
     {
         return $query->where('status', self::STATUS_PUBLISHED)
@@ -98,16 +112,28 @@ class News extends Model
             ->where('published_at', '<=', now());
     }
 
+    /**
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
     public function scopeSite(Builder $query): Builder
     {
         return $query->where('scope', self::SCOPE_SITE);
     }
 
+    /**
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
     public function scopePlayer(Builder $query): Builder
     {
         return $query->where('scope', self::SCOPE_PLAYER);
     }
 
+    /**
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
     public function scopePinnedFirst(Builder $query): Builder
     {
         return $query->orderByDesc('is_pinned')->orderByDesc('published_at');

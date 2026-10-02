@@ -18,6 +18,9 @@ class UserRank extends Model
         ];
     }
 
+    /**
+     * @return HasMany<User, $this>
+     */
     public function users(): HasMany
     {
         return $this->hasMany(User::class, 'rank_id');

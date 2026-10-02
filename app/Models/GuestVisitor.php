@@ -5,7 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property Carbon|null $first_seen_at
+ * @property Carbon|null $last_seen_at
+ * @property Carbon|null $converted_at
+ * @property int $hits
+ */
 #[Fillable([
     'uuid', 'display_name', 'ip_hash', 'user_agent',
     'first_seen_at', 'last_seen_at', 'hits',
@@ -23,6 +30,9 @@ class GuestVisitor extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function convertedUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'converted_user_id');

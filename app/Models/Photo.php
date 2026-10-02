@@ -34,16 +34,25 @@ class Photo extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Album, $this>
+     */
     public function album(): BelongsTo
     {
         return $this->belongsTo(Album::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return MorphMany<Comment, $this>
+     */
     public function comments(): MorphMany
     {
         return $this->morphMany(Comment::class, 'commentable');
@@ -68,6 +77,10 @@ class Photo extends Model
         return Storage::disk('public')->url($this->path_original);
     }
 
+    /**
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
     public function scopePublished(Builder $query): Builder
     {
         return $query->where('is_published', true);
