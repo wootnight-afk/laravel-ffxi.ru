@@ -15,6 +15,18 @@ class UserIdentity extends Component
 
     public function render(): View
     {
+        // Deleted accounts are shown as a neutral label, without link,
+        // avatar or rank — for every viewer (frontend-spec §6.12).
+        if ($this->user->isDeletionRequested()) {
+            return view('components.user-identity', [
+                'user' => $this->user,
+                'deleted' => true,
+                'showLink' => false,
+                'showAvatar' => false,
+                'showRank' => false,
+            ]);
+        }
+
         $viewer = auth()->user();
 
         $isOwner = $viewer !== null && $viewer->id === $this->user->id;
@@ -30,6 +42,7 @@ class UserIdentity extends Component
 
         return view('components.user-identity', [
             'user' => $this->user,
+            'deleted' => false,
             'showLink' => $showLink,
             'showAvatar' => $showAvatar,
             'showRank' => $showRank,

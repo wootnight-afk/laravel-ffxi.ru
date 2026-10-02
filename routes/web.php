@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Cabinet\DangerZoneController;
 use App\Http\Controllers\Cabinet\SecurityController;
 use App\Http\Controllers\CabinetController;
 use App\Http\Controllers\CommentController;
@@ -71,6 +72,10 @@ Route::middleware('auth')->prefix('cabinet')->name('cabinet.')->group(function (
             ->name('security.password');
         Route::post('/security/email', [SecurityController::class, 'updateEmail'])
             ->name('security.email');
+
+        Route::post('/danger/request', [DangerZoneController::class, 'request'])
+            ->middleware('throttle:3,60')
+            ->name('danger.request');
     });
 });
 
