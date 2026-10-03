@@ -28,7 +28,9 @@ class AlbumPolicy
 
     public function create(User $user): bool
     {
-        return $user->hasVerifiedEmail() && ! $user->isBanned();
+        return $user->hasVerifiedEmail()
+            && ! $user->isBanned()
+            && $user->can('albums.create_own');
     }
 
     public function createSite(User $user): bool

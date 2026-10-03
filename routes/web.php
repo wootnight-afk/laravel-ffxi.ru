@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Cabinet\DangerZoneController;
+use App\Http\Controllers\Cabinet\MyNewsController;
 use App\Http\Controllers\Cabinet\SecurityController;
 use App\Http\Controllers\CabinetController;
 use App\Http\Controllers\CommentController;
@@ -76,6 +77,14 @@ Route::middleware('auth')->prefix('cabinet')->name('cabinet.')->group(function (
         Route::post('/danger/request', [DangerZoneController::class, 'request'])
             ->middleware('throttle:3,60')
             ->name('danger.request');
+
+        // My news (player-scope)
+        Route::post('/news', [MyNewsController::class, 'store'])->name('news.store');
+        Route::patch('/news/{news}', [MyNewsController::class, 'update'])->name('news.update');
+        Route::post('/news/{news}/publish', [MyNewsController::class, 'publish'])->name('news.publish');
+        Route::delete('/news/{news}', [MyNewsController::class, 'destroy'])->name('news.destroy');
+        Route::post('/news/{news}/cover', [MyNewsController::class, 'uploadCover'])->name('news.cover');
+        Route::delete('/news/{news}/cover', [MyNewsController::class, 'deleteCover'])->name('news.cover.delete');
     });
 });
 

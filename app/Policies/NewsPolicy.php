@@ -32,7 +32,7 @@ class NewsPolicy
 
     public function create(User $user): bool
     {
-        return $user->hasVerifiedEmail();
+        return $user->hasVerifiedEmail() && $user->can('news.create_own');
     }
 
     public function createSite(User $user): bool
@@ -51,7 +51,7 @@ class NewsPolicy
         }
 
         if ($news->user_id === $user->id) {
-            return $user->hasVerifiedEmail();
+            return $user->hasVerifiedEmail() && $user->can('news.edit_own');
         }
 
         return $user->can('news.edit_any');

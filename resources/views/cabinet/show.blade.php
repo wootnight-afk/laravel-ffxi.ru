@@ -40,6 +40,8 @@
                 @include('cabinet.tabs.profile', ['user' => $user])
             @elseif ($tab === 'social')
                 @include('cabinet.tabs.social', ['user' => $user])
+            @elseif ($tab === 'news')
+                @include('cabinet.tabs.my-news', ['user' => $user])
             @elseif ($tab === 'security')
                 @include('cabinet.tabs.security', ['user' => $user])
             @elseif ($tab === 'danger')
