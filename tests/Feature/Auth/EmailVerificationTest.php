@@ -15,6 +15,7 @@ use function Pest\Laravel\post;
 
 it('allows unverified user to read public pages', function () {
     $user = User::factory()->create(['email_verified_at' => null]);
+    $user->assignRole('user');
 
     actingAs($user)->get(route('home'))->assertOk();
     actingAs($user)->get(route('news.index'))->assertOk();
