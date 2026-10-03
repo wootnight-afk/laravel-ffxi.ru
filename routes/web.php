@@ -28,22 +28,34 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/cookie', fn () => view('cookie'))->name('cookie');
 Route::get('/privacy', fn () => view('privacy'))->name('privacy');
 
-Route::get('/news', [NewsController::class, 'index'])->name('news.index');
-Route::get('/news/{slug}', [NewsController::class, 'show'])->name('news.show');
+Route::get('/news', [NewsController::class, 'index'])
+    ->middleware('section.access:news')
+    ->name('news.index');
+Route::get('/news/{slug}', [NewsController::class, 'show'])
+    ->middleware('section.access:news')
+    ->name('news.show');
 
-Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery.index');
-Route::get('/gallery/{album:slug}', [GalleryController::class, 'showAlbum'])->name('gallery.album');
+Route::get('/gallery', [GalleryController::class, 'index'])
+    ->middleware('section.access:gallery')
+    ->name('gallery.index');
+Route::get('/gallery/{album:slug}', [GalleryController::class, 'showAlbum'])
+    ->middleware('section.access:gallery')
+    ->name('gallery.album');
 Route::get('/gallery/{album:slug}/{photo}', [GalleryController::class, 'showPhoto'])
     ->whereNumber('photo')
+    ->middleware('section.access:gallery')
     ->name('gallery.photo');
 
 // ------------------------------------------------------------------
 // Players (auth)
 // ------------------------------------------------------------------
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'section.access:players'])->group(function () {
     Route::get('/players', [PlayerController::class, 'dashboard'])->name('players.dashboard');
     Route::get('/players/directory', [PlayerController::class, 'directory'])->name('players.directory');
+});
+
+Route::middleware(['auth', 'section.access:player_profiles'])->group(function () {
     Route::get('/players/{user:name}', [PlayerController::class, 'show'])->name('players.show');
 });
 

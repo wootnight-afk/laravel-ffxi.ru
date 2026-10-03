@@ -31,15 +31,11 @@ class SectionAccess
             return $next($request);
         }
 
-        // guest
+        // Guest — frontend-spec §9.17 requires 404, not a login redirect.
         $guestSections = $this->settings->get('guest_sections', []);
 
         if (! is_array($guestSections) || ! ($guestSections[$key] ?? false)) {
-            if ($request->expectsJson()) {
-                abort(404);
-            }
-
-            return redirect()->route('login')->with('intended_section', $key);
+            abort(404);
         }
 
         return $next($request);
