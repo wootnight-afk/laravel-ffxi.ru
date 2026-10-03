@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Enums\UserStatus;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -39,7 +41,7 @@ use Spatie\Permission\Traits\HasRoles;
     'pd_consent_at', 'pd_policy_version', 'marketing_consent_at',
 ])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable, SoftDeletes;
@@ -61,6 +63,19 @@ class User extends Authenticatable implements MustVerifyEmail
             'marketing_consent_at' => 'datetime',
             'status' => UserStatus::class,
         ];
+    }
+
+    /**
+     * Only admins and editors may access the admin panel.
+     * Banned and deletion-requested accounts are always blocked.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        if ($this->isBanned() || $this->isDeletionRequested()) {
+            return false;
+        }
+
+        return $this->hasAnyRole(['admin', 'editor']);
     }
 
     /**

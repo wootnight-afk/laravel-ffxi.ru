@@ -22,9 +22,12 @@
 
 # Public build assets
 /public/build/
+/public/css/filament
 /public/hot
+/public/js/filament
 /public/storage
 /public/fonts-manifest*.json
+/public/fonts/filament
 
 # Composer / NPM caches
 /.composer/
