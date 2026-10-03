@@ -5,6 +5,8 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Cabinet\DangerZoneController;
+use App\Http\Controllers\Cabinet\MyGalleryController;
+use App\Http\Controllers\Cabinet\MyGalleryPhotoController;
 use App\Http\Controllers\Cabinet\MyNewsController;
 use App\Http\Controllers\Cabinet\SecurityController;
 use App\Http\Controllers\CabinetController;
@@ -85,6 +87,18 @@ Route::middleware('auth')->prefix('cabinet')->name('cabinet.')->group(function (
         Route::delete('/news/{news}', [MyNewsController::class, 'destroy'])->name('news.destroy');
         Route::post('/news/{news}/cover', [MyNewsController::class, 'uploadCover'])->name('news.cover');
         Route::delete('/news/{news}/cover', [MyNewsController::class, 'deleteCover'])->name('news.cover.delete');
+
+        // My gallery (player-scope)
+        Route::post('/gallery/albums', [MyGalleryController::class, 'store'])->name('gallery.albums.store');
+        Route::patch('/gallery/albums/{album}', [MyGalleryController::class, 'update'])->name('gallery.albums.update');
+        Route::delete('/gallery/albums/{album}', [MyGalleryController::class, 'destroy'])->name('gallery.albums.destroy');
+
+        Route::post('/gallery/albums/{album}/photos', [MyGalleryController::class, 'upload'])
+            ->middleware('throttle:20,60')
+            ->name('gallery.photos.upload');
+
+        Route::patch('/gallery/photos/{photo}', [MyGalleryPhotoController::class, 'update'])->name('gallery.photos.update');
+        Route::delete('/gallery/photos/{photo}', [MyGalleryPhotoController::class, 'destroy'])->name('gallery.photos.destroy');
     });
 });
 

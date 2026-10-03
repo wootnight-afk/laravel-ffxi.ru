@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Seeders;
 
 use App\Models\Setting;
@@ -20,6 +22,7 @@ class SettingsSeeder extends Seeder
             'events_enabled' => true,
             'gallery_max_albums_per_user' => 10,
             'gallery_max_photo_mb' => 8,
+            'gallery_max_photos_per_day' => 50,
             'social_max_links_per_user' => 10,
             'ranks_enabled' => true,
             'default_profile_public' => false,
