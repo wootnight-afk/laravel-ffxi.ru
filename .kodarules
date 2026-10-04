@@ -124,9 +124,8 @@ CURRENT STATE — см. docs/ai/PROJECT-STATUS.md
 Правила автономной работы агента — см. docs/ai/MASTER-TASK.md
 
 Краткая справка:
-- HEAD: 404631b
-- Stages 1–6: ACCEPTED (см. docs/acceptance/stage-6.md).
-- Stage 7 (Dashboard): D1–D3 done, D4–D7 pending.
+- HEAD: 25fe067
+- Stages 1–7: ACCEPTED (см. docs/acceptance/).
 - Stage 8 (Filament): только panel scaffold.
-- Тесты: 311 passed.
-- Следующий шаг: D4 — Chat (см. PROJECT-STATUS.md).
+- Тесты: 381 passed.
+- Следующий шаг: Stage 8 — Filament (см. PROJECT-STATUS.md).

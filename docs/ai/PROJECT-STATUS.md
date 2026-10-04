@@ -1,7 +1,7 @@
 # Project Status — laravel-ffxi.ru
 
 ## HEAD
-`a087f73` на ветке `main`.
+`25fe067` на ветке `main`.
 
 ## Прогресс по этапам (§30 context.md)
 
@@ -14,10 +14,10 @@
 | 4 | Content engine | done | news, pages, comments, sanitizer |
 | 5 | Gallery | done | ImageProcessor, ProcessPhotoJob |
 | 6 | Profiles & cabinet | ACCEPTED | docs/acceptance/stage-6.md |
-| 7 | Dashboard | IN PROGRESS | D1 ✅ D2 ✅ D3 ✅ D4 ✅ D5 ✅ D6 ✅ D7 ✅ |
+| 7 | Dashboard | ACCEPTED | docs/acceptance/stage-7.md |
 | 8 | Filament | SCAFFOLD ONLY | /admin panel + canAccessPanel |
 | 9 | Backup/restore | not started | — |
-| 10 | Tests (§9) | partial | 372 passed |
+| 10 | Tests (§9) | partial | 381 passed |
 | 11 | CI | not started | — |
 | 12 | Timeweb staging | not started | — |
 | 13 | Deployment | not started | — |
@@ -45,6 +45,8 @@
 - D7 ✅ — Scheduler: database event reminders за час до начала с
   проверкой актуального starts_at и идемпотентностью; retention
   activities по activity_retention_days через Artisan-команду.
+- Приёмка Stage 7 ✅ — `docs/acceptance/stage-7.md`; устранено
+  дублирование регистрации activity listeners.
 
 ## Контракты, которые НЕЛЬЗЯ менять
 
@@ -64,6 +66,5 @@
 
 ## Порядок дальнейшей работы
 
-1. Приёмка Stage 7 + отчёт docs/acceptance/stage-7.md.
-2. Stage 8 — Filament (12 Resources + 4 Pages).
-3. Stages 9–15 — по §30 context.md.
+1. Stage 8 — Filament (12 Resources + 4 Pages).
+2. Stages 9–15 — по §30 context.md.
