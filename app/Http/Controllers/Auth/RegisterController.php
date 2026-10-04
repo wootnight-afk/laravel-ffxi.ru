@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Enums\UserStatus;
+use App\Events\UserRegisteredForActivity;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RegisterRequest;
 use App\Models\User;
@@ -49,6 +50,7 @@ class RegisterController extends Controller
             return $user;
         });
 
+        DB::afterCommit(fn () => event(new UserRegisteredForActivity($user)));
         event(new Registered($user));
 
         Auth::login($user);

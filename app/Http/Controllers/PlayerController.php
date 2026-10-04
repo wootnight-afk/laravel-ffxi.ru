@@ -3,21 +3,31 @@
 namespace App\Http\Controllers;
 
 use App\Enums\UserStatus;
+use App\Models\Activity;
 use App\Models\News;
 use App\Models\Photo;
 use App\Models\User;
+use App\Services\ActivityFeedGrouper;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
 class PlayerController extends Controller
 {
-    public function dashboard(): View
+    public function dashboard(ActivityFeedGrouper $grouper): View
     {
+        $activities = Activity::query()
+            ->recent()
+            ->forFeed()
+            ->limit(15)
+            ->get();
+
         return view('players.dashboard', [
             'onlineCount' => User::query()
                 ->whereNotNull('last_seen_at')
                 ->where('last_seen_at', '>=', now()->subMinutes(5))
                 ->count(),
+            'activityGroups' => $grouper->group($activities),
+            'viewer' => request()->user(),
         ]);
     }
 

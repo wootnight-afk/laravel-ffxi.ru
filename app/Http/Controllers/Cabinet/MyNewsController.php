@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Cabinet;
 
+use App\Events\NewsPublishedForActivity;
 use App\Exceptions\ImageProcessingException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePlayerNewsRequest;
@@ -14,6 +15,7 @@ use App\Services\SettingsRepository;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class MyNewsController extends Controller
@@ -58,6 +60,7 @@ class MyNewsController extends Controller
         $this->ensureEditable($news);
 
         $data = $request->validated();
+        $wasPublished = $news->status === News::STATUS_PUBLISHED;
 
         $news->fill([
             'title' => $data['title'],
@@ -71,6 +74,10 @@ class MyNewsController extends Controller
         }
 
         $news->save();
+
+        if (! $wasPublished && $news->status === News::STATUS_PUBLISHED) {
+            DB::afterCommit(fn () => event(new NewsPublishedForActivity($news, $request->user())));
+        }
 
         return redirect()
             ->route('cabinet.tab', ['tab' => 'news'])
@@ -90,6 +97,10 @@ class MyNewsController extends Controller
 
         $this->applyModeration($news);
         $news->save();
+
+        if ($news->status === News::STATUS_PUBLISHED) {
+            DB::afterCommit(fn () => event(new NewsPublishedForActivity($news, $request->user())));
+        }
 
         return redirect()
             ->route('cabinet.tab', ['tab' => 'news'])

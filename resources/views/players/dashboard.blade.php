@@ -15,4 +15,7 @@
     <div style="margin-top: 28px;">
         @livewire('events-board')
     </div>
+
+    {{-- TODO(D6): migrate to DashboardWidget. --}}
+    @include('players._activity-feed')
 @endsection

@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Enums\EventParticipantStatus;
 use App\Enums\EventStatus;
+use App\Events\CommunityEventCreated;
+use App\Events\CommunityEventJoined;
 use App\Models\Event;
 use App\Models\EventParticipant;
 use App\Models\User;
@@ -26,7 +28,7 @@ class EventService
      */
     public function create(User $leader, array $data): Event
     {
-        return DB::transaction(function () use ($leader, $data): Event {
+        $event = DB::transaction(function () use ($leader, $data): Event {
             $event = Event::create([
                 ...$data,
                 'user_id' => $leader->id,
@@ -42,6 +44,10 @@ class EventService
 
             return $event;
         });
+
+        DB::afterCommit(fn () => event(new CommunityEventCreated($event, $leader)));
+
+        return $event;
     }
 
     /**
@@ -187,6 +193,10 @@ class EventService
                     $event,
                 );
             }
+        }
+
+        if ($shouldNotifyLeader) {
+            DB::afterCommit(fn () => event(new CommunityEventJoined($event, $actor)));
         }
 
         return $participant;

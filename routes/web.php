@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
@@ -79,6 +80,10 @@ Route::middleware(['auth', 'section.access:players'])->group(function () {
     Route::get('/players', [PlayerController::class, 'dashboard'])->name('players.dashboard');
     Route::get('/players/directory', [PlayerController::class, 'directory'])->name('players.directory');
 });
+
+Route::get('/activity', [ActivityController::class, 'index'])
+    ->middleware('auth')
+    ->name('activity.index');
 
 Route::middleware(['auth', 'section.access:player_profiles'])->group(function () {
     Route::get('/players/{user:name}', [PlayerController::class, 'show'])->name('players.show');

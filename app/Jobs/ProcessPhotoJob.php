@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Events\PhotoPublishedForActivity;
 use App\Models\Album;
 use App\Services\ImageProcessor;
 use Illuminate\Bus\Queueable;
@@ -10,6 +11,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
@@ -57,7 +59,12 @@ class ProcessPhotoJob implements ShouldQueue
         );
 
         try {
-            $processor->process($uploadedFile, $album, $this->userId);
+            $photo = $processor->process($uploadedFile, $album, $this->userId);
+            $actor = $photo->user;
+
+            if ($photo->is_published && $actor !== null) {
+                DB::afterCommit(fn () => event(new PhotoPublishedForActivity($photo, $actor)));
+            }
         } finally {
             $this->cleanup();
         }

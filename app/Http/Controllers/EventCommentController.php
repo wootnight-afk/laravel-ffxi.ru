@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\CommentCreatedForActivity;
 use App\Http\Requests\StoreCommentRequest;
 use App\Models\Comment;
 use App\Models\Event;
 use App\Services\SettingsRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class EventCommentController extends Controller
@@ -51,6 +53,10 @@ class EventCommentController extends Controller
             'body' => $data['body'],
             'status' => $status,
         ]);
+
+        if ($comment->status === Comment::STATUS_APPROVED) {
+            DB::afterCommit(fn () => event(new CommentCreatedForActivity($comment, $request->user())));
+        }
 
         $message = $status === Comment::STATUS_APPROVED
             ? 'Комментарий опубликован.'
