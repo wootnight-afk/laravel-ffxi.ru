@@ -46,28 +46,7 @@
                         <button class="btn" type="submit">Отменить событие</button>
                     </form>
                 @endcan
-                @if ($viewerParticipation?->status === \App\Enums\EventParticipantStatus::Joined)
-                    <form method="POST" action="{{ route('events.leave', $event) }}">
-                        @csrf
-                        <button class="btn" type="submit">Выйти</button>
-                    </form>
-                @elseif (auth()->user()->can('join', $event) && $event->status === \App\Enums\EventStatus::Planned)
-                    @php
-                        $joinClosed = $event->starts_at->lessThanOrEqualTo(now())
-                            || ($event->registration_close !== null && $event->registration_close->lessThanOrEqualTo(now()));
-                        $eventFull = $event->max_participants !== null && $event->joined_count >= $event->max_participants;
-                    @endphp
-                    @if ($joinClosed || $eventFull)
-                        <button class="btn" type="button" disabled>
-                            {{ $eventFull ? 'Мест нет' : 'Регистрация закрыта' }}
-                        </button>
-                    @else
-                        <form method="POST" action="{{ route('events.join', $event) }}">
-                            @csrf
-                            <button class="btn btn-primary" type="submit">Записаться</button>
-                        </form>
-                    @endif
-                @endif
+                @livewire('event-signup', ['event' => $event], key('event-signup-'.$event->id))
             </div>
         @else
             <p style="margin-top: 24px;"><a href="{{ route('login') }}">Войдите</a>, чтобы записаться на событие.</p>

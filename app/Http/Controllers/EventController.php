@@ -64,14 +64,9 @@ class EventController extends Controller
                 ->where('status', EventParticipantStatus::Joined),
         ]);
 
-        $viewerParticipation = request()->user() === null
-            ? null
-            : $event->participants->firstWhere('user_id', request()->user()->id);
-
         return view('events.show', [
             'event' => $event,
             'descriptionHtml' => $this->contentRenderer->render($event->description),
-            'viewerParticipation' => $viewerParticipation,
             'timezone' => $this->displayTimezone(),
         ]);
     }

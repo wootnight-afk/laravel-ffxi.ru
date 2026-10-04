@@ -7,11 +7,12 @@
 
     <div class="content-text">
         <p>Привет, <strong>{{ auth()->user()->name }}</strong>! Сейчас онлайн: <strong>{{ $onlineCount }}</strong> {{ trans_choice('игрок|игрока|игроков', $onlineCount) }}.</p>
-        <p style="color: var(--text-muted); font-size: 13px;">
-            Виджеты (чат, события, активность) появятся в следующем обновлении.
-        </p>
         <p style="margin-top: 24px;">
             <a href="{{ route('players.directory') }}">Каталог игроков →</a>
         </p>
+    </div>
+
+    <div style="margin-top: 28px;">
+        @livewire('events-board')
     </div>
 @endsection
