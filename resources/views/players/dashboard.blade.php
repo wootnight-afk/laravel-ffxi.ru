@@ -12,6 +12,11 @@
         </p>
     </div>
 
+    {{-- TODO(D6): migrate to DashboardWidget and configured spans. --}}
+    @if (app(\App\Services\SettingsRepository::class)->bool('chat_enabled', true))
+        @livewire('chat-room')
+    @endif
+
     <div style="margin-top: 28px;">
         @livewire('events-board')
     </div>

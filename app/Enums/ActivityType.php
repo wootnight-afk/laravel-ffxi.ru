@@ -10,6 +10,7 @@ enum ActivityType: string
     case EventCreated = 'event_created';
     case EventJoined = 'event_joined';
     case CommentCreated = 'comment_created';
+    case ChatMessage = 'chat_message';
 
     public function icon(): string
     {
@@ -20,6 +21,7 @@ enum ActivityType: string
             self::EventCreated => '📋',
             self::EventJoined => '✅',
             self::CommentCreated => '💬',
+            self::ChatMessage => '💬',
         };
     }
 
@@ -32,6 +34,7 @@ enum ActivityType: string
             self::EventCreated => 'создал событие',
             self::EventJoined => 'записался на событие',
             self::CommentCreated => 'оставил комментарий',
+            self::ChatMessage => 'отправил сообщение в чат',
         };
     }
 }

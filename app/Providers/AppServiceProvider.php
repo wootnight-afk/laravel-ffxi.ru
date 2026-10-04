@@ -2,12 +2,14 @@
 
 namespace App\Providers;
 
+use App\Events\ChatMessageSentForActivity;
 use App\Events\CommentCreatedForActivity;
 use App\Events\CommunityEventCreated;
 use App\Events\CommunityEventJoined;
 use App\Events\NewsPublishedForActivity;
 use App\Events\PhotoPublishedForActivity;
 use App\Events\UserRegisteredForActivity;
+use App\Listeners\RecordChatMessageActivity;
 use App\Listeners\RecordCommentCreatedActivity;
 use App\Listeners\RecordCommunityEventCreatedActivity;
 use App\Listeners\RecordCommunityEventJoinedActivity;
@@ -43,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
         EventFacade::listen(CommunityEventCreated::class, RecordCommunityEventCreatedActivity::class);
         EventFacade::listen(CommunityEventJoined::class, RecordCommunityEventJoinedActivity::class);
         EventFacade::listen(CommentCreatedForActivity::class, RecordCommentCreatedActivity::class);
+        EventFacade::listen(ChatMessageSentForActivity::class, RecordChatMessageActivity::class);
 
         // Admin bypass for section.{key}.view abilities only.
         // Global bypass is intentionally NOT used: adminreview.md §11 forbids

@@ -24,6 +24,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property UserStatus $status
  * @property Carbon|null $banned_until
  * @property Carbon|null $chat_banned_until
+ * @property bool $chat_banned_permanently
  * @property Carbon|null $deletion_requested_at
  * @property Carbon|null $email_verified_at
  * @property Carbon|null $last_seen_at
@@ -36,7 +37,7 @@ use Spatie\Permission\Traits\HasRoles;
     'rank_id', 'phone', 'phone_is_public', 'avatar_path',
     'is_profile_public', 'race', 'main_job', 'legend', 'legend_html',
     'last_seen_at', 'last_activity_seen_at',
-    'chat_banned_until', 'banned_until', 'ban_reason',
+    'chat_banned_until', 'chat_banned_permanently', 'banned_until', 'ban_reason',
     'status', 'deletion_requested_at', 'deletion_reason',
     'pd_consent_at', 'pd_policy_version', 'marketing_consent_at',
 ])]
@@ -57,6 +58,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'last_seen_at' => 'datetime',
             'last_activity_seen_at' => 'datetime',
             'chat_banned_until' => 'datetime',
+            'chat_banned_permanently' => 'boolean',
             'banned_until' => 'datetime',
             'deletion_requested_at' => 'datetime',
             'pd_consent_at' => 'datetime',
@@ -134,6 +136,14 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $this->hasMany(EventParticipant::class);
     }
 
+    /**
+     * @return HasMany<ChatMessage, $this>
+     */
+    public function messages(): HasMany
+    {
+        return $this->hasMany(ChatMessage::class);
+    }
+
     public function isAdmin(): bool
     {
         return $this->hasRole('admin');
@@ -151,7 +161,8 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 
     public function isChatBanned(): bool
     {
-        return $this->chat_banned_until !== null && $this->chat_banned_until->isFuture();
+        return $this->chat_banned_permanently
+            || ($this->chat_banned_until !== null && $this->chat_banned_until->isFuture());
     }
 
     public function isDeletionRequested(): bool
