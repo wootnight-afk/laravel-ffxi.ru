@@ -14,6 +14,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property Carbon $starts_at
  * @property Carbon|null $registration_close
+ * @property EventStatus $status
  */
 #[Fillable([
     'user_id', 'type_id', 'title', 'description', 'location', 'starts_at',

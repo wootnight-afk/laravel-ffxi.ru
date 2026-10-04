@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property Carbon $joined_at
  * @property Carbon|null $left_at
+ * @property EventParticipantStatus $status
  */
 #[Fillable(['event_id', 'user_id', 'jobs', 'note', 'status', 'joined_at', 'left_at'])]
 class EventParticipant extends Model
