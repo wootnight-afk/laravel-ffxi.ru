@@ -130,6 +130,8 @@ it('sends a message and rejects text beyond five hundred characters', function (
         ->call('postMessage')
         ->assertHasNoErrors();
 
+    $this->assertDatabaseCount('activities', 1);
+
     $room->set('body', str_repeat('b', 501))
         ->call('postMessage')
         ->assertHasErrors('body');

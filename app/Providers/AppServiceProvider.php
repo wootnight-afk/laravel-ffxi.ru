@@ -2,24 +2,9 @@
 
 namespace App\Providers;
 
-use App\Events\ChatMessageSentForActivity;
-use App\Events\CommentCreatedForActivity;
-use App\Events\CommunityEventCreated;
-use App\Events\CommunityEventJoined;
-use App\Events\NewsPublishedForActivity;
-use App\Events\PhotoPublishedForActivity;
-use App\Events\UserRegisteredForActivity;
-use App\Listeners\RecordChatMessageActivity;
-use App\Listeners\RecordCommentCreatedActivity;
-use App\Listeners\RecordCommunityEventCreatedActivity;
-use App\Listeners\RecordCommunityEventJoinedActivity;
-use App\Listeners\RecordNewsPublishedActivity;
-use App\Listeners\RecordPhotoPublishedActivity;
-use App\Listeners\RecordUserRegisteredActivity;
 use App\Models\User;
 use App\Services\HtmlSanitizer;
 use App\Services\SettingsRepository;
-use Illuminate\Support\Facades\Event as EventFacade;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
@@ -39,14 +24,6 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        EventFacade::listen(UserRegisteredForActivity::class, RecordUserRegisteredActivity::class);
-        EventFacade::listen(NewsPublishedForActivity::class, RecordNewsPublishedActivity::class);
-        EventFacade::listen(PhotoPublishedForActivity::class, RecordPhotoPublishedActivity::class);
-        EventFacade::listen(CommunityEventCreated::class, RecordCommunityEventCreatedActivity::class);
-        EventFacade::listen(CommunityEventJoined::class, RecordCommunityEventJoinedActivity::class);
-        EventFacade::listen(CommentCreatedForActivity::class, RecordCommentCreatedActivity::class);
-        EventFacade::listen(ChatMessageSentForActivity::class, RecordChatMessageActivity::class);
-
         // Admin bypass for section.{key}.view abilities only.
         // Global bypass is intentionally NOT used: adminreview.md §11 forbids
         // an admin removing their own admin role or deleting themselves.

@@ -3,12 +3,14 @@
 use App\Enums\ActivityType;
 use App\Enums\EventStatus;
 use App\Models\Activity;
+use App\Models\Comment;
 use App\Models\Event;
 use App\Models\News;
 use App\Models\User;
 use App\Services\ActivityFeedGrouper;
 use App\Services\ActivityLogger;
 use App\Services\ActivitySubjectResolver;
+use App\Services\SettingsRepository;
 use Database\Seeders\DashboardWidgetSeeder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
@@ -213,4 +215,35 @@ it('preserves activity when its actor is hard deleted and nulls actor_id', funct
 
     expect($activity->fresh()->actor_id)->toBeNull()
         ->and($activity->fresh()->exists)->toBeTrue();
+});
+
+it('records exactly one activity for an approved news comment', function () {
+    $author = d3FeedUser('admin');
+    $commenter = d3FeedUser();
+    $news = News::create([
+        'user_id' => $author->id,
+        'scope' => News::SCOPE_SITE,
+        'title' => 'Comment activity acceptance',
+        'body' => 'A published news item for the comment activity regression.',
+        'status' => News::STATUS_PUBLISHED,
+        'published_at' => now()->subMinute(),
+        'comments_enabled' => true,
+    ]);
+    app(SettingsRepository::class)->set('comments_moderation', 'none');
+
+    $response = $this->actingAs($commenter)
+        ->postJson(route('comments.store', $news->slug), [
+            'body' => 'Approved comment creates one activity record.',
+        ])
+        ->assertCreated()
+        ->assertJsonPath('status', Comment::STATUS_APPROVED);
+
+    $commentId = $response->json('id');
+    $this->assertDatabaseCount('activities', 1);
+    $this->assertDatabaseHas('activities', [
+        'type' => ActivityType::CommentCreated->value,
+        'actor_id' => $commenter->id,
+        'subject_type' => (new Comment)->getMorphClass(),
+        'subject_id' => $commentId,
+    ]);
 });
