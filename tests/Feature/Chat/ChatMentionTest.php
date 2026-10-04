@@ -5,6 +5,7 @@ use App\Models\ChatMessage;
 use App\Models\User;
 use App\Notifications\ChatMentionNotification;
 use App\Services\ChatMentionParser;
+use Database\Seeders\DashboardWidgetSeeder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
@@ -25,6 +26,7 @@ function d4MentionUser(string $name, bool $profilePublic = true): User
 beforeEach(function () {
     Cache::flush();
     app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $this->seed(DashboardWidgetSeeder::class);
     Notification::fake();
 });
 

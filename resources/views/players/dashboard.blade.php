@@ -9,18 +9,22 @@
         <p>Привет, <strong>{{ auth()->user()->name }}</strong>!</p>
     </div>
 
-    {{-- TODO(D6): migrate to DashboardWidget and configured spans. --}}
-    @if (app(\App\Services\SettingsRepository::class)->bool('chat_enabled', true))
-        @livewire('chat-room')
-    @endif
-
-    <div style="margin-top: 28px;">
-        @livewire('events-board')
+    <div class="dashboard-grid">
+        @foreach ($widgets as $widget)
+            @php($span = max(1, min(3, $widget->column_span)))
+            <div class="dashboard-widget dashboard-widget--span-{{ $span }}" wire:key="dashboard-widget-{{ $widget->id }}">
+                @if ($widget->type === 'community_chat')
+                    @if (app(\App\Services\SettingsRepository::class)->bool('chat_enabled', true))
+                        @livewire('chat-room', key('dashboard-chat-'.$widget->id))
+                    @endif
+                @elseif ($widget->type === 'events_board')
+                    @livewire('events-board', key('dashboard-events-'.$widget->id))
+                @elseif ($widget->type === 'activity_feed')
+                    @include('players._activity-feed', ['activityGroups' => $activityGroups, 'viewer' => $viewer])
+                @elseif ($widget->type === 'online_users')
+                    @livewire('online-users', key('dashboard-online-users-'.$widget->id))
+                @endif
+            </div>
+        @endforeach
     </div>
-
-    {{-- TODO(D6): migrate to DashboardWidget. --}}
-    @include('players._activity-feed')
-
-    {{-- TODO(D6): migrate to DashboardWidget. --}}
-    @livewire('online-users')
 @endsection

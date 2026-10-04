@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\ActivityFeedGrouper;
 use App\Services\ActivityLogger;
 use App\Services\ActivitySubjectResolver;
+use Database\Seeders\DashboardWidgetSeeder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Spatie\Permission\PermissionRegistrar;
@@ -35,6 +36,7 @@ function d3FeedEvent(User $leader, array $attributes = []): Event
 beforeEach(function () {
     Cache::flush();
     app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $this->seed(DashboardWidgetSeeder::class);
 });
 
 it('requires authentication for the full activity route', function () {

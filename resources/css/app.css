@@ -395,6 +395,54 @@ a:hover {
     font-size: 13px;
 }
 
+.dashboard-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: 1fr;
+}
+
+.dashboard-widget {
+    min-width: 0;
+}
+
+.dashboard-widget--span-1 {
+    grid-column: span 1;
+}
+
+.dashboard-widget--span-2 {
+    grid-column: span 2;
+}
+
+.dashboard-widget--span-3 {
+    grid-column: span 3;
+}
+
+@media (min-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1023px) {
+    .dashboard-widget--span-3 {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 767px) {
+    .dashboard-widget--span-1,
+    .dashboard-widget--span-2,
+    .dashboard-widget--span-3 {
+        grid-column: span 1;
+    }
+}
+
 @media (max-width: 768px) {
     .activity-bell__dropdown {
         position: fixed;

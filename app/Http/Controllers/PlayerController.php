@@ -4,17 +4,39 @@ namespace App\Http\Controllers;
 
 use App\Enums\UserStatus;
 use App\Models\Activity;
+use App\Models\DashboardWidget;
 use App\Models\News;
 use App\Models\Photo;
 use App\Models\User;
 use App\Services\ActivityFeedGrouper;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class PlayerController extends Controller
 {
     public function dashboard(ActivityFeedGrouper $grouper): View
     {
+        $supportedWidgetTypes = ['community_chat', 'events_board', 'activity_feed', 'online_users'];
+        $widgets = DashboardWidget::query()
+            ->active()
+            ->ordered()
+            ->get()
+            ->filter(function (DashboardWidget $widget) use ($supportedWidgetTypes): bool {
+                if (in_array($widget->type, $supportedWidgetTypes, true)) {
+                    return true;
+                }
+
+                Log::warning('Skipped unsupported dashboard widget type.', [
+                    'widget_id' => $widget->id,
+                    'widget_key' => $widget->key,
+                    'widget_type' => $widget->type,
+                ]);
+
+                return false;
+            })
+            ->values();
+
         $activities = Activity::query()
             ->recent()
             ->forFeed()
@@ -22,10 +44,7 @@ class PlayerController extends Controller
             ->get();
 
         return view('players.dashboard', [
-            'onlineCount' => User::query()
-                ->whereNotNull('last_seen_at')
-                ->where('last_seen_at', '>=', now()->subMinutes(5))
-                ->count(),
+            'widgets' => $widgets,
             'activityGroups' => $grouper->group($activities),
             'viewer' => request()->user(),
         ]);

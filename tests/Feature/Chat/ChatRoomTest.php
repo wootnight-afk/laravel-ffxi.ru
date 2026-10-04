@@ -8,6 +8,7 @@ use App\Models\Activity;
 use App\Models\ChatMessage;
 use App\Models\User;
 use App\Services\SettingsRepository;
+use Database\Seeders\DashboardWidgetSeeder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
@@ -36,6 +37,7 @@ beforeEach(function () {
     Cache::flush();
     RateLimiter::clear('chat-message:');
     app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $this->seed(DashboardWidgetSeeder::class);
     Notification::fake();
     app(SettingsRepository::class)->set('chat_enabled', true);
 });

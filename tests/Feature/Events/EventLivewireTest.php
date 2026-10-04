@@ -10,6 +10,7 @@ use App\Models\EventType;
 use App\Models\User;
 use App\Notifications\EventParticipantJoinedNotification;
 use App\Notifications\EventParticipantLeftNotification;
+use Database\Seeders\DashboardWidgetSeeder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
@@ -63,6 +64,7 @@ function d23Event(User $leader, EventType $type, array $overrides = []): Event
 beforeEach(function () {
     Cache::flush();
     app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $this->seed(DashboardWidgetSeeder::class);
     Notification::fake();
 });
 

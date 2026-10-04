@@ -2,6 +2,7 @@
 
 use App\Livewire\OnlineUsers;
 use App\Models\User;
+use Database\Seeders\DashboardWidgetSeeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Livewire;
@@ -28,6 +29,7 @@ function d5OnlineViewer(): User
 beforeEach(function () {
     Cache::flush();
     app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $this->seed(DashboardWidgetSeeder::class);
 });
 
 it('shows the online widget only to authenticated users and places it after the activity feed', function () {
