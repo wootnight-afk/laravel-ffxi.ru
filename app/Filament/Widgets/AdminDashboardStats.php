@@ -40,28 +40,28 @@ class AdminDashboardStats extends StatsOverviewWidget
 
         if (auth()->user()?->hasRole('editor')) {
             return [
-                Stat::make('Новости сайта', (clone $siteNews)->count()),
-                Stat::make('Комментарии на модерации', $pendingComments),
-                Stat::make('Фотографии сайта', $sitePhotos->count()),
-                Stat::make('События на этой неделе', $thisWeekEvents->count()),
+                Stat::make(__('filament.dashboard.stats.news_site'), (clone $siteNews)->count()),
+                Stat::make(__('filament.dashboard.stats.comments_pending'), $pendingComments),
+                Stat::make(__('filament.dashboard.stats.photos_site'), $sitePhotos->count()),
+                Stat::make(__('filament.dashboard.stats.events_week'), $thisWeekEvents->count()),
             ];
         }
 
         return [
-            Stat::make('Пользователи', User::query()->count()),
-            Stat::make('Новые пользователи за 7 дней', User::query()
+            Stat::make(__('filament.dashboard.stats.users'), User::query()->count()),
+            Stat::make(__('filament.dashboard.stats.users_new_week'), User::query()
                 ->where('created_at', '>=', now()->subDays(7))
                 ->count()),
-            Stat::make('Новости', News::query()->count()),
-            Stat::make('Комментарии на модерации', $pendingComments),
-            Stat::make('Фотографии', Photo::query()->count()),
-            Stat::make('Гости онлайн', GuestVisitor::query()
+            Stat::make(__('filament.dashboard.stats.news'), News::query()->count()),
+            Stat::make(__('filament.dashboard.stats.comments_pending'), $pendingComments),
+            Stat::make(__('filament.dashboard.stats.photos'), Photo::query()->count()),
+            Stat::make(__('filament.dashboard.stats.guests_online'), GuestVisitor::query()
                 ->whereNull('converted_user_id')
                 ->where('last_seen_at', '>=', now()->subMinutes(5))
                 ->count()),
-            Stat::make('События на этой неделе', $thisWeekEvents->count()),
-            Stat::make('Запросы на удаление', User::query()
-                ->where('status', UserStatus::DeletionRequested)
+            Stat::make(__('filament.dashboard.stats.events_week'), $thisWeekEvents->count()),
+            Stat::make(__('filament.dashboard.stats.account_requests'), User::query()
+                ->whereIn('status', [UserStatus::DeletionRequested, UserStatus::Suspended])
                 ->count()),
         ];
     }

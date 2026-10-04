@@ -11,9 +11,24 @@ class AdminDashboard extends Dashboard
 
     protected static ?int $navigationSort = 0;
 
-    protected static ?string $title = 'Панель управления';
+    protected static ?string $title = null;
 
-    protected static ?string $navigationLabel = 'Дашборд';
+    protected static ?string $navigationLabel = null;
+
+    public function getTitle(): string
+    {
+        return __('filament.dashboard.title');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('filament.dashboard.label');
+    }
+
+    public static function getNavigationGroup(): string|UnitEnum|null
+    {
+        return __('filament.navigation.main');
+    }
 
     public function getColumns(): int|array
     {

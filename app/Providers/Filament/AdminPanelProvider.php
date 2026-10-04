@@ -40,10 +40,10 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Teal,
             ])
             ->navigationGroups([
-                NavigationGroup::make('Основное'),
-                NavigationGroup::make('Сообщество'),
-                NavigationGroup::make('Контент'),
-                NavigationGroup::make('Система'),
+                NavigationGroup::make(__('filament.navigation.main')),
+                NavigationGroup::make(__('filament.navigation.community')),
+                NavigationGroup::make(__('filament.navigation.content')),
+                NavigationGroup::make(__('filament.navigation.system')),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

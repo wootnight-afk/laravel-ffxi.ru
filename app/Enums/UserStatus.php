@@ -11,9 +11,9 @@ enum UserStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::Active => 'Активен',
-            self::DeletionRequested => 'Запрос на удаление',
-            self::Suspended => 'Приостановлен',
+            self::Active => __('filament.user_status.active'),
+            self::DeletionRequested => __('filament.user_status.deletion_requested'),
+            self::Suspended => __('filament.user_status.suspended'),
         };
     }
 }

@@ -1,13 +1,13 @@
 <x-filament-widgets::widget>
-    <x-filament::section heading="Последние административные действия">
+    <x-filament::section :heading="__('filament.dashboard.audit.heading')">
         <div class="overflow-x-auto">
             <table class="w-full text-start text-sm">
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-gray-700">
-                        <th class="px-3 py-2 font-medium">Дата</th>
-                        <th class="px-3 py-2 font-medium">Пользователь</th>
-                        <th class="px-3 py-2 font-medium">Действие</th>
-                        <th class="px-3 py-2 font-medium">Объект</th>
+                        <th class="px-3 py-2 font-medium">{{ __('filament.dashboard.audit.date') }}</th>
+                        <th class="px-3 py-2 font-medium">{{ __('filament.dashboard.audit.user') }}</th>
+                        <th class="px-3 py-2 font-medium">{{ __('filament.dashboard.audit.action') }}</th>
+                        <th class="px-3 py-2 font-medium">{{ __('filament.dashboard.audit.object') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -21,7 +21,7 @@
                     @empty
                         <tr>
                             <td class="px-3 py-4 text-center text-gray-500" colspan="4">
-                                Записей пока нет
+                                {{ __('filament.dashboard.audit.empty') }}
                             </td>
                         </tr>
                     @endforelse

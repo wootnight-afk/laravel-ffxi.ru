@@ -9,7 +9,7 @@ class RegistrationsChart extends ChartWidget
 {
     protected static ?int $sort = 2;
 
-    protected ?string $heading = 'Регистрации за 30 дней';
+    protected ?string $heading = null;
 
     protected int|string|array $columnSpan = 'full';
 
@@ -21,6 +21,11 @@ class RegistrationsChart extends ChartWidget
     protected function getType(): string
     {
         return 'line';
+    }
+
+    public function getHeading(): string
+    {
+        return __('filament.dashboard.charts.registrations_heading');
     }
 
     /**
@@ -49,7 +54,7 @@ class RegistrationsChart extends ChartWidget
         return [
             'datasets' => [
                 [
-                    'label' => 'Регистрации',
+                    'label' => __('filament.dashboard.charts.registrations_label'),
                     'data' => $counts,
                 ],
             ],
