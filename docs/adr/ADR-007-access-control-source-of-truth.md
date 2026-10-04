@@ -47,8 +47,10 @@
 3. **Middleware** `section.access:{key}` (`App\Http\Middleware\SectionAccess`):
    для авторизованного пользователя — проверка permission; для гостя —
    проверка `guest_sections[key]`. При отсутствии доступа — 404/редирект.
-4. **`Gate::before` для admin** — администратор проходит любую проверку
-   без явного разрешения (context.md §13).
+4. **`Gate::before` для admin** — возвращает `true` только для abilities
+   с префиксом `section.`. Для остальных abilities callback не даёт обхода
+   (`null`); применяются обычные Spatie permissions и Policies. Явные
+   запреты Policies, включая запрет self-delete и self-demotion, сохраняются.
 
 **Таблица `page_role_access` не вводится.** Ни миграция, ни модель, ни
 Filament-ресурс для неё не создаются. В `adminreview.md` §4.1 остаётся

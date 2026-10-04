@@ -315,8 +315,10 @@ resend verification 3/день.
 **Реализация:** spatie `section.{key}.view` (для ролей) + JSON
 `guest_sections` в `settings` (для гостей). Middleware
 `section.access:{key}`: auth → проверка permission; guest → проверка
-JSON. `Gate::before` для admin → true. Изменения — мгновенны (flush
-settings cache).
+JSON. `Gate::before` для admin возвращает `true` только для abilities
+с префиксом `section.`. Для остальных abilities действуют обычные
+Spatie permissions и Policies; явные запреты Policies сохраняются.
+Изменения — мгновенны (flush settings cache).
 
 Полная матрица и список секций — `frontend-spec.md` §4.
 

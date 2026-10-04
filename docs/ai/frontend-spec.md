@@ -98,7 +98,10 @@
 **Реализация:** guest-доступ — JSON по секциям в `settings`
 (`guest_sections`); роли — spatie `section.{key}.view`. Middleware
 `section.access:{key}`: auth → разрешение роли; guest → settings.
-`Gate::before` для admin → true. Изменения мгновенны (flush cache).
+`Gate::before` для admin возвращает `true` только для abilities
+с префиксом `section.`. Для остальных abilities действуют обычные
+Spatie permissions и Policies; явные запреты Policies сохраняются.
+Изменения мгновенны (flush cache).
 
 ## 3.3 Гранулярные разрешения (spatie)
 
