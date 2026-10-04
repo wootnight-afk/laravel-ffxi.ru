@@ -1,7 +1,7 @@
 # Project Status — laravel-ffxi.ru
 
 ## HEAD
-`1b4894a` на ветке `main`.
+`1276bb2` на ветке `main`.
 
 ## Прогресс по этапам (§30 context.md)
 
@@ -14,10 +14,10 @@
 | 4 | Content engine | done | news, pages, comments, sanitizer |
 | 5 | Gallery | done | ImageProcessor, ProcessPhotoJob |
 | 6 | Profiles & cabinet | ACCEPTED | docs/acceptance/stage-6.md |
-| 7 | Dashboard | IN PROGRESS | D1 ✅ D2 ✅ D3 ✅ D4 🟡 D5–D7 ⏳ |
+| 7 | Dashboard | IN PROGRESS | D1 ✅ D2 ✅ D3 ✅ D4 ✅ D5 ✅ D6–D7 ⏳ |
 | 8 | Filament | SCAFFOLD ONLY | /admin panel + canAccessPanel |
 | 9 | Backup/restore | not started | — |
-| 10 | Tests (§9) | partial | 311 passed |
+| 10 | Tests (§9) | partial | 351 passed |
 | 11 | CI | not started | — |
 | 12 | Timeweb staging | not started | — |
 | 13 | Deployment | not started | — |
@@ -34,10 +34,12 @@
   (D3).
 - D3 ✅ — Activity model, ActivityType, ActivityLogger, 6 событий
   + 6 listeners, ActivityController, /activity, dashboard feed.
-- D4 🟡 — Chat (Livewire ChatRoom + модерация). Контракт согласован,
-  реализация НЕ начата. Миграции 000021 chat_banned_permanently,
-  000022 chat_messages — запланированы.
-- D5 ⏳ — Bell (уведомления: личные + community), online users widget.
+- D4 ✅ — Chat (Livewire ChatRoom + модерация). Миграции 000021
+  chat_banned_permanently, 000022 chat_messages; database notifications;
+  synchronous chat activity.
+- D5 ✅ — ActivityBell (community + personal database notifications),
+  OnlineUsers widget, 30s/60s polling; activity snapshots скрываются,
+  если существующий subject недоступен viewer'у.
 - D6 ⏳ — DashboardWidget grid (community_chat, events_board,
   activity_feed, online_users + api_chart/html_board из Stage 8).
 - D7 ⏳ — Scheduler (event reminder, activity retention).
@@ -60,10 +62,8 @@
 
 ## Порядок дальнейшей работы
 
-1. D4 — Chat (см. MASTER-TASK.md §Текущий контракт).
-2. D5 — Bell + online users.
-3. D6 — DashboardWidget grid.
-4. D7 — Scheduler + retention.
-5. Приёмка Stage 7 + отчёт docs/acceptance/stage-7.md.
-6. Stage 8 — Filament (12 Resources + 4 Pages).
-7. Stages 9–15 — по §30 context.md.
+1. D6 — DashboardWidget grid.
+2. D7 — Scheduler + retention.
+3. Приёмка Stage 7 + отчёт docs/acceptance/stage-7.md.
+4. Stage 8 — Filament (12 Resources + 4 Pages).
+5. Stages 9–15 — по §30 context.md.
