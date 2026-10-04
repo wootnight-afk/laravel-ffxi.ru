@@ -121,6 +121,9 @@ Route::middleware('auth')->prefix('cabinet')->name('cabinet.')->group(function (
         Route::post('/danger/request', [DangerZoneController::class, 'request'])
             ->middleware('throttle:3,60')
             ->name('danger.request');
+        Route::post('/danger/suspend', [DangerZoneController::class, 'suspend'])
+            ->middleware('throttle:3,60')
+            ->name('danger.suspend');
 
         // My news (player-scope)
         Route::post('/news', [MyNewsController::class, 'store'])->name('news.store');

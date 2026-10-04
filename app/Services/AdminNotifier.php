@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\User;
 use App\Notifications\UserDeletionRequestedForAdminNotification;
 use App\Notifications\UserEmailChangedForAdminNotification;
+use App\Notifications\UserSuspendedForAdminNotification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Throwable;
@@ -90,6 +91,40 @@ class AdminNotifier
             );
         } catch (Throwable $e) {
             Log::error('AdminNotifier: failed to send deletion request notification', [
+                'initiator_id' => $initiator->getKey(),
+                'recipients' => $recipients->pluck('id')->all(),
+                'exception' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function notifyAboutUserSuspension(
+        User $initiator,
+        string $reason,
+    ): void {
+        $recipients = User::role('admin')
+            ->whereKeyNot($initiator->getKey())
+            ->get();
+
+        if ($recipients->isEmpty()) {
+            Log::info('AdminNotifier: no admin recipients for account suspension', [
+                'initiator_id' => $initiator->getKey(),
+            ]);
+
+            return;
+        }
+
+        try {
+            Notification::send(
+                $recipients,
+                new UserSuspendedForAdminNotification(
+                    user: $initiator,
+                    reason: $reason,
+                    suspendedAt: $initiator->suspended_at?->toIso8601String() ?? now()->toIso8601String(),
+                ),
+            );
+        } catch (Throwable $e) {
+            Log::error('AdminNotifier: failed to send account suspension notification', [
                 'initiator_id' => $initiator->getKey(),
                 'recipients' => $recipients->pluck('id')->all(),
                 'exception' => $e->getMessage(),

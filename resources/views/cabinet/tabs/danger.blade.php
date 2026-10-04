@@ -15,6 +15,74 @@
         </p>
     </div>
 @else
+    @if (! $user->isSuspended())
+        <div style="padding: 20px; border: 2px solid #d97706; border-radius: 8px; background: rgba(217, 119, 6, 0.05); margin-bottom: 20px;">
+            <h3 style="font-size: 16px; color: #b45309; margin-top: 0; margin-bottom: 12px;">
+                Приостановить аккаунт
+            </h3>
+
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+                Временная блокировка. Войти не сможете, но данные и контент сохранятся.
+            </p>
+
+            <form method="POST" action="{{ route('cabinet.danger.suspend') }}">
+                @csrf
+
+                <div class="form-group">
+                    <label for="suspension_reason">Причина</label>
+                    <textarea
+                        id="suspension_reason"
+                        name="reason"
+                        class="form-control"
+                        rows="3"
+                        minlength="3"
+                        maxlength="500"
+                        required
+                        style="resize: vertical;"
+                    >{{ old('reason') }}</textarea>
+                    @error('reason') <div class="form-error">{{ $message }}</div> @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="suspension_password">Текущий пароль</label>
+                    <input
+                        type="password"
+                        id="suspension_password"
+                        name="password"
+                        class="form-control"
+                        required
+                        autocomplete="current-password"
+                    >
+                    @error('password') <div class="form-error">{{ $message }}</div> @enderror
+                </div>
+
+                <div class="form-group" style="padding: 12px; background: var(--bg-card); border-radius: 4px;">
+                    <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.5;">
+                        <input
+                            type="checkbox"
+                            name="confirm"
+                            value="1"
+                            required
+                            style="margin-top: 3px;"
+                            {{ old('confirm') ? 'checked' : '' }}
+                        >
+                        <span>Понимаю, что мой аккаунт будет заблокирован.</span>
+                    </label>
+                    @error('confirm') <div class="form-error">{{ $message }}</div> @enderror
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn"
+                    style="background: #d97706; color: #fff; border-color: #d97706;"
+                    onclick="return confirm('Вы уверены, что хотите приостановить аккаунт?');"
+                >
+                    Приостановить аккаунт
+                </button>
+            </form>
+        </div>
+    @endif
+
     <div style="padding: 20px; border: 2px solid #dc2626; border-radius: 8px; background: rgba(220, 38, 38, 0.05);">
         <h3 style="font-size: 16px; color: #dc2626; margin-top: 0; margin-bottom: 12px;">
             Удаление аккаунта

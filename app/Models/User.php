@@ -26,6 +26,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $chat_banned_until
  * @property bool $chat_banned_permanently
  * @property Carbon|null $deletion_requested_at
+ * @property Carbon|null $suspended_at
  * @property Carbon|null $email_verified_at
  * @property Carbon|null $last_seen_at
  * @property Carbon|null $last_activity_seen_at
@@ -38,7 +39,7 @@ use Spatie\Permission\Traits\HasRoles;
     'is_profile_public', 'race', 'main_job', 'legend', 'legend_html',
     'last_seen_at', 'last_activity_seen_at',
     'chat_banned_until', 'chat_banned_permanently', 'banned_until', 'ban_reason',
-    'status', 'deletion_requested_at', 'deletion_reason',
+    'status', 'deletion_requested_at', 'deletion_reason', 'suspended_at', 'suspension_reason',
     'pd_consent_at', 'pd_policy_version', 'marketing_consent_at',
 ])]
 #[Hidden(['password', 'remember_token'])]
@@ -61,6 +62,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'chat_banned_permanently' => 'boolean',
             'banned_until' => 'datetime',
             'deletion_requested_at' => 'datetime',
+            'suspended_at' => 'datetime',
             'pd_consent_at' => 'datetime',
             'marketing_consent_at' => 'datetime',
             'status' => UserStatus::class,
@@ -73,7 +75,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        if ($this->isBanned() || $this->isDeletionRequested()) {
+        if ($this->isBanned() || $this->isDeletionRequested() || $this->isSuspended()) {
             return false;
         }
 
@@ -170,9 +172,14 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $this->status === UserStatus::DeletionRequested;
     }
 
+    public function isSuspended(): bool
+    {
+        return $this->status === UserStatus::Suspended;
+    }
+
     public function isProfilePublic(): bool
     {
-        return $this->is_profile_public && ! $this->isDeletionRequested();
+        return $this->is_profile_public && ! $this->isDeletionRequested() && ! $this->isSuspended();
     }
 
     /**

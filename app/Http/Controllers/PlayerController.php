@@ -77,7 +77,7 @@ class PlayerController extends Controller
 
     public function show(Request $request, User $user): View
     {
-        if ($user->isDeletionRequested()) {
+        if ($user->isDeletionRequested() || $user->isSuspended()) {
             abort(404);
         }
 

@@ -46,6 +46,13 @@ class LoginController extends Controller
             ]);
         }
 
+        if ($user->isSuspended()) {
+            Auth::logout();
+            throw ValidationException::withMessages([
+                'email' => 'Аккаунт приостановлен. Обратитесь к администрации.',
+            ]);
+        }
+
         $request->session()->regenerate();
 
         $user->forceFill(['last_seen_at' => now()])->saveQuietly();
