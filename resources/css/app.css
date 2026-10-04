@@ -245,6 +245,168 @@ a:hover {
     }
 }
 
+.activity-bell {
+    position: relative;
+}
+
+.activity-bell__trigger {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.activity-bell__badge {
+    position: absolute;
+    top: -5px;
+    right: -8px;
+    min-width: 19px;
+    border-radius: 12px;
+    background: #dc2626;
+    color: #fff;
+    padding: 1px 5px;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 17px;
+}
+
+.activity-bell__dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 1001;
+    width: min(380px, calc(100vw - 24px));
+    max-height: min(72vh, 600px);
+    overflow: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-card);
+    box-shadow: 0 8px 24px var(--shadow-header);
+    color: var(--text-main);
+}
+
+.activity-bell__tabs {
+    position: sticky;
+    top: 0;
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-card);
+}
+
+.activity-bell__tab {
+    flex: 1;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    padding: 12px 8px;
+    cursor: pointer;
+}
+
+.activity-bell__tab.is-active {
+    border-bottom-color: var(--primary-color);
+    color: var(--text-main);
+}
+
+.activity-bell__list {
+    padding: 0 14px;
+}
+
+.activity-bell__entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.activity-bell__entry.is-unread {
+    background: color-mix(in srgb, var(--primary-color) 7%, transparent);
+}
+
+.activity-bell__icon {
+    flex: 0 0 24px;
+    text-align: center;
+}
+
+.activity-bell__entry-body {
+    min-width: 0;
+    flex: 1;
+    overflow-wrap: anywhere;
+}
+
+.activity-bell__entry-body p {
+    margin: 0 0 3px;
+}
+
+.activity-bell__empty {
+    padding: 18px 0;
+}
+
+.activity-bell__mark-read,
+.activity-bell__open {
+    margin-top: 7px;
+    border: 0;
+    background: transparent;
+    color: var(--primary-color);
+    padding: 0;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.online-users {
+    margin-top: 28px;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-card);
+}
+
+.online-users__count {
+    display: inline-block;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.online-users__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    list-style: none;
+}
+
+.online-users__list li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    max-width: 96px;
+    overflow-wrap: anywhere;
+    text-align: center;
+    font-size: 13px;
+}
+
+@media (max-width: 768px) {
+    .activity-bell__dropdown {
+        position: fixed;
+        top: 70px;
+        right: 12px;
+    }
+
+    .online-users {
+        padding: 12px;
+    }
+}
+
 .container {
     max-width: var(--max-width);
     margin: 0 auto;

@@ -29,6 +29,7 @@
             </button>
 
             @auth
+                @livewire('activity-bell')
                 <a href="{{ route('cabinet.show') }}" class="login-link">{{ auth()->user()->name }}</a>
                 <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                     @csrf

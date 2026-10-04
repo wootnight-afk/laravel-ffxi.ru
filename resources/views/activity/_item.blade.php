@@ -2,7 +2,11 @@
     $activity = $group['activity'];
     $items = $group['items'];
     $actor = $activity->actor;
-    $subjectUrl = app(\App\Services\ActivitySubjectResolver::class)->url($activity, $viewer);
+    $subjectResolver = app(\App\Services\ActivitySubjectResolver::class);
+    $subjectUrl = $subjectResolver->url($activity, $viewer);
+    $hasSubject = $activity->subject_id !== null;
+    $subjectAccessible = ! $hasSubject
+        || $subjectResolver->subjectAccessible($activity, $viewer);
     $snapshot = $activity->data['title']
         ?? $activity->data['target_title']
         ?? $activity->data['caption']
@@ -20,13 +24,13 @@
             @if (count($items) > 1)
                 <span class="news-meta">({{ count($items) }} раза)</span>
             @endif
-            @if ($snapshot)
+            @if ($snapshot && $subjectAccessible)
                 @if ($subjectUrl)
                     <a href="{{ $subjectUrl }}">{{ $snapshot }}</a>
                 @else
                     <span>{{ $snapshot }}</span>
                 @endif
-            @elseif ($subjectUrl)
+            @elseif (! $snapshot && $subjectAccessible && $subjectUrl)
                 <a href="{{ $subjectUrl }}">перейти</a>
             @endif
         </p>

@@ -10,6 +10,7 @@ use App\Services\ActivityFeedGrouper;
 use App\Services\ActivityLogger;
 use App\Services\ActivitySubjectResolver;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Spatie\Permission\PermissionRegistrar;
 
 function d3FeedUser(string $role = 'user'): User
@@ -148,6 +149,32 @@ it('does not link to an inaccessible news subject', function () {
     $activity = app(ActivityLogger::class)->log(ActivityType::NewsPublished, $author, $news, ['title' => $news->title]);
 
     expect(app(ActivitySubjectResolver::class)->url($activity, $viewer))->toBeNull();
+});
+
+it('does not expose a closed-profile player news title in the activity feed', function () {
+    $author = d3FeedUser();
+    $author->forceFill(['is_profile_public' => false])->saveQuietly();
+    $title = 'Hidden player news '.Str::random(10);
+    $news = News::create([
+        'user_id' => $author->id,
+        'scope' => News::SCOPE_PLAYER,
+        'title' => $title,
+        'body' => 'Player news body for a closed profile.',
+        'status' => News::STATUS_PUBLISHED,
+        'published_at' => now()->subMinute(),
+    ]);
+    app(ActivityLogger::class)->log(
+        ActivityType::NewsPublished,
+        $author,
+        $news,
+        ['title' => $news->title, 'scope' => 'player'],
+    );
+    $viewer = d3FeedUser();
+
+    $this->actingAs($viewer)
+        ->get(route('activity.index'))
+        ->assertOk()
+        ->assertDontSee($title);
 });
 
 it('does not link to a soft-deleted event subject', function () {

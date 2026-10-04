@@ -6,10 +6,7 @@
     <h1 class="page-title">Дашборд сообщества</h1>
 
     <div class="content-text">
-        <p>Привет, <strong>{{ auth()->user()->name }}</strong>! Сейчас онлайн: <strong>{{ $onlineCount }}</strong> {{ trans_choice('игрок|игрока|игроков', $onlineCount) }}.</p>
-        <p style="margin-top: 24px;">
-            <a href="{{ route('players.directory') }}">Каталог игроков →</a>
-        </p>
+        <p>Привет, <strong>{{ auth()->user()->name }}</strong>!</p>
     </div>
 
     {{-- TODO(D6): migrate to DashboardWidget and configured spans. --}}
@@ -23,4 +20,7 @@
 
     {{-- TODO(D6): migrate to DashboardWidget. --}}
     @include('players._activity-feed')
+
+    {{-- TODO(D6): migrate to DashboardWidget. --}}
+    @livewire('online-users')
 @endsection

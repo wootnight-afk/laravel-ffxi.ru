@@ -31,6 +31,19 @@ class ActivitySubjectResolver
         };
     }
 
+    public function subjectAccessible(Activity $activity, ?User $viewer): bool
+    {
+        if ($activity->subject_id === null) {
+            return true;
+        }
+
+        if (! $activity->subject instanceof Model) {
+            return false;
+        }
+
+        return $this->url($activity, $viewer) !== null;
+    }
+
     public function actorLinkable(?User $actor, ?User $viewer): bool
     {
         return $actor !== null
@@ -59,6 +72,7 @@ class ActivitySubjectResolver
         return $news->isPublished()
             && $author !== null
             && $this->canViewSection($viewer, 'player_profiles')
+            && ($author->isProfilePublic() || $viewer->id === $author->id || $viewer->isAdmin())
             && Route::has('players.show')
             ? route('players.show', $author->name)
             : null;
