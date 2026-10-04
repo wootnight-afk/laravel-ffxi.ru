@@ -63,3 +63,16 @@ Middleware: `section.access:{key}`, `registration.open`, `IdentifyGuest`.
 
 - User communication: Russian
 - Code, comments, commits: English
+
+## Current project status
+
+- Stage 0: Timeweb audit — pending (owner).
+- Stage 1: ADR-001 stack — done.
+- Stage 2: Docker development environment and Laravel skeleton — done.
+- Stage 3–5: completion is not asserted here; confirm against acceptance evidence.
+- Stage 6: Profiles and cabinet — accepted; see
+  `docs/acceptance/stage-6.md`.
+- Stage 8: early Filament scaffold exists at `/admin`; resources are pending.
+  This scaffold does not mean Stage 8 has started in the §30 sequence.
+- Next: Stage 7 — architecture Step 1 only. Implementation requires
+  separate explicit approval. Stage 8 work must wait until Stage 7 is accepted.
