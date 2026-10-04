@@ -11,6 +11,7 @@ use App\Http\Controllers\Cabinet\MyNewsController;
 use App\Http\Controllers\Cabinet\SecurityController;
 use App\Http\Controllers\CabinetController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\EventCommentController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventParticipantController;
 use App\Http\Controllers\GalleryController;
@@ -64,6 +65,9 @@ Route::middleware('section.access:events')->group(function () {
         Route::post('/events/{event}/cancel', [EventController::class, 'cancel'])->name('events.cancel');
         Route::post('/events/{event}/join', [EventParticipantController::class, 'join'])->name('events.join');
         Route::post('/events/{event}/leave', [EventParticipantController::class, 'leave'])->name('events.leave');
+        Route::post('/events/{event}/comments', [EventCommentController::class, 'store'])
+            ->middleware('throttle:20,60')
+            ->name('events.comments.store');
     });
 });
 

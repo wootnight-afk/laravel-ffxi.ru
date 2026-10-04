@@ -6,12 +6,14 @@ use App\Enums\EventParticipantStatus;
 use App\Enums\EventStatus;
 use App\Http\Requests\StoreEventRequest;
 use App\Http\Requests\UpdateEventRequest;
+use App\Models\Comment;
 use App\Models\Event;
 use App\Models\EventType;
 use App\Services\ContentRenderer;
 use App\Services\EventService;
 use App\Services\SettingsRepository;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -63,10 +65,52 @@ class EventController extends Controller
             'participants as joined_count' => fn ($participants) => $participants
                 ->where('status', EventParticipantStatus::Joined),
         ]);
+        $viewer = request()->user();
+        $canModerateComments = $viewer?->can('comments.moderate') ?? false;
+        $comments = $event->comments()
+            ->whereNull('parent_id')
+            ->where(function (Builder $query) use ($viewer, $canModerateComments): void {
+                $query->where('status', Comment::STATUS_APPROVED);
+
+                if ($canModerateComments) {
+                    $query->orWhereIn('status', [
+                        Comment::STATUS_PENDING,
+                        Comment::STATUS_REJECTED,
+                        Comment::STATUS_SPAM,
+                    ]);
+                } elseif ($viewer !== null) {
+                    $query->orWhere(fn (Builder $own) => $own
+                        ->where('user_id', $viewer->id)
+                        ->whereIn('status', [Comment::STATUS_PENDING, Comment::STATUS_REJECTED]));
+                }
+            })
+            ->with([
+                'user',
+                'replies' => function ($replies) use ($viewer, $canModerateComments): void {
+                    $replies->where(function (Builder $query) use ($viewer, $canModerateComments): void {
+                        $query->where('status', Comment::STATUS_APPROVED);
+
+                        if ($canModerateComments) {
+                            $query->orWhereIn('status', [
+                                Comment::STATUS_PENDING,
+                                Comment::STATUS_REJECTED,
+                                Comment::STATUS_SPAM,
+                            ]);
+                        } elseif ($viewer !== null) {
+                            $query->orWhere(fn (Builder $own) => $own
+                                ->where('user_id', $viewer->id)
+                                ->whereIn('status', [Comment::STATUS_PENDING, Comment::STATUS_REJECTED]));
+                        }
+                    })->with('user')->orderBy('created_at');
+                },
+            ])
+            ->orderBy('created_at')
+            ->paginate(20);
 
         return view('events.show', [
             'event' => $event,
             'descriptionHtml' => $this->contentRenderer->render($event->description),
+            'comments' => $comments,
             'timezone' => $this->displayTimezone(),
         ]);
     }

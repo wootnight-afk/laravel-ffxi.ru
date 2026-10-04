@@ -35,6 +35,8 @@
             ])
         </section>
 
+        @include('events._comments', ['event' => $event, 'comments' => $comments])
+
         @auth
             <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px;">
                 @can('update', $event)
