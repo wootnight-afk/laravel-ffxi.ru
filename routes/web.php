@@ -11,6 +11,8 @@ use App\Http\Controllers\Cabinet\MyNewsController;
 use App\Http\Controllers\Cabinet\SecurityController;
 use App\Http\Controllers\CabinetController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\EventParticipantController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsController;
@@ -45,6 +47,25 @@ Route::get('/gallery/{album:slug}/{photo}', [GalleryController::class, 'showPhot
     ->whereNumber('photo')
     ->middleware('section.access:gallery')
     ->name('gallery.photo');
+
+Route::middleware('section.access:events')->group(function () {
+    Route::get('/events', [EventController::class, 'index'])->name('events.index');
+    Route::get('/events/create', [EventController::class, 'create'])
+        ->middleware(['auth', 'verified'])
+        ->name('events.create');
+    Route::get('/events/{event}/edit', [EventController::class, 'edit'])
+        ->middleware(['auth', 'verified'])
+        ->name('events.edit');
+    Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
+
+    Route::middleware(['auth', 'verified'])->group(function () {
+        Route::post('/events', [EventController::class, 'store'])->name('events.store');
+        Route::put('/events/{event}', [EventController::class, 'update'])->name('events.update');
+        Route::post('/events/{event}/cancel', [EventController::class, 'cancel'])->name('events.cancel');
+        Route::post('/events/{event}/join', [EventParticipantController::class, 'join'])->name('events.join');
+        Route::post('/events/{event}/leave', [EventParticipantController::class, 'leave'])->name('events.leave');
+    });
+});
 
 // ------------------------------------------------------------------
 // Players (auth)

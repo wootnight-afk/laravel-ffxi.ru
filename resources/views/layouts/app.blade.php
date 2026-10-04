@@ -18,6 +18,7 @@
         <nav class="nav-links">
             <a href="{{ route('news.index') }}" class="{{ request()->routeIs('news.*') ? 'active' : '' }}">Новости игры</a>
             <a href="{{ route('gallery.index') }}" class="{{ request()->routeIs('gallery.*') ? 'active' : '' }}">Галерея</a>
+            <a href="{{ route('events.index') }}" class="{{ request()->routeIs('events.*') ? 'active' : '' }}">События</a>
             <a href="{{ route('players.dashboard') }}" class="{{ request()->routeIs('players.*') ? 'active' : '' }}">Игроки</a>
             <a href="{{ route('contacts') }}" class="{{ request()->routeIs('contacts') ? 'active' : '' }}">Контакты</a>
         </nav>
