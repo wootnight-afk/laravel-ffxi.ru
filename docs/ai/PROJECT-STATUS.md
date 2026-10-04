@@ -1,7 +1,7 @@
 # Project Status — laravel-ffxi.ru
 
 ## HEAD
-`25fe067` на ветке `main`.
+`6dab1e2` на ветке `main` (HEAD до коммита архитектурного контракта Stage 8).
 
 ## Прогресс по этапам (§30 context.md)
 
@@ -15,7 +15,7 @@
 | 5 | Gallery | done | ImageProcessor, ProcessPhotoJob |
 | 6 | Profiles & cabinet | ACCEPTED | docs/acceptance/stage-6.md |
 | 7 | Dashboard | ACCEPTED | docs/acceptance/stage-7.md |
-| 8 | Filament | SCAFFOLD ONLY | /admin panel + canAccessPanel |
+| 8 | Filament | IN PROGRESS | /admin panel + canAccessPanel; архитектурный контракт: docs/ai/STAGE-8-CONTRACT.md |
 | 9 | Backup/restore | not started | — |
 | 10 | Tests (§9) | partial | 381 passed |
 | 11 | CI | not started | — |
@@ -66,5 +66,5 @@
 
 ## Порядок дальнейшей работы
 
-1. Stage 8 — Filament (12 Resources + 4 Pages).
+1. Stage 8 — E1 (Panel + Dashboard), согласно docs/ai/STAGE-8-CONTRACT.md.
 2. Stages 9–15 — по §30 context.md.
