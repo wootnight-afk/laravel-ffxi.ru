@@ -118,6 +118,22 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $this->hasMany(Comment::class);
     }
 
+    /**
+     * @return HasMany<Event, $this>
+     */
+    public function eventsAsLeader(): HasMany
+    {
+        return $this->hasMany(Event::class, 'user_id');
+    }
+
+    /**
+     * @return HasMany<EventParticipant, $this>
+     */
+    public function eventParticipations(): HasMany
+    {
+        return $this->hasMany(EventParticipant::class);
+    }
+
     public function isAdmin(): bool
     {
         return $this->hasRole('admin');
