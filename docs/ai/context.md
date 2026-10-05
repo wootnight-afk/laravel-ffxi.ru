@@ -389,9 +389,10 @@ Policy + re-auth (пароль) + audit. ActivityLog read-only для редак
 ## Навигация (4 группы)
 
     Основное      — Dashboard
-    Сообщество    — Users, Roles, Matrix, Guests
+    Сообщество    — Users, Guests
     Контент       — News, Comments, Gallery, Pages, Events
-    Система       — EventTypes, Ranks, Widgets, ActivityLog, Settings, Backup, Update
+    Система       — Roles, PermissionsMatrix, EventTypes, Ranks, Widgets,
+                    ActivityLog, Settings, Backup, Update
 
 ## Доступ
 

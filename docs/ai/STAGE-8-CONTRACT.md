@@ -211,6 +211,17 @@ read-only и доступен только admin.
 настроенные navigation groups в порядке: **Основное**, **Сообщество**,
 **Контент**, **Система**; фиксировать `navigationSort`.
 
+**Navigation groups (финальное решение):**
+
+- Основное: Dashboard.
+- Сообщество: Users, Guests.
+- Контент: News, Comments, Gallery, Pages, Events.
+- Система: Roles, PermissionsMatrix, EventTypes, Ranks, Widgets,
+  ActivityLog, Settings.
+
+**Roles + Matrix — только группа «Система», admin-only.**
+**Editor имеет доступ только к группе «Контент».**
+
 Locale интерфейса — `ru`. Все пользовательские подписи, labels,
 validation errors, notifications, confirmations и flash messages должны
 использовать переводные ключи, не разрозненные строки в Resource-коде.

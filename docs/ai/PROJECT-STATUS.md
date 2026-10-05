@@ -1,7 +1,7 @@
 # Project Status — laravel-ffxi.ru
 
 ## HEAD
-`6dab1e2` на ветке `main` (HEAD до коммита архитектурного контракта Stage 8).
+`65f903e` на ветке `main` (Stage 8: E1, E2, E7).
 
 ## Прогресс по этапам (§30 context.md)
 
@@ -15,9 +15,9 @@
 | 5 | Gallery | done | ImageProcessor, ProcessPhotoJob |
 | 6 | Profiles & cabinet | ACCEPTED | docs/acceptance/stage-6.md |
 | 7 | Dashboard | ACCEPTED | docs/acceptance/stage-7.md |
-| 8 | Filament | IN PROGRESS | /admin panel + canAccessPanel; архитектурный контракт: docs/ai/STAGE-8-CONTRACT.md |
+| 8 | Filament | IN PROGRESS | E1 ✅, E2 ✅ (a+b), E7 ✅; `/admin`; контракт: docs/ai/STAGE-8-CONTRACT.md |
 | 9 | Backup/restore | not started | — |
-| 10 | Tests (§9) | partial | 381 passed |
+| 10 | Tests (§9) | partial | 417 passed |
 | 11 | CI | not started | — |
 | 12 | Timeweb staging | not started | — |
 | 13 | Deployment | not started | — |
@@ -48,6 +48,17 @@
 - Приёмка Stage 7 ✅ — `docs/acceptance/stage-7.md`; устранено
   дублирование регистрации activity listeners.
 
+## Stage 8 — детализация
+
+- E1 ✅ — Panel navigation (4 группы) + AdminDashboard со статистикой,
+  графиком регистраций за 30 дней, audit preview и shortcuts.
+- E2 ✅ — UserResource, RoleResource, GuestResource; suspended account
+  workflow (миграция 000024) + account requests UI.
+- E7 ✅ — SettingsPage (8 групп), `App\Rules\IpAllowlist`,
+  `SettingsRepository::setMany` в транзакции, `admin_2fa_required=false`
+  и `admin_ip_allowlist=[]` по умолчанию, re-auth при изменении allowlist.
+- Далее: E3 → E4 → E5 → E6 → E8 → E9 (см. §2 контракта).
+
 ## Контракты, которые НЕЛЬЗЯ менять
 
 - Roles: только user / editor / admin. Никаких owner/moderator/super_admin.
@@ -66,5 +77,6 @@
 
 ## Порядок дальнейшей работы
 
-1. Stage 8 — E1 (Panel + Dashboard), согласно docs/ai/STAGE-8-CONTRACT.md.
+1. Stage 8 — E3 (Permissions Matrix), затем E4 → E5 → E6 → E8 → E9,
+   согласно docs/ai/STAGE-8-CONTRACT.md.
 2. Stages 9–15 — по §30 context.md.

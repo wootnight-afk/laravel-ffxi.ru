@@ -613,9 +613,9 @@ Editor видит только «Контент».
   фильтры + вкладка «Запросы на удаление» с бейджем; действия 6.12
   (re-auth).
 - **Guests:** список guest_visitors.
-- **Roles:** CRUD + syncPermissions.
-- **Matrix:** таблица «раздел × роль» + guest-флаги; сохранение = sync
-  `section.*.view` + guest-JSON.
+
+> Roles и Matrix относятся к группе навигации «Система» (см. §7.5),
+> а не к «Сообществу».
 
 ## 7.3 Контент (admin + editor)
 
@@ -640,6 +640,9 @@ CRUD `dashboard_widgets`: title, type, is_active, sort_order
 
 ## 7.5 Система (admin)
 
+- **Roles:** CRUD + syncPermissions. Только admin, группа «Система».
+- **Matrix:** таблица «раздел × роль» + guest-флаги; сохранение = sync
+  `section.*.view` + guest-JSON. Только admin, группа «Система».
 - **ActivityLog:** `admin_audit_logs` + community activities.
 - **EventTypes:** CRUD.
 - **Ranks:** CRUD.
