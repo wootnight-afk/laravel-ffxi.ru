@@ -71,9 +71,8 @@ Autonomous work rules: `docs/ai/MASTER-TASK.md`.
 
 Short summary:
 - HEAD: `64ca101` on `main`.
-- Stages 1–6: ACCEPTED (see `docs/acceptance/stage-6.md`).
-- Stage 7 (Dashboard): D1–D3 done, D4–D7 pending.
-- Stage 8 (Filament): panel scaffold only.
-- Tests: 311 passed.
+- Stages 1–8: ACCEPTED (см. docs/acceptance/).
+- Stage 9 (Backup/restore/rollback): E9.0 done — ADR-004 + STAGE-9-CONTRACT.md. E9.1–E9.8 pending (E9.1: Backup core).
+- Tests: 549 passed.
 
-Next step: D4 — Chat (see `PROJECT-STATUS.md`).
+Next step: E9.1 — Backup core (см. PROJECT-STATUS.md).
