@@ -56,6 +56,12 @@ RUN docker-php-ext-configure gd \
 # pre-built vendor/ shipped by rsync per spec section 22).
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
+# Runtime PHP configuration (spec section 4). The php:8.4-fpm image
+# reads every *.ini in conf.d/ for both the FPM and CLI SAPIs, so this
+# is the single source of truth for the dev container's PHP settings
+# (e.g. memory_limit). Editing php.ini requires an image rebuild.
+COPY php.ini /usr/local/etc/php/conf.d/zz-ffxi-dev.ini
+
 # Non-root runtime user, matches typical WSL2 host UID/GID.
 # FPM pool is reconfigured to use this user instead of www-data so that
 # files created by the container on bind mounts are owned by the host user.
