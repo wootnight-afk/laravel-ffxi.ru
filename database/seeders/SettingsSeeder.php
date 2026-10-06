@@ -34,6 +34,10 @@ class SettingsSeeder extends Seeder
             'admin_ip_allowlist' => [],
             'admin_new_ip_notify' => true,
             'timezone_display' => 'Europe/Moscow',
+            'backup_retention_daily' => 7,
+            'backup_retention_weekly' => 4,
+            'backup_retention_monthly' => 12,
+            'min_free_space_pct' => 5,
             'guest_chat_enabled' => false,
             'guest_sections' => [
                 'home' => true,

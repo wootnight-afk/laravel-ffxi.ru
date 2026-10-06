@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services\Backup;
 
+use FilesystemIterator;
 use Illuminate\Support\Facades\Process;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use RuntimeException;
+use SplFileInfo;
 use Symfony\Component\Process\ExecutableFinder;
 
 /**
@@ -173,6 +177,51 @@ class FilesArchiver
     }
 
     /**
+     * Estimate the on-disk size (bytes) of the files that would be archived
+     * for a scope, honouring the exclude list. Used by the free-space safety
+     * check (ADR-004 section 5.2).
+     */
+    public function estimateSize(string $scope): int
+    {
+        $total = 0;
+
+        foreach ($this->resolveIncludePaths($scope) as $candidate) {
+            $absolute = base_path($candidate);
+
+            if (is_file($absolute)) {
+                if (! $this->isExcluded($candidate)) {
+                    $total += $this->fileSize($absolute);
+                }
+
+                continue;
+            }
+
+            if (! is_dir($absolute)) {
+                continue;
+            }
+
+            $iterator = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($absolute, FilesystemIterator::SKIP_DOTS),
+                RecursiveIteratorIterator::LEAVES_ONLY,
+            );
+
+            foreach ($iterator as $file) {
+                if (! $file instanceof SplFileInfo || ! $file->isFile()) {
+                    continue;
+                }
+
+                if ($this->isExcluded($this->relativePath($file->getPathname()))) {
+                    continue;
+                }
+
+                $total += $this->fileSize($file->getPathname());
+            }
+        }
+
+        return $total;
+    }
+
+    /**
      * @param  array<int, string>  $files
      */
     private function writeListFile(array $files): string
@@ -186,6 +235,43 @@ class FilesArchiver
         file_put_contents($path, implode("\n", $files)."\n");
 
         return $path;
+    }
+
+    /**
+     * Relative, forward-slash path of an absolute path inside the project root.
+     */
+    private function relativePath(string $absolutePath): string
+    {
+        $relative = str_replace(base_path(), '', $absolutePath);
+        $relative = ltrim($relative, DIRECTORY_SEPARATOR);
+
+        return str_replace(DIRECTORY_SEPARATOR, '/', $relative);
+    }
+
+    private function isExcluded(string $relativePath): bool
+    {
+        foreach (self::EXCLUDE_PATTERNS as $pattern) {
+            if (str_contains($pattern, '*')) {
+                if (fnmatch($pattern, $relativePath)) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            if ($relativePath === $pattern || str_starts_with($relativePath, $pattern.'/')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function fileSize(string $path): int
+    {
+        $size = @filesize($path);
+
+        return $size === false ? 0 : $size;
     }
 
     private function resolveBinary(): ?string

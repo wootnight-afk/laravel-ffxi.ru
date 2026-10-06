@@ -45,6 +45,7 @@ class BackupService
         private readonly FilesArchiver $archiver,
         private readonly BackupStorage $storage,
         private readonly BackupLock $lock,
+        private readonly BackupRetention $retention,
     ) {}
 
     /**
@@ -66,6 +67,10 @@ class BackupService
         }
 
         try {
+            // Free-space safety (ADR-004 section 5.2): abort before writing
+            // anything when the expected backup would leave too little space.
+            $this->retention->ensureSpaceAvailable($this->expectedSizeBytes($mode, $scope));
+
             return $this->performCreate($mode, $scope, $triggeredBy, $userId);
         } finally {
             $this->lock->release('backup');
@@ -235,6 +240,25 @@ class BackupService
     private function includesFiles(string $mode): bool
     {
         return $mode === BackupManifest::TYPE_FULL || $mode === BackupManifest::TYPE_SITE_ONLY;
+    }
+
+    /**
+     * Estimated uncompressed size of the artifacts a backup will produce,
+     * used by the free-space safety check (ADR-004 section 5.2).
+     */
+    private function expectedSizeBytes(string $mode, ?string $scope): int
+    {
+        $expected = 0;
+
+        if ($this->includesDatabase($mode)) {
+            $expected += $this->dbSizeBytes();
+        }
+
+        if ($this->includesFiles($mode)) {
+            $expected += $this->archiver->estimateSize((string) $scope);
+        }
+
+        return $expected;
     }
 
     private function workingDirectory(): string

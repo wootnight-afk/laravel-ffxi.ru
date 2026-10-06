@@ -302,9 +302,9 @@ it('prints the backup id, type, scope and manifest path', function () {
         ->toContain('.manifest.json');
 });
 
-it('reports that retention cleanup is scheduled for E9.3', function () {
+it('applies retention cleanup and reports the number of deletions', function () {
     $this->artisan('app:backup-cleanup')
-        ->expectsOutputToContain('E9.3')
+        ->expectsOutputToContain('Deleted')
         ->assertExitCode(0);
 });
 
