@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\AdminDashboard;
+use App\Filament\Pages\BackupPage;
 use App\Filament\Pages\PermissionsMatrixPage;
 use App\Filament\Pages\SettingsPage;
 use App\Filament\Widgets\AdminDashboardStats;
@@ -65,6 +66,7 @@ class AdminPanelProvider extends PanelProvider
                 AdminDashboard::class,
                 PermissionsMatrixPage::class,
                 SettingsPage::class,
+                BackupPage::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([

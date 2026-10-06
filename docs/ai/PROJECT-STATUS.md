@@ -16,8 +16,8 @@
 | 6 | Profiles & cabinet | ACCEPTED | docs/acceptance/stage-6.md |
 | 7 | Dashboard | ACCEPTED | docs/acceptance/stage-7.md |
 | 8 | Filament | ACCEPTED | docs/acceptance/stage-8.md; контракт: docs/ai/STAGE-8-CONTRACT.md |
-| 9 | Backup/restore | E9.3 done | docs/adr/ADR-004-backup-restore.md, docs/ai/STAGE-9-CONTRACT.md |
-| 10 | Tests (§9) | partial | 624 passed |
+| 9 | Backup/restore | E9.4 done | docs/adr/ADR-004-backup-restore.md, docs/ai/STAGE-9-CONTRACT.md |
+| 10 | Tests (§9) | partial | 639 passed |
 | 11 | CI | not started | — |
 | 12 | Timeweb staging | not started | — |
 | 13 | Deployment | not started | — |
@@ -93,7 +93,12 @@
   `app:backup-cleanup` (под backup-lock), free-space safety
   (`FilesArchiver::estimateSize` + `min_free_space_pct`), settings-ключи
   `backup_retention_{daily,weekly,monthly}` и `min_free_space_pct`.
-- E9.4–E9.8 — pending (E9.4: Filament `BackupPage`).
+- E9.4 ✅ — Filament `BackupPage` (admin-only, `/admin/backups`):
+  таблица backup'ов (array-records), создание (radio mode/scope + Scope B
+  warning), просмотр/download manifest, удаление, retention settings;
+  audit `backup.created`/`backup.deleted` без IP (contract §12). Restore —
+  только CLI (R4); restore-request flow — E9.5 (§2).
+- E9.5–E9.8 — pending (E9.5: `restore_requests` + restore-request flow).
 
 ## Контракты, которые НЕЛЬЗЯ менять
 

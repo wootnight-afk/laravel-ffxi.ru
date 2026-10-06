@@ -18,6 +18,8 @@ class AuditLogger
      * @param  array<string, mixed>|null  $old  Prior state snapshot (never secrets).
      * @param  array<string, mixed>|null  $new  New state snapshot (never secrets).
      * @param  User|null  $actor  Explicit actor; defaults to the authenticated user.
+     * @param  bool  $recordIp  Record the request IP/UA. Kept for security events
+     *                          only (restore/rollback); plain mutations pass false.
      */
     public function log(
         string $action,
@@ -25,6 +27,7 @@ class AuditLogger
         ?array $old = null,
         ?array $new = null,
         ?User $actor = null,
+        bool $recordIp = true,
     ): AdminAuditLog {
         $actor ??= auth()->user();
 
@@ -35,8 +38,8 @@ class AuditLogger
             'subject_id' => $subject?->getKey(),
             'old' => $old,
             'new' => $new,
-            'ip' => $this->resolveIp(),
-            'user_agent' => $this->resolveUserAgent(),
+            'ip' => $recordIp ? $this->resolveIp() : null,
+            'user_agent' => $recordIp ? $this->resolveUserAgent() : null,
             'created_at' => now(),
         ]);
     }
