@@ -11,7 +11,9 @@ class EditUser extends EditRecord
     protected static string $resource = UserResource::class;
 
     /**
-     * Hard deletion remains unavailable until the re-authenticated E8 flow.
+     * Destructive account actions (restore, re-authenticated hard delete) are
+     * exposed from the user list to keep the edit page free of irreversible
+     * operations.
      *
      * @return array<Action>
      */

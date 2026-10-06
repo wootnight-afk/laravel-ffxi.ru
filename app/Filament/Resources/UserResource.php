@@ -3,11 +3,13 @@
 namespace App\Filament\Resources;
 
 use App\Enums\UserStatus;
+use App\Filament\Actions\ReAuthenticateAction;
 use App\Filament\Concerns\LogsAdminActivity;
 use App\Filament\Resources\UserResource\Pages\EditUser;
 use App\Filament\Resources\UserResource\Pages\ListUsers;
 use App\Filament\Resources\UserResource\RelationManagers\SocialLinksRelationManager;
 use App\Models\User;
+use App\Services\AdminActivityLogger;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DateTimePicker;
@@ -167,6 +169,23 @@ class UserResource extends Resource
 
                         $record->forceFill(['status' => UserStatus::Active])->save();
                     }),
+                ReAuthenticateAction::make(
+                    name: 'hard_delete',
+                    label: __('filament.resources.users.actions.hard_delete'),
+                    callback: function (?Model $record): void {
+                        if (! $record instanceof User) {
+                            return;
+                        }
+
+                        // Account status only: content is never touched
+                        // automatically (R3).
+                        $record->delete();
+
+                        app(AdminActivityLogger::class)->record($record, 'hard_deleted');
+                    },
+                )
+                    ->modalDescription(__('filament.resources.users.actions.hard_delete_confirm'))
+                    ->successNotificationTitle(__('filament.resources.users.actions.hard_deleted')),
             ])
             ->recordUrl(null);
     }
