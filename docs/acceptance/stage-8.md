@@ -3,9 +3,9 @@
 | Поле | Значение |
 |---|---|
 | Дата | 2026-10-06 |
-| HEAD | 9e8ccbf |
+| HEAD | cc252b4 |
 | Ветка | main |
-| Статус | ACCEPTED (см. §4.1 — одно отклонение от R4) |
+| Статус | ACCEPTED |
 
 ---
 
@@ -92,7 +92,7 @@
 | **R1** — Markdown editor, единый безопасный pipeline; Comment — plain text | `MarkdownEditor` в News/Page, `ContentRenderer` + `HtmlSanitizer`; комментарии escaped | `NewsResourceTest`, `PageResourceTest`, `CommentResourceTest`, `Stage8AcceptanceTest`, `HtmlSanitizerTest` | ✅ |
 | **R2** — Editor — контентный администратор | `canViewAny`/`canCreate`/`canEdit` per resource; editor ограничен группой «Контент» | `UserRoleGuestResourcesTest`, `EventTypeResourceTest`, `Stage8AcceptanceTest` | ✅ |
 | **R3** — Запросы без авто-удаления контента | `restore` меняет только статус; hard delete = soft delete без каскада | `UserRequestWorkflowTest`, `ReAuthenticateActionTest`, `UserRoleGuestResourcesTest` | ✅ |
-| **R4** — Аудит без secrets/PII | `LogsAdminActivity` + `AdminActivityLogger`, redaction, без дублей | `AdminActivityAuditTest`, `ActivityLogResourceTest`, `Stage8AcceptanceTest` | ⚠️ см. §4.1 |
+| **R4** — Аудит без secrets/PII | `LogsAdminActivity` + `AdminActivityLogger`, redaction, без дублей; смена ролей — `user.roles_changed` | `AdminActivityAuditTest`, `UserRoleAuditTest`, `ActivityLogResourceTest`, `Stage8AcceptanceTest` | ✅ |
 | **R5** — MFA opt-in | `AppAuthentication` + динамический gate по `admin_2fa_required` | `MultiFactorAuthenticationTest`, `SettingsPageTest`, `Stage8AcceptanceTest` | ✅ |
 | **R6** — IP allowlist opt-in | `EnsureAdminIpAllowed`, пустой список = allow-all | `AdminIpAllowlistTest`, `SettingsPageTest` | ✅ |
 | **R7** — Экспорт исключён | Нет ExportAction/кнопок/кода | `Stage8AcceptanceTest` + per-resource проверки в `NewsResourceTest`, `PageResourceTest`, `GalleryResourceTest`, `EventResourceTest`, `EventTypeResourceTest`, `RankResourceTest`, `DashboardWidgetResourceTest` | ✅ |
@@ -123,22 +123,28 @@
 Дополнительно обновлён `AdminActivityAuditTest` — тест приведён в соответствие
 с корректным поведением после fix `email_verified_at`.
 
+### Fix R4: аудит смены ролей (отдельный коммит)
+
+Отклонение R4, найденное при приёмке (смена роли применялась, но не
+логировалась), закрыто отдельным коммитом
+`fix(stage-8): audit role assignment changes (R4)`:
+
+- `EditUser` снимает роли в `beforeSave` (до сохранения Spatie-relation) и
+  сравнивает их в `afterSave`, записывая `user.roles_changed` с payload
+  `old`/`new` = `{roles: [...]}`.
+- Роли — relation, а не атрибут, поэтому generic-listener их не видит и
+  дублей нет (подтверждено тестом «ровно одна запись»).
+- `LogsAdminActivity` менять не потребовалось: `roles` не попадает в
+  generic-payload.
+- Bulk-смена ролей в `UserResource` отсутствует — расширение не требуется.
+
+Тесты: `tests/Feature/Filament/UserRoleAuditTest.php` — 5 тестов (26 assertions).
+
 ---
 
 ## 4. Известные gaps
 
-### 4.1 Отклонение от R4: смена роли не попадает в аудит
-
-R4 (§135 контракта) требует явно логировать `assignRole`. Проверено на
-runtime: смена роли пользователя через `EditUser` **применяется**, но не
-создаёт audit-запись (payload пуст). Остальные перечисленные действия
-(`create`, `update`, `delete`, `publish`, `reject`, `restore`) логируются.
-
-Не исправлено в рамках E9: приёмка не меняет runtime, а запрет «не менять
-runtime сверх fix `email_verified_at`» это исключает. Требуется отдельный
-fix-коммит, например `fix(stage-8): audit role assignment changes (R4)`.
-
-### 4.2 Прочие ограничения
+### 4.1 Прочие ограничения
 
 | Gap | Куда перенесён |
 |---|---|
@@ -149,6 +155,7 @@ fix-коммит, например `fix(stage-8): audit role assignment changes 
 | Уведомления пользователю при restore / hard delete | опционально, не реализовано |
 | Restore очищает только статус, не `suspension_reason` | соответствует §5 контракта, но расходится с текстом ТЗ E8.5 |
 | Hard delete не затирает PII и не освобождает/резервирует ник | соответствует R3, расходится с `frontend-spec.md §6.12` |
+| Bulk-смена ролей в UserResource отсутствует | нет bulk-action, расширять не требуется (R4 покрывает single-action) |
 | Trusted proxies / реальный IP за прокси | Stage 12 |
 
 ---
@@ -181,10 +188,9 @@ fix-коммит, например `fix(stage-8): audit role assignment changes 
       автоматическое изменение контента.
 - [x] MFA self-service доступна, но не обязательна по умолчанию; allowlist
       выключен пустым списком и защищает все panel routes при включении.
-- [ ] Audit actions реализованы без дубликатов и без раскрытия запрещённых
-      secrets/PII; `ActivityLogResource` read-only/admin-only —
-      дубликаты и redaction в порядке, **но `assignRole` не логируется**
-      (§4.1).
+- [x] Audit actions реализованы без дубликатов и без раскрытия запрещённых
+      secrets/PII; `ActivityLogResource` read-only/admin-only; смена ролей
+      логируется как `user.roles_changed`.
 - [x] ExportAction/кнопки экспорта отсутствуют; BackupPage — Stage 9,
       UpdatePage — Stage 15, `api_chart`/`html_board` не включены.
 - [x] Pest, Pint, Larastan и `git diff --check` проходят; `stage-8.md`
@@ -195,9 +201,9 @@ fix-коммит, например `fix(stage-8): audit role assignment changes 
 
 ## 7. Результаты проверок
 
-- **Pest:** 544 passed (1680 assertions).
+- **Pest:** 549 passed (1706 assertions).
 - **Larastan:** `[OK] No errors`.
-- **Pint:** PASS (320 files).
+- **Pint:** PASS (321 files).
 - **`git diff --check`:** exit 0.
 - **`php artisan view:cache`:** OK.
 
