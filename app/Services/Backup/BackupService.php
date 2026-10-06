@@ -55,14 +55,22 @@ class BackupService
      * @param  string|null  $scope  a | b | storage_app | whole_site | null
      * @param  string  $triggeredBy  cron | deploy | admin:{id} | cli
      * @param  int|null  $userId  actor id for admin-triggered backups
+     * @param  bool  $acquireLock  When false the caller already holds the backup
+     *                             lock (used by the restore auto-backup, contract
+     *                             section 6.5 step 3) and the lock is left alone.
      */
-    public function create(string $mode, ?string $scope, string $triggeredBy, ?int $userId = null): BackupManifest
-    {
+    public function create(
+        string $mode,
+        ?string $scope,
+        string $triggeredBy,
+        ?int $userId = null,
+        bool $acquireLock = true,
+    ): BackupManifest {
         $mode = $this->normaliseMode($mode);
         $scope = $this->normaliseScope($mode, $scope);
         $this->assertValidCombination($mode, $scope);
 
-        if (! $this->lock->acquire('backup')) {
+        if ($acquireLock && ! $this->lock->acquire('backup')) {
             throw new RuntimeException('Another backup or restore is already running.');
         }
 
@@ -73,7 +81,9 @@ class BackupService
 
             return $this->performCreate($mode, $scope, $triggeredBy, $userId);
         } finally {
-            $this->lock->release('backup');
+            if ($acquireLock) {
+                $this->lock->release('backup');
+            }
         }
     }
 

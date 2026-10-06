@@ -101,6 +101,28 @@ backup: ## Create a backup (MODE=full|site|db, SCOPE=a|b).
 		--triggered-by=cli
 
 # ------------------------------------------------------------------
+# Rollback / restore (stage 9, spec section 24)
+#
+# The restore request is created in BackupPage (admin, re-auth + MFA).
+#   make rollback LIST
+#   make rollback CHECK <request_id>
+#   make rollback APPLY <request_id>
+# ------------------------------------------------------------------
+
+.PHONY: rollback
+rollback: ## Rollback: LIST | CHECK <id> | APPLY <id>.
+	@docker compose exec -T app php artisan app:rollback \
+		$(filter-out rollback,$(MAKECMDGOALS))
+
+# Swallow the positional goals (LIST / CHECK / APPLY / <id>) so Make does not
+# treat them as unknown targets when `rollback` is invoked.
+ifneq ($(filter rollback,$(MAKECMDGOALS)),)
+%:
+	@:
+endif
+
+
+# ------------------------------------------------------------------
 # Quality gates (match the CI pipeline, spec section 21)
 # ------------------------------------------------------------------
 
@@ -133,6 +155,5 @@ validate: ## Run composer validate --strict.
 # behind them (spec section 32 forbids placeholder targets).
 #
 #   deploy        stage 13 — rsync + production commands
-#   rollback      stage 13 — previous release tag
 #   restore-test  stage 11 — restore into a separate dev environment
 # ------------------------------------------------------------------

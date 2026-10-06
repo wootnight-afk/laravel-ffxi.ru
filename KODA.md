@@ -70,9 +70,11 @@ Full project status: `docs/ai/PROJECT-STATUS.md`.
 Autonomous work rules: `docs/ai/MASTER-TASK.md`.
 
 Short summary:
-- HEAD: `6846c30` on `main`.
+- HEAD: `3c9ca0f` on `main`.
 - Stages 1–8: ACCEPTED (см. docs/acceptance/).
-- Stage 9 (Backup/restore/rollback): E9.0 done — ADR-004 + STAGE-9-CONTRACT.md. E9.1–E9.8 pending (E9.1: Backup core).
-- Tests: 549 passed.
+- Stage 9 (Backup/restore/rollback): E9.5 done — backup core + retention +
+  admin BackupPage + restore (restore_requests, HMAC, CLI rollback).
+  E9.6–E9.8 pending (E9.6: scheduler).
+- Tests: 668 passed.
 
-Next step: E9.1 — Backup core (см. PROJECT-STATUS.md).
+Next step: E9.6 — scheduler (DB-only backup + cleanup) (см. PROJECT-STATUS.md).

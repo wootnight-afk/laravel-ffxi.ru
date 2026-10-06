@@ -1,7 +1,7 @@
 # Project Status — laravel-ffxi.ru
 
 ## HEAD
-`6846c30` на ветке `main` (Stage 9: E9.0 — контракт).
+`3c9ca0f` на ветке `main` (Stage 9: E9.4 — admin BackupPage).
 
 ## Прогресс по этапам (§30 context.md)
 
@@ -16,8 +16,8 @@
 | 6 | Profiles & cabinet | ACCEPTED | docs/acceptance/stage-6.md |
 | 7 | Dashboard | ACCEPTED | docs/acceptance/stage-7.md |
 | 8 | Filament | ACCEPTED | docs/acceptance/stage-8.md; контракт: docs/ai/STAGE-8-CONTRACT.md |
-| 9 | Backup/restore | E9.4 done | docs/adr/ADR-004-backup-restore.md, docs/ai/STAGE-9-CONTRACT.md |
-| 10 | Tests (§9) | partial | 639 passed |
+| 9 | Backup/restore | E9.5 done | docs/adr/ADR-004-backup-restore.md, docs/ai/STAGE-9-CONTRACT.md |
+| 10 | Tests (§9) | partial | 668 passed |
 | 11 | CI | not started | — |
 | 12 | Timeweb staging | not started | — |
 | 13 | Deployment | not started | — |
@@ -98,7 +98,14 @@
   warning), просмотр/download manifest, удаление, retention settings;
   audit `backup.created`/`backup.deleted` без IP (contract §12). Restore —
   только CLI (R4); restore-request flow — E9.5 (§2).
-- E9.5–E9.8 — pending (E9.5: `restore_requests` + restore-request flow).
+- E9.5 ✅ — restore: миграция/модель `restore_requests` (UUID, HMAC-SHA256,
+  expiry 30 мин), `RestoreRequestService`, `RestoreService` (read-only
+  `check` + `apply`: lock, auto-backup, maintenance, DB→files, smoke-test,
+  audit), `app:rollback LIST/CHECK/APPLY`, `app:restore-test` (каркас),
+  `make rollback`, restore-request flow в `BackupPage` (re-auth + MFA
+  панели, admin-only). Audit `restore.requested/applied/failed/rejected`
+  с IP (security-события). HTTP restore отсутствует (R4).
+- E9.6–E9.8 — pending (E9.6: scheduler DB-only backup + cleanup).
 
 ## Контракты, которые НЕЛЬЗЯ менять
 

@@ -2,10 +2,12 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\RestoreRequest;
 use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\Backup\BackupManifest;
 use App\Services\Backup\BackupService;
+use App\Services\Backup\RestoreRequestService;
 use App\Services\SettingsRepository;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Radio;
@@ -125,6 +127,7 @@ class BackupPage extends Page implements HasTable
             ->recordActions([
                 $this->buildViewManifestAction(),
                 $this->buildDownloadManifestAction(),
+                $this->buildRestoreRequestAction(),
                 $this->buildDeleteBackupAction(),
             ])
             ->paginated(false);
@@ -316,6 +319,71 @@ class BackupPage extends Page implements HasTable
                     $backupId.'.manifest.json',
                     ['Content-Type' => 'application/json'],
                 );
+            });
+    }
+
+    /**
+     * Create a restore request (HTTP never performs the restore itself).
+     *
+     * Re-auth (current password) is enforced by the form rule; MFA is enforced
+     * by the panel middleware. The action only records a pending
+     * {@see RestoreRequest} and shows the CLI instruction
+     * (ADR-004 R4/R5, contract section 6.2).
+     */
+    private function buildRestoreRequestAction(): Action
+    {
+        return Action::make('restoreRequest')
+            ->label(__('filament.backup.actions.restore'))
+            ->icon('heroicon-o-arrow-uturn-left')
+            ->color('danger')
+            ->requiresConfirmation()
+            ->modalHeading(__('filament.backup.actions.restore'))
+            ->modalDescription(__('filament.backup.restore_confirm'))
+            ->modalSubmitActionLabel(__('filament.backup.actions.restore'))
+            ->visible(fn (): bool => static::canAccess())
+            ->schema([
+                TextInput::make('password')
+                    ->label(__('filament.reauth.password'))
+                    ->password()
+                    ->revealable()
+                    ->required()
+                    ->rule('current_password'),
+            ])
+            ->action(function (array $record): void {
+                abort_unless(static::canAccess(), 403);
+
+                /** @var User $actor */
+                $actor = auth()->user();
+                $backupId = (string) ($record['backup_id'] ?? '');
+                $manifest = app(BackupService::class)->find($backupId);
+
+                if ($manifest === null) {
+                    Notification::make()
+                        ->danger()
+                        ->title(__('filament.backup.restore_failed'))
+                        ->send();
+
+                    return;
+                }
+
+                $request = app(RestoreRequestService::class)->create($backupId, (int) $actor->getKey());
+
+                // Security event: IP/UA are recorded (contract section 12).
+                app(AuditLogger::class)->log(
+                    action: 'restore.requested',
+                    new: [
+                        'request_id' => $request->id,
+                        'backup_id' => $backupId,
+                        'expires_at' => $request->expires_at->toIso8601String(),
+                    ],
+                );
+
+                Notification::make()
+                    ->warning()
+                    ->title(__('filament.backup.restore_requested'))
+                    ->body(__('filament.backup.restore_instruction', ['id' => $request->id]))
+                    ->persistent()
+                    ->send();
             });
     }
 
