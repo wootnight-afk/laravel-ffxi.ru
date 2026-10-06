@@ -8,6 +8,7 @@ use App\Filament\Pages\SettingsPage;
 use App\Filament\Widgets\AdminDashboardStats;
 use App\Filament\Widgets\RecentAuditLogs;
 use App\Filament\Widgets\RegistrationsChart;
+use App\Http\Middleware\EnsureAdminIpAllowed;
 use App\Http\Middleware\EnsureAdminMultiFactorAuthentication;
 use App\Http\Middleware\SetAdminPanelLocale;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
@@ -83,6 +84,7 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
                 SetAdminPanelLocale::class,
+                EnsureAdminIpAllowed::class,
             ], isPersistent: true)
             ->authMiddleware([
                 Authenticate::class,
