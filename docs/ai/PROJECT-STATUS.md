@@ -1,7 +1,7 @@
 # Project Status — laravel-ffxi.ru
 
 ## HEAD
-`0ff7e5d` на ветке `main` (Stage 8: ACCEPTED).
+`ab6060d` на ветке `main` (Stage 8: ACCEPTED).
 
 ## Прогресс по этапам (§30 context.md)
 
@@ -17,7 +17,7 @@
 | 7 | Dashboard | ACCEPTED | docs/acceptance/stage-7.md |
 | 8 | Filament | ACCEPTED | docs/acceptance/stage-8.md; контракт: docs/ai/STAGE-8-CONTRACT.md |
 | 9 | Backup/restore | not started | — |
-| 10 | Tests (§9) | partial | 544 passed |
+| 10 | Tests (§9) | partial | 549 passed |
 | 11 | CI | not started | — |
 | 12 | Timeweb staging | not started | — |
 | 13 | Deployment | not started | — |
@@ -74,9 +74,10 @@
 - E8.5 ✅ — Request workflow: restore (только статус), re-auth hard delete
   без каскада, фильтр «Запросы».
 - Fix ✅ — `email_verified_at` добавлен в `#[Fillable]` `User`.
+- Fix ✅ — R4 закрыт: смена ролей логируется как `user.roles_changed`
+  (`EditUser` before/after save; тесты `UserRoleAuditTest`).
 - E9 ✅ — acceptance gap-fill (15 тестов) + `docs/acceptance/stage-8.md`.
-- **Открытое отклонение:** R4 `assignRole` не логируется
-  (`stage-8.md` §4.1) — требуется отдельный fix-коммит.
+- Все отклонения R1–R7 закрыты; Stage 8 — ACCEPTED.
 
 ## Контракты, которые НЕЛЬЗЯ менять
 
@@ -98,5 +99,4 @@
 
 1. Stage 9 — Backup / restore / rollback (Step 1: архитектура), по
    §30 context.md и `docs/ai/STAGE-8-CONTRACT.md` §12 (перенесено).
-2. Отдельный fix-коммит: R4 `assignRole` audit (stage-8.md §4.1).
-3. Stages 10–15 — по §30 context.md.
+2. Stages 10–15 — по §30 context.md.
