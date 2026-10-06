@@ -168,6 +168,8 @@ class UserResource extends Resource
                         abort_unless(auth()->user()?->can('users.manage'), 403);
 
                         $record->forceFill(['status' => UserStatus::Active])->save();
+
+                        app(AdminActivityLogger::class)->record($record, 'restored');
                     }),
                 ReAuthenticateAction::make(
                     name: 'hard_delete',
