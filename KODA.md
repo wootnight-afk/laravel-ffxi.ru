@@ -70,7 +70,7 @@ Full project status: `docs/ai/PROJECT-STATUS.md`.
 Autonomous work rules: `docs/ai/MASTER-TASK.md`.
 
 Short summary:
-- HEAD: `404631b` on `main`.
+- HEAD: `64ca101` on `main`.
 - Stages 1–6: ACCEPTED (see `docs/acceptance/stage-6.md`).
 - Stage 7 (Dashboard): D1–D3 done, D4–D7 pending.
 - Stage 8 (Filament): panel scaffold only.
