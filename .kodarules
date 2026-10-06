@@ -124,8 +124,11 @@ CURRENT STATE — см. docs/ai/PROJECT-STATUS.md
 Правила автономной работы агента — см. docs/ai/MASTER-TASK.md
 
 Краткая справка:
-- HEAD: 25fe067
-- Stages 1–7: ACCEPTED (см. docs/acceptance/).
-- Stage 8 (Filament): только panel scaffold.
-- Тесты: 381 passed.
-- Следующий шаг: Stage 8 — Filament (см. PROJECT-STATUS.md).
+- HEAD: 0ff7e5d
+- Stages 1–8: ACCEPTED (см. docs/acceptance/).
+- Stage 8 (Filament): 12 Resources + 2 custom Pages, MFA opt-in,
+  IP allowlist, audit trait, re-auth, request workflow.
+  Отчёт: docs/acceptance/stage-8.md.
+- Тесты: 544 passed.
+- Следующий шаг: Stage 9 — Backup/restore/rollback (Step 1).
+- Открытое отклонение: R4 `assignRole` не логируется (stage-8.md §4.1).

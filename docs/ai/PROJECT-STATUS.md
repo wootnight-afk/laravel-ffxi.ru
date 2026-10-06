@@ -1,7 +1,7 @@
 # Project Status — laravel-ffxi.ru
 
 ## HEAD
-`65f903e` на ветке `main` (Stage 8: E1, E2, E7).
+`0ff7e5d` на ветке `main` (Stage 8: ACCEPTED).
 
 ## Прогресс по этапам (§30 context.md)
 
@@ -15,9 +15,9 @@
 | 5 | Gallery | done | ImageProcessor, ProcessPhotoJob |
 | 6 | Profiles & cabinet | ACCEPTED | docs/acceptance/stage-6.md |
 | 7 | Dashboard | ACCEPTED | docs/acceptance/stage-7.md |
-| 8 | Filament | IN PROGRESS | E1 ✅, E2 ✅ (a+b), E7 ✅; `/admin`; контракт: docs/ai/STAGE-8-CONTRACT.md |
+| 8 | Filament | ACCEPTED | docs/acceptance/stage-8.md; контракт: docs/ai/STAGE-8-CONTRACT.md |
 | 9 | Backup/restore | not started | — |
-| 10 | Tests (§9) | partial | 417 passed |
+| 10 | Tests (§9) | partial | 544 passed |
 | 11 | CI | not started | — |
 | 12 | Timeweb staging | not started | — |
 | 13 | Deployment | not started | — |
@@ -57,7 +57,26 @@
 - E7 ✅ — SettingsPage (8 групп), `App\Rules\IpAllowlist`,
   `SettingsRepository::setMany` в транзакции, `admin_2fa_required=false`
   и `admin_ip_allowlist=[]` по умолчанию, re-auth при изменении allowlist.
-- Далее: E3 → E4 → E5 → E6 → E8 → E9 (см. §2 контракта).
+- E3 ✅ — PermissionsMatrixPage: роли × `section.*.view` + `guest_sections`,
+  немедленный cache flush, admin-only.
+- E4 ✅ — NewsResource + CommentResource: MarkdownEditor → единый
+  `ContentRenderer`/`HtmlSanitizer`, plain-text комментарии, модерация.
+- E5 ✅ — GalleryResource (+PhotosRelationManager), PageResource,
+  EventResource (через EventService).
+- E6 ✅ — EventTypeResource (admin-only gate), RankResource,
+  DashboardWidgetResource, ActivityLogResource (read-only, admin-only).
+- E8.1 ✅ — MFA opt-in: миграция 000023, `AppAuthentication` в панели,
+  `EnsureAdminMultiFactorAuthentication`.
+- E8.2 ✅ — `EnsureAdminIpAllowed` (пустой список = allow-all).
+- E8.3 ✅ — `LogsAdminActivity` + `AdminActivityLogger` + провайдер
+  (`RecordCreated`/`RecordUpdated`, DeleteAction/DeleteBulkAction).
+- E8.4 ✅ — `ReAuthenticateAction` для необратимых действий.
+- E8.5 ✅ — Request workflow: restore (только статус), re-auth hard delete
+  без каскада, фильтр «Запросы».
+- Fix ✅ — `email_verified_at` добавлен в `#[Fillable]` `User`.
+- E9 ✅ — acceptance gap-fill (15 тестов) + `docs/acceptance/stage-8.md`.
+- **Открытое отклонение:** R4 `assignRole` не логируется
+  (`stage-8.md` §4.1) — требуется отдельный fix-коммит.
 
 ## Контракты, которые НЕЛЬЗЯ менять
 
@@ -73,10 +92,11 @@
 
 ## Известные gaps (зафиксированы, не блокеры)
 
-См. docs/acceptance/stage-6.md §5.
+См. docs/acceptance/stage-6.md §5 и docs/acceptance/stage-8.md §4.
 
 ## Порядок дальнейшей работы
 
-1. Stage 8 — E3 (Permissions Matrix), затем E4 → E5 → E6 → E8 → E9,
-   согласно docs/ai/STAGE-8-CONTRACT.md.
-2. Stages 9–15 — по §30 context.md.
+1. Stage 9 — Backup / restore / rollback (Step 1: архитектура), по
+   §30 context.md и `docs/ai/STAGE-8-CONTRACT.md` §12 (перенесено).
+2. Отдельный fix-коммит: R4 `assignRole` audit (stage-8.md §4.1).
+3. Stages 10–15 — по §30 context.md.
