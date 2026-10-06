@@ -50,7 +50,9 @@ function makeAuditComment(User $author, array $overrides = []): Comment
 
 it('records an audit entry when a user is updated through the resource', function () {
     $admin = makeAuditActor();
-    $target = User::factory()->create();
+    // Minute-aligned so the seconds-less form round trip does not register as
+    // a change; the payload must then contain only the rank we actually set.
+    $target = User::factory()->create(['email_verified_at' => now()->startOfMinute()]);
     $rank = UserRank::create(['key' => 'audit-rank', 'title' => 'Audit rank']);
 
     Livewire::actingAs($admin)
