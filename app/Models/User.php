@@ -4,6 +4,10 @@ namespace App\Models;
 
 use App\Enums\UserStatus;
 use Database\Factories\UserFactory;
+use Filament\Auth\MultiFactor\App\Concerns\InteractsWithAppAuthentication;
+use Filament\Auth\MultiFactor\App\Concerns\InteractsWithAppAuthenticationRecovery;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthenticationRecovery;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -32,6 +36,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $last_activity_seen_at
  * @property Carbon|null $pd_consent_at
  * @property Carbon|null $marketing_consent_at
+ * @property string|null $app_authentication_secret
+ * @property array<string>|null $app_authentication_recovery_codes
  */
 #[Fillable([
     'name', 'email', 'password',
@@ -42,11 +48,11 @@ use Spatie\Permission\Traits\HasRoles;
     'status', 'deletion_requested_at', 'deletion_reason', 'suspended_at', 'suspension_reason',
     'pd_consent_at', 'pd_policy_version', 'marketing_consent_at',
 ])]
-#[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable implements FilamentUser, MustVerifyEmail
+#[Hidden(['password', 'remember_token', 'app_authentication_secret', 'app_authentication_recovery_codes'])]
+class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, Notifiable, SoftDeletes;
+    use HasFactory, HasRoles, InteractsWithAppAuthentication, InteractsWithAppAuthenticationRecovery, Notifiable, SoftDeletes;
 
     protected function casts(): array
     {

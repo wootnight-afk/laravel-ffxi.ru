@@ -8,7 +8,9 @@ use App\Filament\Pages\SettingsPage;
 use App\Filament\Widgets\AdminDashboardStats;
 use App\Filament\Widgets\RecentAuditLogs;
 use App\Filament\Widgets\RegistrationsChart;
+use App\Http\Middleware\EnsureAdminMultiFactorAuthentication;
 use App\Http\Middleware\SetAdminPanelLocale;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -34,6 +36,15 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->profile()
+            ->multiFactorAuthentication(
+                providers: [
+                    AppAuthentication::make()
+                        ->recoverable(),
+                ],
+                isRequired: true,
+            )
+            ->multiFactorAuthenticationRequiredMiddlewareName(EnsureAdminMultiFactorAuthentication::class)
             ->brandName('FFXI Phoenix')
             ->darkMode(true)
             ->colors([
