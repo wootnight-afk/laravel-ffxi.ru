@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\LogsAdminActivity;
 use App\Filament\Resources\RoleResource\Pages\ListRoles;
 use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
@@ -12,6 +13,8 @@ use UnitEnum;
 
 class RoleResource extends Resource
 {
+    use LogsAdminActivity;
+
     protected static ?string $model = Role::class;
 
     protected static string|UnitEnum|null $navigationGroup = null;

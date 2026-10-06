@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\LogsAdminActivity;
 use App\Filament\Resources\GuestResource\Pages\ListGuests;
 use App\Models\GuestVisitor;
 use Filament\Resources\Pages\PageRegistration;
@@ -12,6 +13,8 @@ use UnitEnum;
 
 class GuestResource extends Resource
 {
+    use LogsAdminActivity;
+
     protected static ?string $model = GuestVisitor::class;
 
     protected static string|UnitEnum|null $navigationGroup = null;

@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\LogsAdminActivity;
 use App\Filament\Resources\CommentResource\Pages\EditComment;
 use App\Filament\Resources\CommentResource\Pages\ListComments;
 use App\Models\Comment;
+use App\Services\AdminActivityLogger;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -30,6 +32,8 @@ use UnitEnum;
 
 class CommentResource extends Resource
 {
+    use LogsAdminActivity;
+
     protected static ?string $model = Comment::class;
 
     protected static ?int $navigationSort = 2;
@@ -128,6 +132,8 @@ class CommentResource extends Resource
                         abort_unless(auth()->user()?->can('comments.moderate'), 403);
 
                         $record->update(['status' => Comment::STATUS_APPROVED, 'is_reported' => false]);
+
+                        app(AdminActivityLogger::class)->record($record, 'approved');
                     }),
                 Action::make('reject')
                     ->label(__('filament.resources.comments.actions.reject'))
@@ -139,6 +145,8 @@ class CommentResource extends Resource
                         abort_unless(auth()->user()?->can('comments.moderate'), 403);
 
                         $record->update(['status' => Comment::STATUS_REJECTED]);
+
+                        app(AdminActivityLogger::class)->record($record, 'rejected');
                     }),
                 Action::make('spam')
                     ->label(__('filament.resources.comments.actions.spam'))
@@ -150,6 +158,8 @@ class CommentResource extends Resource
                         abort_unless(auth()->user()?->can('comments.moderate'), 403);
 
                         $record->update(['status' => Comment::STATUS_SPAM]);
+
+                        app(AdminActivityLogger::class)->record($record, 'spam');
                     }),
                 EditAction::make(),
                 DeleteAction::make(),
@@ -164,6 +174,8 @@ class CommentResource extends Resource
                                 abort_unless(auth()->user()?->can('comments.moderate'), 403);
 
                                 $record->update(['status' => Comment::STATUS_APPROVED, 'is_reported' => false]);
+
+                                app(AdminActivityLogger::class)->record($record, 'approved');
                             });
                         }),
                     BulkAction::make('reject')
@@ -175,6 +187,8 @@ class CommentResource extends Resource
                                 abort_unless(auth()->user()?->can('comments.moderate'), 403);
 
                                 $record->update(['status' => Comment::STATUS_REJECTED]);
+
+                                app(AdminActivityLogger::class)->record($record, 'rejected');
                             });
                         }),
                     BulkAction::make('spam')
@@ -186,6 +200,8 @@ class CommentResource extends Resource
                                 abort_unless(auth()->user()?->can('comments.moderate'), 403);
 
                                 $record->update(['status' => Comment::STATUS_SPAM]);
+
+                                app(AdminActivityLogger::class)->record($record, 'spam');
                             });
                         }),
                     DeleteBulkAction::make(),

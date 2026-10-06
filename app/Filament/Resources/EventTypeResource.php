@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\LogsAdminActivity;
 use App\Filament\Resources\EventTypeResource\Pages\CreateEventType;
 use App\Filament\Resources\EventTypeResource\Pages\EditEventType;
 use App\Filament\Resources\EventTypeResource\Pages\ListEventTypes;
@@ -23,6 +24,8 @@ use UnitEnum;
 
 class EventTypeResource extends Resource
 {
+    use LogsAdminActivity;
+
     protected static ?string $model = EventType::class;
 
     protected static ?int $navigationSort = 5;

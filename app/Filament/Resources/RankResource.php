@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\LogsAdminActivity;
 use App\Filament\Resources\RankResource\Pages\CreateRank;
 use App\Filament\Resources\RankResource\Pages\EditRank;
 use App\Filament\Resources\RankResource\Pages\ListRanks;
@@ -25,6 +26,8 @@ use UnitEnum;
 
 class RankResource extends Resource
 {
+    use LogsAdminActivity;
+
     protected static ?string $model = UserRank::class;
 
     protected static ?int $navigationSort = 6;

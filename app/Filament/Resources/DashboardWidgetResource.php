@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\LogsAdminActivity;
 use App\Filament\Resources\DashboardWidgetResource\Pages\CreateDashboardWidget;
 use App\Filament\Resources\DashboardWidgetResource\Pages\EditDashboardWidget;
 use App\Filament\Resources\DashboardWidgetResource\Pages\ListDashboardWidgets;
@@ -24,6 +25,8 @@ use UnitEnum;
 
 class DashboardWidgetResource extends Resource
 {
+    use LogsAdminActivity;
+
     protected static ?string $model = DashboardWidget::class;
 
     protected static ?int $navigationSort = 7;

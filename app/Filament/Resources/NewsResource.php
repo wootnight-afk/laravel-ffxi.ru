@@ -2,10 +2,12 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\LogsAdminActivity;
 use App\Filament\Resources\NewsResource\Pages\CreateNews;
 use App\Filament\Resources\NewsResource\Pages\EditNews;
 use App\Filament\Resources\NewsResource\Pages\ListNews;
 use App\Models\News;
+use App\Services\AdminActivityLogger;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -34,6 +36,8 @@ use UnitEnum;
 
 class NewsResource extends Resource
 {
+    use LogsAdminActivity;
+
     protected static ?string $model = News::class;
 
     protected static ?int $navigationSort = 1;
@@ -215,6 +219,8 @@ class NewsResource extends Resource
                             'published_at' => $record->published_at ?? now(),
                             'rejection_reason' => null,
                         ]);
+
+                        app(AdminActivityLogger::class)->record($record, 'published');
                     }),
                 Action::make('reject')
                     ->label(__('filament.resources.news.actions.reject'))
@@ -236,6 +242,8 @@ class NewsResource extends Resource
                             'rejection_reason' => $data['rejection_reason'],
                             'published_at' => null,
                         ]);
+
+                        app(AdminActivityLogger::class)->record($record, 'rejected');
                     }),
                 Action::make('archive')
                     ->label(__('filament.resources.news.actions.archive'))
@@ -247,6 +255,8 @@ class NewsResource extends Resource
                         abort_unless(auth()->user()?->can('archive', $record), 403);
 
                         $record->update(['status' => News::STATUS_ARCHIVED]);
+
+                        app(AdminActivityLogger::class)->record($record, 'archived');
                     }),
                 EditAction::make(),
                 DeleteAction::make(),
@@ -266,6 +276,8 @@ class NewsResource extends Resource
                                     'published_at' => $record->published_at ?? now(),
                                     'rejection_reason' => null,
                                 ]);
+
+                                app(AdminActivityLogger::class)->record($record, 'published');
                             });
                         }),
                     BulkAction::make('archive')
@@ -277,6 +289,8 @@ class NewsResource extends Resource
                                 abort_unless(auth()->user()?->can('archive', $record), 403);
 
                                 $record->update(['status' => News::STATUS_ARCHIVED]);
+
+                                app(AdminActivityLogger::class)->record($record, 'archived');
                             });
                         }),
                     DeleteBulkAction::make(),

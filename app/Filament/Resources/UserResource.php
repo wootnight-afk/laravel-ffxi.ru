@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Enums\UserStatus;
+use App\Filament\Concerns\LogsAdminActivity;
 use App\Filament\Resources\UserResource\Pages\EditUser;
 use App\Filament\Resources\UserResource\Pages\ListUsers;
 use App\Filament\Resources\UserResource\RelationManagers\SocialLinksRelationManager;
@@ -24,6 +25,8 @@ use UnitEnum;
 
 class UserResource extends Resource
 {
+    use LogsAdminActivity;
+
     protected static ?string $model = User::class;
 
     protected static string|UnitEnum|null $navigationGroup = null;

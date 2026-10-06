@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Enums\EventStatus;
+use App\Filament\Concerns\LogsAdminActivity;
 use App\Filament\Resources\EventResource\Pages\CreateEvent;
 use App\Filament\Resources\EventResource\Pages\EditEvent;
 use App\Filament\Resources\EventResource\Pages\ListEvents;
@@ -32,6 +33,8 @@ use UnitEnum;
 
 class EventResource extends Resource
 {
+    use LogsAdminActivity;
+
     protected static ?string $model = Event::class;
 
     protected static ?int $navigationSort = 5;

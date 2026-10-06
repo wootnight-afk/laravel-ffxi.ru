@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\LogsAdminActivity;
 use App\Filament\Resources\GalleryResource\Pages\CreateAlbum;
 use App\Filament\Resources\GalleryResource\Pages\EditAlbum;
 use App\Filament\Resources\GalleryResource\Pages\ListAlbums;
@@ -29,6 +30,8 @@ use UnitEnum;
 
 class GalleryResource extends Resource
 {
+    use LogsAdminActivity;
+
     protected static ?string $model = Album::class;
 
     protected static ?int $navigationSort = 3;

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\LogsAdminActivity;
 use App\Filament\Resources\PageResource\Pages\CreatePage;
 use App\Filament\Resources\PageResource\Pages\EditPage;
 use App\Filament\Resources\PageResource\Pages\ListPages;
@@ -25,6 +26,8 @@ use UnitEnum;
 
 class PageResource extends Resource
 {
+    use LogsAdminActivity;
+
     protected static ?string $model = Page::class;
 
     protected static ?int $navigationSort = 4;
