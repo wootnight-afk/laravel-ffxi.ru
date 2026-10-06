@@ -40,7 +40,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property array<string>|null $app_authentication_recovery_codes
  */
 #[Fillable([
-    'name', 'email', 'password',
+    'name', 'email', 'email_verified_at', 'password',
     'rank_id', 'phone', 'phone_is_public', 'avatar_path',
     'is_profile_public', 'race', 'main_job', 'legend', 'legend_html',
     'last_seen_at', 'last_activity_seen_at',

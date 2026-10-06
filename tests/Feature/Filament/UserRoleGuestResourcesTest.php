@@ -122,6 +122,21 @@ it('keeps the role catalog read-only and limited to the seeded roles', function 
     $this->actingAs($admin)->get('/admin/roles')->assertOk();
 });
 
+it('persists email_verified_at when an admin edits a user', function () {
+    $admin = makeManagementPanelUser('admin');
+    $user = makeManagementPanelUser('user');
+    $verifiedAt = now()->startOfMinute();
+
+    Livewire::actingAs($admin)
+        ->test(EditUser::class, ['record' => $user->getKey()])
+        ->set('data.email_verified_at', $verifiedAt->toDateTimeString())
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect($user->refresh()->email_verified_at?->toDateTimeString())
+        ->toBe($verifiedAt->toDateTimeString());
+});
+
 it('shows guest names but does not expose guest identifiers or ip hashes', function () {
     $admin = makeManagementPanelUser('admin');
     $guest = GuestVisitor::query()->create([
