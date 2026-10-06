@@ -31,7 +31,7 @@ class SettingsPage extends Page
 
     protected static string|UnitEnum|null $navigationGroup = null;
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 9;
 
     /**
      * @var array<string, mixed>

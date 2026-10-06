@@ -337,6 +337,67 @@ return [
                 'cancel_reason' => 'Причина отмены',
             ],
         ],
+        'event_types' => [
+            'label' => 'Тип события',
+            'plural' => 'Типы событий',
+            'sections' => [
+                'main' => 'Тип события',
+            ],
+            'fields' => [
+                'key' => 'Ключ',
+                'title' => 'Название',
+                'icon' => 'Иконка',
+                'sort_order' => 'Порядок',
+                'is_active' => 'Активен',
+            ],
+        ],
+        'ranks' => [
+            'label' => 'Ранг',
+            'plural' => 'Ранги',
+            'sections' => [
+                'main' => 'Ранг',
+            ],
+            'fields' => [
+                'key' => 'Ключ',
+                'title' => 'Название',
+                'icon' => 'Иконка',
+                'rating' => 'Рейтинг',
+                'color' => 'Цвет',
+                'sort_order' => 'Порядок',
+                'is_active' => 'Активен',
+            ],
+        ],
+        'widgets' => [
+            'label' => 'Виджет',
+            'plural' => 'Виджеты',
+            'sections' => [
+                'main' => 'Виджет',
+            ],
+            'fields' => [
+                'key' => 'Ключ',
+                'title' => 'Заголовок',
+                'type' => 'Тип',
+                'column_span' => 'Ширина (колонки)',
+                'sort_order' => 'Порядок',
+                'is_active' => 'Активен',
+                'settings' => 'Настройки',
+                'settings_key' => 'Ключ',
+                'settings_value' => 'Значение',
+            ],
+        ],
+        'audit_logs' => [
+            'label' => 'Запись журнала',
+            'plural' => 'Журнал событий',
+            'fields' => [
+                'created_at' => 'Дата',
+                'actor' => 'Пользователь',
+                'action' => 'Действие',
+                'subject' => 'Объект',
+                'ip' => 'IP',
+                'date_from' => 'С даты',
+                'date_until' => 'По дату',
+            ],
+        ],
     ],
     'user_status' => [
         'active' => 'Активен',
