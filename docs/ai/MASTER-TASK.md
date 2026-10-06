@@ -157,37 +157,29 @@ memory_limit.
 - Осмысленный commit.
 - Отчёт в docs/acceptance/stage-N.md.
 
-## Текущий контракт (D4 — Chat)
+## Текущий контракт — Stage 8
 
-Роли: user / editor / admin. Новых ролей не создавать.
+См. `docs/ai/STAGE-8-CONTRACT.md`.
 
-Chat moderation через существующее permission chat.moderate
-(admin-only). Проверок target нет (admin→admin, admin→self — OK).
-Editor не имеет chat.moderate.
+Ключевые решения:
+- Roles/Matrix — только admin, группа «Система».
+- Editor — только группа «Контент».
+- MFA opt-in (R5), allowlist opt-out (R6), export исключён (R7).
+- Account status ≠ content deletion (R3).
+- Audit без PII (R4).
+- Единый Markdown pipeline (R1).
 
-Mute:
-- Временный: chat_banned_until = now + N (1h / 1d / 7d).
-- Permanent: chat_banned_permanently = true.
-- isChatBanned() = chat_banned_permanently OR (until > now).
-- Unban очищает оба поля.
-
-Уведомления: database-only, sync (без ShouldQueue):
-- ChatMentionNotification
-- ChatBannedNotification
-- ChatUnbannedNotification
-
-Chat activity: sync (как D3; решение владельца для D4), subject =
-ChatMessage, payload без текста, idempotent по message id. Это решение
-для D4 заменяет queued delivery, указанную в frontend-spec §5.9.
-
-Widget order на /players: community_chat → events_board → activity_feed.
-Без grid/spans (это D6).
-
-Rate limit: 5/30с через RateLimiter (хардкод, не settings).
-
-Никаких DM, медиа, guest-чата, SSE/WebSocket/Redis.
-
-Файлы D4 — см. отдельный контракт в истории чата (не переопределять).
+Подэтапы Stage 8:
+- E1 ✅ — Panel + Dashboard
+- E2a ✅ — Suspended workflow
+- E2b ✅ — User + Role + Guest
+- E7 ✅ — Settings
+- E3 ✅ — Permissions Matrix
+- E4 ✅ — News + Comment
+- E5 ⏳ — Gallery + Page + Event
+- E6 ⏳ — EventType + Rank + Widget + ActivityLog
+- E8 ⏳ — MFA + IP allowlist + Audit + Requests
+- E9 ⏳ — Acceptance
 
 ## Как действовать при неопределённости
 
