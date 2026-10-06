@@ -70,7 +70,7 @@ Full project status: `docs/ai/PROJECT-STATUS.md`.
 Autonomous work rules: `docs/ai/MASTER-TASK.md`.
 
 Short summary:
-- HEAD: `64ca101` on `main`.
+- HEAD: `6846c30` on `main`.
 - Stages 1–8: ACCEPTED (см. docs/acceptance/).
 - Stage 9 (Backup/restore/rollback): E9.0 done — ADR-004 + STAGE-9-CONTRACT.md. E9.1–E9.8 pending (E9.1: Backup core).
 - Tests: 549 passed.

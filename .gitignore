@@ -9,6 +9,7 @@
 /storage/app/private/
 /storage/app/public/
 /storage/app/*.key
+/storage/backups/
 /storage/logs/*
 !/storage/logs/.gitignore
 /storage/framework/cache/*

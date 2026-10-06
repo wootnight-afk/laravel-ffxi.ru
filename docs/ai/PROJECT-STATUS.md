@@ -1,7 +1,7 @@
 # Project Status — laravel-ffxi.ru
 
 ## HEAD
-`64ca101` на ветке `main` (Stage 9: E9.0 — контракт).
+`6846c30` на ветке `main` (Stage 9: E9.0 — контракт).
 
 ## Прогресс по этапам (§30 context.md)
 
