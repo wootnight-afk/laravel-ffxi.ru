@@ -83,7 +83,13 @@
 
 - E9.0 ✅ — ADR-004 (backup / restore / rollback) + STAGE-9-CONTRACT.md
   + CHANGELOG.md (минимальный) + sync docs.
-- E9.1–E9.8 — pending (E9.1: Backup core).
+- E9.1 ✅ — backup core: `BackupManifest`, `DatabaseDumper`,
+  `FilesArchiver`, `BackupStorage`/`LocalBackupStorage`, `BackupLock`,
+  `BackupService`, `config/backup.php`, `storage/backups/`.
+- E9.2 ✅ — CLI `app:backup` + `app:backup-cleanup` (каркас) + Makefile
+  (`make backup`) + `default-mysql-client` в dev Dockerfile.
+- Amendment ADR-004 §3.1 — `lang/` включён в Scope B.
+- E9.3–E9.8 — pending (E9.3: retention + safety).
 
 ## Контракты, которые НЕЛЬЗЯ менять
 

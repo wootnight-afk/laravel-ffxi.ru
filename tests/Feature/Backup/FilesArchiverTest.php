@@ -26,12 +26,26 @@ beforeEach(function () {
     File::ensureDirectoryExists(dirname($this->marker));
     file_put_contents($this->marker, 'e9-1 marker');
 
+    // lang/ must be part of Scope B (ADR-004 section 3.1, E9.2 amendment).
+    // Create a fixture so the assertion holds even on a checkout without
+    // translations, and remove it afterwards to keep the tree clean.
+    $this->langDir = base_path('lang');
+    $this->langFixture = base_path('lang/ru/e9-2-fixture.php');
+    $this->langDirCreated = ! is_dir($this->langDir);
+    File::ensureDirectoryExists(dirname($this->langFixture));
+    file_put_contents($this->langFixture, "<?php\n\nreturn [];\n");
+
     $this->archiver = new FilesArchiver;
 });
 
 afterEach(function () {
     File::deleteDirectory($this->workDir);
     File::delete($this->marker);
+    File::delete($this->langFixture);
+
+    if ($this->langDirCreated && is_dir($this->langDir)) {
+        File::deleteDirectory($this->langDir);
+    }
 });
 
 it('detects that tar is available', function () {
@@ -60,12 +74,14 @@ it('archives the exact scope B composition for whole_site', function () {
     $result = $this->archiver->archive(BackupManifest::SCOPE_WHOLE_SITE, $output);
 
     expect($result['files'])->toContain('app', 'config', 'storage/app', 'composer.json', 'composer.lock');
+    expect($result['files'])->toContain('lang');
 
     $entries = archiveTarEntries($output);
     $flattened = implode("\n", $entries);
 
     expect($entries)->toContain('app', 'config', 'composer.json', 'composer.lock');
     expect($entries)->toContain('storage/app/test/e9-1-marker.txt');
+    expect($entries)->toContain('lang', 'lang/ru/e9-2-fixture.php');
 
     foreach (['vendor', 'node_modules', '.git', 'docker', 'docs', 'tests', '.github', '.vscode', '.idea'] as $excluded) {
         expect($flattened)->not->toMatch('#(^|\n)'.preg_quote($excluded, '#').'/#');

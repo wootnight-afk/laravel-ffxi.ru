@@ -43,6 +43,7 @@ class FilesArchiver
         'public',
         'resources',
         'routes',
+        'lang',
         'storage/app',
         'artisan',
         'composer.json',

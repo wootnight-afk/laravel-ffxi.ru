@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
+use App\Contracts\BackupStorage;
 use App\Models\GuestVisitor;
 use App\Models\User;
 use App\Policies\GuestVisitorPolicy;
 use App\Policies\RolePolicy;
+use App\Services\Backup\LocalBackupStorage;
 use App\Services\HtmlSanitizer;
 use App\Services\SettingsRepository;
 use Illuminate\Support\Facades\Gate;
@@ -24,6 +26,12 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->singleton(HtmlSanitizer::class);
         $this->app->singleton(SettingsRepository::class);
+
+        // Backup subsystem (Stage 9). The storage abstraction is bound to the
+        // local disk implementation so BackupService can be resolved from the
+        // container (CLI, scheduler, Filament page). An external store can be
+        // swapped in here later without touching the service.
+        $this->app->bind(BackupStorage::class, LocalBackupStorage::class);
     }
 
     public function boot(): void

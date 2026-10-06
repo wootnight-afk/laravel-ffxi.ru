@@ -3,7 +3,7 @@
 # Run from the project root on WSL2.
 #
 # Targets below are real and verified. Deployment-related targets
-# (deploy, rollback, backup, restore-test) will be added on stages
+# (deploy, rollback, restore-test) will be added on stages
 # 11 and 13 once their scripts exist. Spec section 32 forbids adding
 # Makefile targets without a working implementation behind them.
 # ------------------------------------------------------------------
@@ -85,6 +85,22 @@ key: ## Generate a new APP_KEY (overwrites the current one).
 	$(DC) exec $(APP) php artisan key:generate
 
 # ------------------------------------------------------------------
+# Backup (stage 9, spec sections 17 and 27)
+#
+# MODE is required (full | site | db); SCOPE is required for full/site.
+#   make backup MODE=db
+#   make backup MODE=site SCOPE=a
+#   make backup MODE=full SCOPE=b
+# ------------------------------------------------------------------
+
+.PHONY: backup
+backup: ## Create a backup (MODE=full|site|db, SCOPE=a|b).
+	@docker compose exec -T app php artisan app:backup \
+		--mode=$(MODE) \
+		$(if $(SCOPE),--scope=$(SCOPE),) \
+		--triggered-by=cli
+
+# ------------------------------------------------------------------
 # Quality gates (match the CI pipeline, spec section 21)
 # ------------------------------------------------------------------
 
@@ -118,6 +134,5 @@ validate: ## Run composer validate --strict.
 #
 #   deploy        stage 13 — rsync + production commands
 #   rollback      stage 13 — previous release tag
-#   backup        stage 11 — mysqldump + external copy
 #   restore-test  stage 11 — restore into a separate dev environment
 # ------------------------------------------------------------------

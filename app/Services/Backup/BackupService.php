@@ -108,7 +108,7 @@ class BackupService
             }
         }
 
-        $manifestPath = $this->manifestRelativePath($manifest);
+        $manifestPath = $this->manifestPath($manifest);
 
         if ($this->storage->exists($manifestPath)) {
             $this->storage->delete($manifestPath);
@@ -372,7 +372,10 @@ class BackupService
         return (int) ($row['size'] ?? 0);
     }
 
-    private function manifestRelativePath(BackupManifest $manifest): string
+    /**
+     * Relative path of a manifest inside the backup store (contract section 5.2).
+     */
+    public function manifestPath(BackupManifest $manifest): string
     {
         $createdAt = Carbon::parse($manifest->createdAt)->utc();
 

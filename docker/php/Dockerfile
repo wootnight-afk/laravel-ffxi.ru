@@ -23,6 +23,9 @@ ARG GID=1000
 # - libonig-dev         -> mbstring
 # - libxml2-dev         -> xml
 # - git, unzip          -> Composer (dev only)
+# - default-mysql-client -> mysqldump for the backup subsystem (spec
+#   sections 17 and 22; ADR-004 R8). Dev-only: production provides its
+#   own MySQL client on Timeweb shared hosting.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     unzip \
@@ -34,6 +37,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libzip-dev \
     libonig-dev \
     libxml2-dev \
+    default-mysql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # PHP extensions required by Laravel 13, Filament 5, Pest and
