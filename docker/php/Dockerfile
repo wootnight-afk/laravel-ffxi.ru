@@ -40,6 +40,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     default-mysql-client \
     && rm -rf /var/lib/apt/lists/*
 
+# Local dev MySQL client configuration. The dev MySQL 8.4 container uses a
+# self-signed certificate; the MariaDB client from default-mysql-client
+# verifies it by default, which breaks mysqldump. TLS stays enabled and only
+# certificate verification is disabled, for the dev stack only (production
+# does not use this image, spec sections 1, 7 and 22).
+COPY mysql-client.cnf /etc/mysql/conf.d/zz-ffxi-client.cnf
+
 # PHP extensions required by Laravel 13, Filament 5, Pest and
 # intervention/image. pcntl and redis are intentionally NOT installed
 # (spec sections 6, 32: no Redis, no long-running workers).

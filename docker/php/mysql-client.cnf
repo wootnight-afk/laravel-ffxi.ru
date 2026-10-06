@@ -1,0 +1,12 @@
+# Local development MySQL client configuration (spec sections 4 and 17).
+#
+# The dev MySQL 8.4 container presents a self-signed TLS certificate. The
+# MariaDB client shipped by default-mysql-client verifies the server
+# certificate by default, which makes mysqldump fail with
+# "TLS/SSL error: self-signed certificate in certificate chain".
+#
+# TLS stays enabled: only verification of the (self-signed) server
+# certificate is disabled, for the local dev stack only. Production does not
+# use this image (spec sections 1, 7 and 22) and keeps full verification.
+[client]
+ssl-verify-server-cert=0

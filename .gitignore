@@ -20,6 +20,8 @@
 !/storage/framework/views/.gitignore
 /storage/framework/testing/
 /storage/framework/cache/data/
+/storage/framework/backup.lock
+/storage/framework/backup.lock.d/
 
 # Public build assets
 /public/build/
