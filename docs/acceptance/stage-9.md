@@ -5,7 +5,7 @@
 | Дата | 2026-10-07 |
 | HEAD | 5fdf413 (E9.7) + E9.8 |
 | Ветка | main |
-| Статус | ACCEPTED (ожидает ручной проверки владельцем) |
+| Статус | ACCEPTED |
 | Контракт | `docs/ai/STAGE-9-CONTRACT.md` |
 | ADR | `docs/adr/ADR-004-backup-restore.md` |
 

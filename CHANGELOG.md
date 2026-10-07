@@ -6,7 +6,7 @@
 
 ## [Unreleased]
 
-### Stage 9 — Backup / Restore / Rollback (E9.8 done, ожидает приёмки)
+### Stage 9 — Backup / Restore / Rollback (DONE / ACCEPTED)
 
 - E9.0 — ADR-004 (backup / restore / rollback) + `STAGE-9-CONTRACT.md` +
   минимальный `CHANGELOG.md`.

@@ -71,12 +71,12 @@ Autonomous work rules: `docs/ai/MASTER-TASK.md`.
 
 Short summary:
 - HEAD: `5fdf413` on `main`.
-- Stages 1–8: ACCEPTED (см. docs/acceptance/).
-- Stage 9 (Backup/restore/rollback): E9.8 done — backup core + retention +
-  admin BackupPage + restore (restore_requests, HMAC, CLI rollback) +
-  scheduler (04:00 DB-only backup, 04:30 cleanup) + restore-test
+- Stages 1–9: ACCEPTED (см. docs/acceptance/).
+- Stage 9 (Backup/restore/rollback): DONE / ACCEPTED — backup core +
+  retention + admin BackupPage + restore (restore_requests, HMAC, CLI
+  rollback) + scheduler (04:00 DB-only backup, 04:30 cleanup) + restore-test
   (isolated dev DB). Acceptance: docs/acceptance/stage-9.md.
-  Ожидает приёмки владельцем.
 - Tests: 678 passed.
 
-Next step: Stage 10 — Tests (§9) coverage (см. PROJECT-STATUS.md).
+Next step: Stage 10 — Tests (§9) coverage — NOT STARTED, ожидает отдельного
+решения после локальной проверки проекта (см. PROJECT-STATUS.md).

@@ -16,13 +16,13 @@
 | 6 | Profiles & cabinet | ACCEPTED | docs/acceptance/stage-6.md |
 | 7 | Dashboard | ACCEPTED | docs/acceptance/stage-7.md |
 | 8 | Filament | ACCEPTED | docs/acceptance/stage-8.md; контракт: docs/ai/STAGE-8-CONTRACT.md |
-| 9 | Backup/restore | E9.8 done (ожидает приёмки) | docs/adr/ADR-004-backup-restore.md, docs/ai/STAGE-9-CONTRACT.md, docs/acceptance/stage-9.md |
-| 10 | Tests (§9) | partial | 678 passed |
-| 11 | CI | not started | — |
-| 12 | Timeweb staging | not started | — |
-| 13 | Deployment | not started | — |
-| 14 | Production | not started | — |
-| 15 | Update UI | not started | — |
+| 9 | Backup/restore | DONE / ACCEPTED | docs/adr/ADR-004-backup-restore.md, docs/ai/STAGE-9-CONTRACT.md, docs/acceptance/stage-9.md |
+| 10 | Tests (§9) | NOT STARTED — ожидает отдельного решения после локальной проверки проекта | — |
+| 11 | CI | NOT STARTED | — |
+| 12 | Timeweb staging | NOT STARTED | — |
+| 13 | Deployment | NOT STARTED | — |
+| 14 | Production | NOT STARTED | — |
+| 15 | Update UI | NOT STARTED | — |
 
 ## Stage 7 — детализация
 
@@ -144,8 +144,9 @@
 
 ## Порядок дальнейшей работы
 
-1. Stage 9 — Backup / restore / rollback — E9.8 done, ожидает приёмки
-   владельцем (`docs/acceptance/stage-9.md`).
-2. Stage 10 — Tests (§9): добить покрытие `frontend-spec.md` §9.
+1. Stage 9 — Backup / restore / rollback — DONE / ACCEPTED
+   (`docs/acceptance/stage-9.md`).
+2. Stage 10 — Tests (§9) — NOT STARTED, ожидает отдельного решения после
+   локальной проверки проекта владельцем.
 3. Stages 11–15 — по §30 context.md (CI, staging, deployment, production,
    update UI).
