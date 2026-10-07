@@ -6,6 +6,17 @@
 
 ## [Unreleased]
 
+### E10 — Unified MFA (docs finalized, implementation NOT STARTED)
+
+- `ADR-009-unified-mfa.md` (Proposed): unified site-wide MFA, глобальный gate
+  `mfa_global_enabled` (default true), единый challenge `/mfa/challenge`,
+  escape-hatches `/cabinet/security` и `/admin/settings`, verification до logout,
+  Filament `AppAuthentication` — storage/compat, R5-amendment.
+- `E10-MFA-CONTRACT.md`: пофазный план E10.1–E10.8 + тестовая матрица T1–T24.
+- Reconciliation: `STAGE-8-CONTRACT.md` §1 R5 (amendment), `frontend-spec.md`,
+  `context.md` §13, `docs/acceptance/stage-8.md` (историческое примечание).
+- Code/DB/composer/migrations не изменялись.
+
 ### Stage 9 — Backup / Restore / Rollback (DONE / ACCEPTED)
 
 - E9.0 — ADR-004 (backup / restore / rollback) + `STAGE-9-CONTRACT.md` +

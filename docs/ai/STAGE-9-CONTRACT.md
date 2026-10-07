@@ -40,6 +40,11 @@ rollback поверх уже реализованного приложения (
 механизм MFA панели, `bootstrap/app.php` (`withSchedule`),
 `docker/php/Dockerfile`. Их наличие не означает наличия backup-логики.
 
+> **Примечание ADR-009 (2026-10-07):** ссылки на «MFA панели» в этом контракте
+> описывают механизм Stage 8. После E10 MFA-требование для admin обеспечивается
+> unified site-wide MFA (ADR-009); `/admin/backups` попадает под полную защиту
+> `/admin/*`. Требование «re-auth + MFA» для restore-request сохраняется.
+
 ---
 
 ## §1. Решения владельца (R1–R12)

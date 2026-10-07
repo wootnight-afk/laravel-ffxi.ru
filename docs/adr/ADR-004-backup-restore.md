@@ -343,6 +343,10 @@ HTTP не выполняет восстановление (R4).
 1. Admin выбирает `backup_id` в BackupPage.
 2. Выполняется re-auth (пароль) через существующий механизм Stage 8 и
    требование MFA панели.
+
+> **Примечание ADR-009 (2026-10-07):** «требование MFA панели» после E10
+> обеспечивается unified site-wide MFA (ADR-009); требование «re-auth + MFA»
+> для restore-request сохраняется без изменений.
 3. Явное подтверждение.
 4. `RestoreRequestService` создаёт строку в `restore_requests`:
    `id` (UUID), `backup_id`, `admin_user_id`, `token` (HMAC-SHA256),

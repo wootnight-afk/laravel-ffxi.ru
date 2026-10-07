@@ -128,7 +128,10 @@ Rollback разрешён только при совместимости.
 ## Разрешено добавить (фиксируется в ADR при подключении)
 
 - `league/commonmark` — Markdown;
-- `pragmarx/google2fa` + `bacon/bacon-qr-code` — 2FA Filament (если нужно);
+- `pragmarx/google2fa` + `bacon/bacon-qr-code` — 2FA/MFA (если нужно).
+  Фактически `pragmarx/google2fa` и `pragmarx/google2fa-qrcode` уже приходят
+  транзитивно; QR рендерится через `chillerlan/php-qrcode`, `bacon/bacon-qr-code`
+  не установлен. Необходимость отдельного composer-change — scope ADR-009 §2.8;
 - `ezyang/htmlpurifier` — опционально как HTML-санитайзер (fallback —
   собственный `HtmlSanitizer` на DOMDocument);
 - npm: `chart.js` (виджеты), `photoswipe` (галерея; fallback — Alpine).
@@ -324,8 +327,27 @@ Spatie permissions и Policies; явные запреты Policies сохран�
 
 ## MFA
 
-Штатные возможности Filament 5. Обязательна для admin (`admin_2fa_required`,
-default true). Editor — опционально.
+Unified site-wide MFA (ADR-009; см. `docs/adr/ADR-009-unified-mfa.md`,
+`docs/ai/E10-MFA-CONTRACT.md`).
+
+- Глобальный gate `mfa_global_enabled` (архитектурный default **true**).
+  При `false` enforcement полностью выключен; существующие MFA secrets/recovery
+  codes **не удаляются** и снова работают при включении.
+- `admin_2fa_required` (архитектурный default **false**) действует только при
+  `mfa_global_enabled=true`: `true` → admin обязан, `false` → admin opt-in.
+  На editor/user не влияет (они всегда opt-in).
+- Единый challenge `/mfa/challenge` (`mfa.challenge` / `mfa.challenge.verify`)
+  для всех ролей; verification действует до logout.
+- Escape-hatches: `/cabinet/security`, `/admin/settings`. Отдельной
+  `/admin/settings/security` нет.
+- Storage — существующие `users.app_authentication_secret` (encrypted) и
+  `users.app_authentication_recovery_codes` (encrypted:array, hashed).
+  Filament `AppAuthentication` — storage/compat без второго enforcement;
+  двойного challenge нет.
+
+> **Текущее runtime-состояние БД (2026-10-07):** `admin_2fa_required = true`
+> (запись от 2026-10-03). Это runtime state, **не** архитектурный default;
+> автоматически не изменяется.
 
 ## Password hashing
 
@@ -340,6 +362,9 @@ Referrer-Policy, CSP (Report-Only → enforcing после проверки).
 
 Production cookies: `Secure`, `HttpOnly`, `SameSite`. Regeneration
 после login. Logout инвалидирует. Reset-токены — с ограниченным сроком.
+MFA verification state (ADR-009) привязан к текущему authenticated user:
+смена пользователя внутри session не должна позволять использовать чужой
+verification state.
 
 ## Upload security
 
@@ -1033,6 +1058,14 @@ Settings (key-value), Хранение аватаров (storage/app/public/avat
 ---
 
 # ИСТОРИЯ ВЕРСИЙ
+
+**4.0.1 (doc-reconciliation, стек не изменён)** — §13 MFA приведён к ADR-009
+(unified site-wide MFA): `mfa_global_enabled` (default true), `admin_2fa_required`
+(default false, влияет только на admin), единый challenge, escape-hatches,
+verification до logout, storage/compat Filament. §13 Session security —
+привязка MFA verification к пользователю. §3 — уточнение по QR-стеку.
+Версия спецификации 4.0 (FINAL) сохраняется; изменение носит характер
+согласования документации.
 
 **4.0** — интеграция функциональной спецификации (frontend-spec.md v1.0):
 роли + guest-трекинг (`guest_visitors`, cookie 30 дней), матрица доступа

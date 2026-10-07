@@ -35,7 +35,7 @@ missing from either — ask the user instead.
 
 ## Roles
 
-- admin — full access, 2FA required.
+- admin — full access, MFA per ADR-009 (`mfa_global_enabled` + `admin_2fa_required`).
 - editor — only "Content" group in admin.
 - user — authorized player.
 - guest — virtual + tracked via `guest_visitors` (cookie 30 days).

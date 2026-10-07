@@ -74,7 +74,13 @@
 | **Guest** | Неавторизованный | Гостевые страницы (по матрице 3.2): контент, одобренные комментарии, фото, текстовые ники. Трекается как `guest001…` — только для админки. Профили, чат, дашборд, 🔔 — недоступны |
 | **User** | Зарегистрированный, email подтверждён | Всё гостевое + дашборд (чат/события/лента), свои новости и альбомы, соцсети, комментарии, запись на события, 🔔, кабинет, ранг-бейдж у других |
 | **Editor** | User + контент-админка | В админке — только «Контент»: Новости, Комментарии, Галерея, Страницы, События |
-| **Admin** | Полный доступ | Всё + пользователи, роли, матрица, справочники, настройки, виджеты, аудит, гости, очередь удалений. Усиленный вход (2FA) |
+| **Admin** | Полный доступ | Всё + пользователи, роли, матрица, справочники, настройки, виджеты, аудит, гости, очередь удалений. Усиленный вход (MFA — ADR-009) |
+
+**MFA (ADR-009, unified site-wide).** `mfa_global_enabled` (default true) —
+глобальный gate. user/editor — opt-in; admin — opt-in при `admin_2fa_required=false`,
+обязан при `admin_2fa_required=true` (только когда global gate включён). Единый
+challenge `/mfa/challenge`; verification — до logout; escape-hatches —
+`/cabinet/security` и `/admin/settings`.
 
 **Неподтвердивший email**: логин и чтение — да; write-действия — 403
 (middleware `verified` + Policies). Баннер «Подтвердите email».
@@ -179,6 +185,7 @@ Fallback аватара: инициал + цвет из хэша ника.
 | GET | `/players/{user:nickname}` | auth, section:player_profiles | Страница игрока |
 | GET | `/activity` | auth | Полная лента |
 | GET | `/cabinet/{tab}` | auth | Кабинет (write — `verified`) |
+| GET/POST | `/mfa/challenge` | auth | Единый MFA-challenge (`mfa.challenge` / `mfa.challenge.verify`; ADR-009) |
 | GET | `/cookie` | — | Cookie-политика |
 | GET | `/privacy` | — | Политика ПД |
 | — | `/admin/{...}` | auth, panel.access | Filament |
@@ -381,8 +388,15 @@ case-insensitive unique (БД + валидация). Live-проверка (debo
 Вкладки: **Профиль** (аватар с кроп-превью 6.6; раса; main job; легенда
 Markdown с предпросмотром; телефон+видимость; `is_profile_public` с
 подписью) • **Социальные сети** (6.14) • **Новости** • **Фото** •
-**События** • **Безопасность** (пароль; смена email с реверификацией) •
+**События** • **Безопасность** (пароль; смена email с реверификацией;
+MFA: setup/verify/disable/recovery codes — ADR-009, форма Blade + POST) •
 **Опасная зона** (6.12). Ранг — read-only. Формы — Livewire.
+
+> **MFA (ADR-009).** `/cabinet/security` — основное self-service место MFA и
+> обязательный escape-hatch: доступен независимо от MFA-verification. Для
+> sensitive operations (disable MFA, regeneration/reissue recovery codes)
+> применяется повторная аутентификация. Storage — `users.app_authentication_secret`
+> / `users.app_authentication_recovery_codes`.
 
 ## 6.3 Страница игрока и каталог
 
@@ -653,17 +667,33 @@ CRUD `dashboard_widgets`: title, type, is_active, sort_order
   `social_max_links_per_user`, `ranks_enabled`, `default_profile_public`,
   `bell_enabled`, `activity_enabled`, `notifications_enabled`,
   `activity_retention_days`, `admin_2fa_required`, `admin_ip_allowlist`,
-  `admin_new_ip_notify`, `timezone_display`, `guest_chat_enabled`
-  (reserved)). Хранение — `settings` (key/value json), кеш flush при
-  сохранении.
+  `admin_new_ip_notify`, `mfa_global_enabled`, `timezone_display`,
+  `guest_chat_enabled` (reserved)). Хранение — `settings` (key/value json),
+  кеш flush при сохранении.
+
+> **MFA (ADR-009).** Security-секция `SettingsPage` — основное место глобальных
+> MFA-настроек и обязательный escape-hatch для admin: доступна независимо от
+> MFA-verification. `mfa_global_enabled` (default true) — глобальный gate;
+> `admin_2fa_required` действует только при `mfa_global_enabled=true` и не влияет
+> на editor/user. Отдельная страница `/admin/settings/security` **не создаётся**.
+> Изменения MFA-настроек — только через `SettingsRepository::setMany()` с
+> инвалидацией `settings.all`.
 
 ## 7.6 Усиленный вход admin
 
-- 2FA (TOTP) обязательна (Filament встроенная; первый вход —
-  принудительная настройка с QR); editor — опционально.
+- **MFA (TOTP), ADR-009 — unified site-wide.** Единый challenge `/mfa/challenge`
+  для user/editor/admin. `mfa_global_enabled` (default true) — глобальный gate;
+  `admin_2fa_required` действует только при `mfa_global_enabled=true`:
+  `false` → admin MFA opt-in, `true` → admin обязан. editor/user — всегда opt-in;
+  `admin_2fa_required` на них не влияет. При `mfa_global_enabled=false`
+  enforcement выключен, настройки MFA сохраняются.
+- Verification действует **до logout** (session инвалидируется при logout);
+  trusted devices и длительные TTL не используются.
+- Escape-hatches (доступны без пройденного MFA): `/cabinet/security`
+  (setup/disable/recovery) и `/admin/settings` (глобальные настройки, включая MFA).
 - Rate limit 5/мин/IP + email о входе с нового IP.
 - Опциональный IP-allowlist.
-- Чувствительные операции (удаление, смена ролей/прав, security) —
+- Чувствительные операции (удаление, смена ролей/прав, security, disable MFA) —
   re-auth + audit.
 - Все мутации → `admin_audit_logs`. Сессии — database.
 
@@ -763,6 +793,9 @@ AlbumManager, EventForm, DangerZone}`, `Widgets\ApiChart`.
 25. **Enumeration:** reset/resend — единый ответ.
 26. **Activity:** `comment_created` создаётся; группировка; ссылка на
     недоступное не рендерится.
+27. **MFA (ADR-009):** единый acceptance matrix T1–T24 —
+    `docs/ai/E10-MFA-CONTRACT.md` §4 (global gate, роли, escape-hatches,
+    challenge, recovery, logout, admin reset, no double challenge).
 
 **Unit:** NicknameSuggester (включая CI); генерация excerpt; маппинг
 api_chart; группировка activity; URL-нормализация соцссылок.
@@ -780,6 +813,13 @@ REST API, мультиязычность, emoji-реакции, вложения
 ---
 
 # ИСТОРИЯ ВЕРСИЙ
+
+**1.1** — reconciliation с `ADR-009` (unified site-wide MFA): §3.1 (MFA-политика
+ролей), §4 (`/mfa/challenge`), §6.2 (MFA в Security-вкладке кабинета),
+§7.5 (`mfa_global_enabled`), §7.6 (усиленный вход admin переписан на единый
+challenge, escape-hatches, verification до logout), §9 (scenario 27 → matrix
+T1–T24). Продуктовые решения не менялись — только согласование с новой
+MFA-моделью.
 
 **1.0** — первая версия. Интеграция с `context.md` v4.0 (без дублей:
 стек, инфраструктура, деплой — в context.md; функционал — здесь).

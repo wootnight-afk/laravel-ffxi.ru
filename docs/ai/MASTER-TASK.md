@@ -164,7 +164,8 @@ memory_limit.
 Ключевые решения:
 - Roles/Matrix — только admin, группа «Система».
 - Editor — только группа «Контент».
-- MFA opt-in (R5), allowlist opt-out (R6), export исключён (R7).
+- MFA — см. `docs/adr/ADR-009-unified-mfa.md` (unified site-wide; R5-amended),
+  allowlist opt-out (R6), export исключён (R7).
 - Account status ≠ content deletion (R3).
 - Audit без PII (R4).
 - Единый Markdown pipeline (R1).

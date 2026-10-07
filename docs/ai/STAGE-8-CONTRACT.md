@@ -168,6 +168,18 @@ read-only и доступен только admin.
   `app_authentication_recovery_codes` отдельной миграцией
   `0001_01_01_000023_add_app_authentication_to_users_table.php`.
 
+> **R5-amended by ADR-009** (2026-10-07). Текст выше — исторический контракт
+> Stage 8 и остаётся в силе для уже принятого Stage 8. Дальнейшее развитие MFA
+> переопределяется `docs/adr/ADR-009-unified-mfa.md`:
+> MFA становится site-wide с глобальным gate `mfa_global_enabled` (default true);
+> единый challenge `/mfa/challenge` для user/editor/admin; escape-hatches
+> `/cabinet/security` и `/admin/settings`; verification до logout;
+> `admin_2fa_required` не влияет на editor/user; Filament `AppAuthentication`
+> остаётся storage/compat без второго enforcement; двойного challenge нет;
+> permission `mfa.manage` для admin reset. План реализации и тестовая матрица —
+> `docs/ai/E10-MFA-CONTRACT.md`. Приёмка Stage 8 (`docs/acceptance/stage-8.md`)
+> остаётся исторически корректной.
+
 ### R6. IP allowlist — opt-in
 
 - Middleware: `EnsureAdminIpAllowed`; оно защищает все маршруты панели,
@@ -274,6 +286,11 @@ MFA и allowlist не обязательны по умолчанию. Включ
 пользователем в профиле; включение allowlist администратором требует
 re-auth и предупреждения. Проверки должны покрывать UI и серверный путь.
 Не считать наличие переключателя доказательством применения middleware.
+
+> **Обновление ADR-009 (2026-10-07):** MFA-модель Stage 8 (admin-only
+> Filament challenge, opt-in) расширена до unified site-wide MFA. Источник
+> истины для дальнейших изменений MFA — `docs/adr/ADR-009-unified-mfa.md`
+> и `docs/ai/E10-MFA-CONTRACT.md`. Allowlist (R6) не затрагивается.
 
 ### 3.5. Единый Markdown pipeline (R1)
 
@@ -513,6 +530,11 @@ Plain-text комментарии остаются plain text и экранир�
   необратимые действия запрашивают re-auth; контент меняется только по
   отдельному ручному действию.
 - **Зависимости:** E2, E6, E7; настроенный Filament panel и Settings.
+
+> **Обновление ADR-009 (2026-10-07):** описанная здесь MFA-часть E8
+> (Filament challenge, admin-only opt-in) исторически принята. Дальнейшее
+> развитие MFA — unified site-wide (`ADR-009`, `E10-MFA-CONTRACT.md`).
+> Allowlist и audit-интеграция остаются без изменений.
 
 **Delete flow уточнение:** это не каскадная процедура. Администратор вручную
 выбирает каждое действие над account/content; hard delete не запускает

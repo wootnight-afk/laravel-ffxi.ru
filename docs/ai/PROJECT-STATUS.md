@@ -142,11 +142,28 @@
 
 См. docs/acceptance/stage-6.md §5 и docs/acceptance/stage-8.md §4.
 
+## MFA — ADR-009 / E10 (docs finalized, implementation NOT STARTED)
+
+- `docs/adr/ADR-009-unified-mfa.md` — **Proposed / awaiting implementation**:
+  unified site-wide MFA; глобальный gate `mfa_global_enabled` (default true);
+  единый challenge `/mfa/challenge`; escape-hatches `/cabinet/security`,
+  `/admin/settings`; verification до logout; storage/compat Filament; R5-amendment.
+- `docs/ai/E10-MFA-CONTRACT.md` — пофазный план E10.1–E10.8 + тестовая матрица (T1–T24).
+- Reconciliation: `STAGE-8-CONTRACT.md` §1 R5 / §3.4 / §11 (amendment),
+  `frontend-spec.md` §3.1/§4/§6.2/§7.5/§7.6, `context.md` §13,
+  `docs/acceptance/stage-8.md` (историческое примечание).
+- **Runtime state:** в текущей БД `admin_2fa_required = true` (запись от
+  2026-10-03) при архитектурном default `false`; `mfa_global_enabled` отсутствует.
+  Автоматически не изменяется.
+- Порядок: E10.1 → E10.2 → E10.3 → E10.4 → E10.5 → E10.6 → E10.7 → E10.8.
+
 ## Порядок дальнейшей работы
 
 1. Stage 9 — Backup / restore / rollback — DONE / ACCEPTED
    (`docs/acceptance/stage-9.md`).
-2. Stage 10 — Tests (§9) — NOT STARTED, ожидает отдельного решения после
+2. E10 — Unified MFA (ADR-009) — docs finalized, implementation NOT STARTED,
+   ожидает OK владельца на E10.1.
+3. Stage 10 — Tests (§9) — NOT STARTED, ожидает отдельного решения после
    локальной проверки проекта владельцем.
-3. Stages 11–15 — по §30 context.md (CI, staging, deployment, production,
+4. Stages 11–15 — по §30 context.md (CI, staging, deployment, production,
    update UI).

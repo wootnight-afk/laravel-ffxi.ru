@@ -59,6 +59,13 @@
 - `AppAuthentication` в панели; `EnsureAdminMultiFactorAuthentication`
   применяет требование только при `admin_2fa_required=true` и роли `admin`.
 
+> **Историческая примечание (ADR-009, 2026-10-07).** Приведённое выше —
+> фактическая реализация Stage 8 и остаётся исторически корректной. Дальнейшее
+> развитие MFA расширено до unified site-wide (`docs/adr/ADR-009-unified-mfa.md`,
+> `docs/ai/E10-MFA-CONTRACT.md`): глобальный gate `mfa_global_enabled`, единый
+> challenge `/mfa/challenge`, escape-hatches `/cabinet/security` и
+> `/admin/settings`. Приёмка Stage 8 не пересматривается.
+
 ### E8.2 — IP allowlist
 - `EnsureAdminIpAllowed` в panel middleware (покрывает login и все panel routes);
   пустой список = allow-all.
@@ -215,3 +222,5 @@
 - `docs/ai/context.md` §14, §30.
 - `docs/ai/frontend-spec.md` §3.1, §7.
 - `docs/acceptance/stage-7.md`.
+- `docs/adr/ADR-009-unified-mfa.md` (R5-amendment, MFA site-wide) и
+  `docs/ai/E10-MFA-CONTRACT.md` — развитие MFA после Stage 8.

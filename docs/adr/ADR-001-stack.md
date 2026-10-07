@@ -233,6 +233,12 @@ Filament 4 остаётся реальной резервной веткой (с
 что MFA-обвязка приходит с ядром панели, и снижает вероятность отдельного
 подключения `laravel/fortify`.
 
+> **Примечание ADR-009 (2026-10-07):** наблюдение подтверждено —
+> `pragmarx/google2fa` v9.1.0 и `pragmarx/google2fa-qrcode` v4.0.0 приходят
+> транзитивно с Filament v5.9.0. MFA-архитектура зафиксирована в
+> `docs/adr/ADR-009-unified-mfa.md` (unified site-wide MFA); `laravel/fortify`
+> не добавляется. Стек ADR-001 не изменяется.
+
 ### 4.2. Точный Laravel constraint Filament 4
 
 Точный Laravel constraint Filament 4 через filament/support не подтверждён в
