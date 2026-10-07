@@ -1,7 +1,7 @@
 # Project Status — laravel-ffxi.ru
 
 ## HEAD
-`efb4a6a` на ветке `main` (Stage 9: E9.5 — restore requests + CLI rollback).
+`5fdf413` на ветке `main` (Stage 9: E9.7 — restore test; E9.8 — acceptance).
 
 ## Прогресс по этапам (§30 context.md)
 
@@ -16,8 +16,8 @@
 | 6 | Profiles & cabinet | ACCEPTED | docs/acceptance/stage-6.md |
 | 7 | Dashboard | ACCEPTED | docs/acceptance/stage-7.md |
 | 8 | Filament | ACCEPTED | docs/acceptance/stage-8.md; контракт: docs/ai/STAGE-8-CONTRACT.md |
-| 9 | Backup/restore | E9.6 done | docs/adr/ADR-004-backup-restore.md, docs/ai/STAGE-9-CONTRACT.md |
-| 10 | Tests (§9) | partial | 670 passed |
+| 9 | Backup/restore | E9.8 done (ожидает приёмки) | docs/adr/ADR-004-backup-restore.md, docs/ai/STAGE-9-CONTRACT.md, docs/acceptance/stage-9.md |
+| 10 | Tests (§9) | partial | 678 passed |
 | 11 | CI | not started | — |
 | 12 | Timeweb staging | not started | — |
 | 13 | Deployment | not started | — |
@@ -109,7 +109,22 @@
   (`app:backup --mode=db --triggered-by=cron`) + `04:30` retention cleanup
   (`app:backup-cleanup`), оба `withoutOverlapping()`; feature-тест
   `tests/Feature/Scheduler/BackupScheduleTest.php`.
-- E9.7–E9.8 — pending (E9.7: `app:restore-test` + `make restore-test`).
+- E9.7 ✅ — `app:restore-test` (реализация) + `make restore-test`:
+  `RestoreTestService` восстанавливает backup в изолированную dev-БД
+  `laravel_ffxi_restore_test` (integrity-проверка `hash_db` → DROP/CREATE →
+  dump → smoke-test → DROP в `finally`), не затрагивая рабочую БД;
+  guard на совпадение с рабочей БД; `config/backup.php` блок `restore_test`.
+- E9.8 ✅ — приёмка: `docs/acceptance/stage-9.md`; закрыты пробелы
+  audit-событие `backup.cleanup` (§12/§13.22) и тест провала совместимости
+  (§13.15); `RestoreTestService` добавлен в карту компонентов контракта §3.1;
+  синхронизированы статусные документы.
+
+## Stage 9 — открытые gaps
+
+- **Q6** — внешняя копия backup (S3/restic/вручную) не реализована
+  (out of scope Stage 9, ADR-004 §8.2). Точка расширения — `BackupStorage`.
+- Рассинхронизация migrations при restore старого dump — известный риск
+  (§6.4 п.4), вне scope Stage 9.
 
 ## Контракты, которые НЕЛЬЗЯ менять
 
@@ -129,6 +144,8 @@
 
 ## Порядок дальнейшей работы
 
-1. Stage 9 — Backup / restore / rollback (Step 1: архитектура), по
-   §30 context.md и `docs/ai/STAGE-8-CONTRACT.md` §12 (перенесено).
-2. Stages 10–15 — по §30 context.md.
+1. Stage 9 — Backup / restore / rollback — E9.8 done, ожидает приёмки
+   владельцем (`docs/acceptance/stage-9.md`).
+2. Stage 10 — Tests (§9): добить покрытие `frontend-spec.md` §9.
+3. Stages 11–15 — по §30 context.md (CI, staging, deployment, production,
+   update UI).

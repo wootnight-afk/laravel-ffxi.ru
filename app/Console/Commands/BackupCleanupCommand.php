@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Services\AuditLogger;
 use App\Services\Backup\BackupLock;
 use App\Services\Backup\BackupRetention;
 use Illuminate\Console\Command;
@@ -20,7 +21,7 @@ class BackupCleanupCommand extends Command
 
     protected $description = 'Apply the backup retention policy (GFS 7/4/12).';
 
-    public function handle(BackupRetention $retention, BackupLock $lock): int
+    public function handle(BackupRetention $retention, BackupLock $lock, AuditLogger $audit): int
     {
         if (! $lock->acquire('backup')) {
             $this->error('Another backup or restore is already running.');
@@ -33,6 +34,13 @@ class BackupCleanupCommand extends Command
         } finally {
             $lock->release('backup');
         }
+
+        // Non-security event: no IP/UA is recorded (contract section 12).
+        $audit->log(
+            action: 'backup.cleanup',
+            new: ['deleted' => $deleted],
+            recordIp: false,
+        );
 
         $this->info("Deleted {$deleted} expired backup(s).");
 

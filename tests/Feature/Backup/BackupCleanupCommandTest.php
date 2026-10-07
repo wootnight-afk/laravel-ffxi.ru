@@ -1,6 +1,7 @@
 <?php
 
 use App\Contracts\BackupStorage;
+use App\Models\AdminAuditLog;
 use App\Services\Backup\BackupLock;
 use App\Services\Backup\BackupService;
 use App\Services\Backup\DatabaseDumper;
@@ -96,6 +97,23 @@ it('reports zero deletions when everything is protected', function () {
         ->assertExitCode(0);
 
     expect($this->storage->list())->toHaveCount(2);
+});
+
+it('records a backup.cleanup audit entry without IP', function () {
+    seedBackupsAt([
+        '2026-10-06 10:00:00',
+        '2025-01-15 10:00:00',
+    ]);
+
+    Carbon::setTestNow(Carbon::parse('2026-10-06 12:00:00', 'UTC'));
+
+    $this->artisan('app:backup-cleanup')->assertExitCode(0);
+
+    $log = AdminAuditLog::query()->where('action', 'backup.cleanup')->first();
+
+    expect($log)->not->toBeNull()
+        ->and($log->new['deleted'])->toBe(1)
+        ->and($log->ip)->toBeNull();
 });
 
 it('refuses to clean up while another backup or restore holds the lock', function () {

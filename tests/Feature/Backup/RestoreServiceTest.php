@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__.'/Stage9RestoreSupport.php';
 
+use App\Contracts\BackupStorage;
 use App\Models\AdminAuditLog;
 use App\Models\RestoreRequest;
 use App\Services\Backup\BackupLock;
@@ -100,6 +101,31 @@ it('refuses to apply when the request is expired and audits the failure', functi
         ->and(app()->maintenanceMode()->active())->toBeFalse();
 
     // No auto-backup was created: only the original backup exists.
+    expect(app(BackupService::class)->list())->toHaveCount(1);
+});
+
+it('refuses to apply an incompatible backup without changes and audits the failure', function () {
+    // Rewrite the stored manifest with a framework major the host cannot run,
+    // simulating a rollback across a Laravel major version (contract 6.4).
+    $storage = app(BackupStorage::class);
+    $manifestPath = $storage->get(app(BackupService::class)->manifestPath($this->manifest));
+
+    $data = json_decode((string) file_get_contents($manifestPath), true);
+    $data['laravel_version'] = '99.0.0';
+    file_put_contents($manifestPath, json_encode($data));
+
+    $problems = stage9RestoreService()->check($this->request->fresh());
+
+    expect(implode(' ', $problems))->toContain('Laravel major version mismatch');
+
+    expect(fn () => stage9RestoreService()->apply($this->request->fresh()))
+        ->toThrow(RuntimeException::class);
+
+    expect($this->request->fresh()->status)->toBe(RestoreRequest::STATUS_FAILED)
+        ->and(AdminAuditLog::query()->where('action', 'restore.failed')->exists())->toBeTrue()
+        ->and(app()->maintenanceMode()->active())->toBeFalse();
+
+    // Nothing was restored or auto-backed-up.
     expect(app(BackupService::class)->list())->toHaveCount(1);
 });
 

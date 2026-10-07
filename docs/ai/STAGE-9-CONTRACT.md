@@ -102,6 +102,7 @@ App\Services\Backup\BackupService         (orchestrator)
 App\Services\Backup\BackupRetention       (7/4/12 + safety)
 App\Services\Backup\RestoreRequestService (HMAC request)
 App\Services\Backup\RestoreService        (restore flow)
+App\Services\Backup\RestoreTestService    (isolated-db restore-test)
 
 App\Console\Commands\BackupCommand
 App\Console\Commands\BackupCleanupCommand
