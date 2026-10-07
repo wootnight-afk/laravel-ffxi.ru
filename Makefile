@@ -107,6 +107,11 @@ backup: ## Create a backup (MODE=full|site|db, SCOPE=a|b).
 #   make rollback LIST
 #   make rollback CHECK <request_id>
 #   make rollback APPLY <request_id>
+#
+# Restore-test restores a backup into the isolated dev database
+# (BACKUP_RESTORE_TEST_DATABASE, default laravel_ffxi_restore_test) and drops
+# it again. The working database is never touched.
+#   make restore-test <backup_id>
 # ------------------------------------------------------------------
 
 .PHONY: rollback
@@ -114,9 +119,14 @@ rollback: ## Rollback: LIST | CHECK <id> | APPLY <id>.
 	@docker compose exec -T app php artisan app:rollback \
 		$(filter-out rollback,$(MAKECMDGOALS))
 
+.PHONY: restore-test
+restore-test: ## Restore a backup into the isolated dev DB (restore-test <id>).
+	@docker compose exec -T app php artisan app:restore-test \
+		$(filter-out restore-test,$(MAKECMDGOALS))
+
 # Swallow the positional goals (LIST / CHECK / APPLY / <id>) so Make does not
-# treat them as unknown targets when `rollback` is invoked.
-ifneq ($(filter rollback,$(MAKECMDGOALS)),)
+# treat them as unknown targets when `rollback` or `restore-test` is invoked.
+ifneq ($(filter rollback restore-test,$(MAKECMDGOALS)),)
 %:
 	@:
 endif
@@ -155,5 +165,4 @@ validate: ## Run composer validate --strict.
 # behind them (spec section 32 forbids placeholder targets).
 #
 #   deploy        stage 13 — rsync + production commands
-#   restore-test  stage 11 — restore into a separate dev environment
 # ------------------------------------------------------------------

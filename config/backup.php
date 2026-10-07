@@ -36,6 +36,18 @@ return [
     // File lock guarding concurrent backup / restore (spec section 10).
     'lock_path' => storage_path('framework/backup.lock'),
 
+    // Isolated database used by `app:restore-test` (spec section 17,
+    // contract section 11). The command recreates and drops this database,
+    // so it needs an account with the CREATE/DROP privilege; in development
+    // that is the MySQL root account of the Docker stack. Host and port are
+    // taken from the default connection. Dev-only: restore-test never runs
+    // against the working database.
+    'restore_test' => [
+        'database' => env('BACKUP_RESTORE_TEST_DATABASE', 'laravel_ffxi_restore_test'),
+        'username' => env('BACKUP_RESTORE_TEST_USERNAME', 'root'),
+        'password' => env('BACKUP_RESTORE_TEST_PASSWORD', env('DB_ROOT_PASSWORD', '')),
+    ],
+
     // External copy is out of scope for Stage 9 (ADR-004 section 8.2).
     'external' => [
         'enabled' => false,
