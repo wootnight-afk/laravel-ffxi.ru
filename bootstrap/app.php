@@ -24,6 +24,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('app:cleanup-activities')
             ->dailyAt('03:00')
             ->withoutOverlapping();
+
+        // Daily DB-only backup and its retention cleanup (ADR-004 R7,
+        // contract section 10). Full backups stay manual / pre-deploy.
+        $schedule->command('app:backup --mode=db --triggered-by=cron')
+            ->dailyAt('04:00')
+            ->withoutOverlapping();
+
+        $schedule->command('app:backup-cleanup')
+            ->dailyAt('04:30')
+            ->withoutOverlapping();
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [

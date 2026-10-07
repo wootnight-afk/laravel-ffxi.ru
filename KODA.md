@@ -70,11 +70,12 @@ Full project status: `docs/ai/PROJECT-STATUS.md`.
 Autonomous work rules: `docs/ai/MASTER-TASK.md`.
 
 Short summary:
-- HEAD: `3c9ca0f` on `main`.
+- HEAD: `efb4a6a` on `main`.
 - Stages 1–8: ACCEPTED (см. docs/acceptance/).
-- Stage 9 (Backup/restore/rollback): E9.5 done — backup core + retention +
-  admin BackupPage + restore (restore_requests, HMAC, CLI rollback).
-  E9.6–E9.8 pending (E9.6: scheduler).
-- Tests: 668 passed.
+- Stage 9 (Backup/restore/rollback): E9.6 done — backup core + retention +
+  admin BackupPage + restore (restore_requests, HMAC, CLI rollback) +
+  scheduler (04:00 DB-only backup, 04:30 cleanup).
+  E9.7–E9.8 pending (E9.7: restore-test).
+- Tests: 670 passed.
 
-Next step: E9.6 — scheduler (DB-only backup + cleanup) (см. PROJECT-STATUS.md).
+Next step: E9.7 — app:restore-test implementation (см. PROJECT-STATUS.md).
