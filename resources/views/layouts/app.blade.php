@@ -1,8 +1,21 @@
 <!DOCTYPE html>
-<html lang="ru" x-data="themeToggle()" x-bind:data-theme="theme">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Anti-FOUC: apply the stored theme before the body renders.
+        // Priority: localStorage('ffxi-theme') -> prefers-color-scheme -> light.
+        (function () {
+            try {
+                var stored = localStorage.getItem('ffxi-theme');
+                var theme = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {
+                // localStorage unavailable — keep the default light theme.
+            }
+        })();
+    </script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'FFXI Phoenix Server')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -24,8 +37,9 @@
         </nav>
 
         <div class="header-right">
-            <button type="button" class="theme-toggle" x-on:click="toggle()" aria-label="Переключить тему">
-                <span x-text="theme === 'dark' ? '🌙' : '☀'"></span>
+            <button type="button" class="theme-toggle" data-theme-toggle aria-label="Переключить тему">
+                <span class="theme-toggle__icon" data-theme-icon="light">☀</span>
+                <span class="theme-toggle__icon" data-theme-icon="dark">🌙</span>
             </button>
 
             @auth
@@ -65,19 +79,6 @@
         {{ session('status') }}
     </div>
 @endif
-
-<script>
-    function themeToggle() {
-        return {
-            theme: localStorage.getItem('ffxi-theme') ||
-                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
-            toggle() {
-                this.theme = this.theme === 'dark' ? 'light' : 'dark';
-                localStorage.setItem('ffxi-theme', this.theme);
-            }
-        };
-    }
-</script>
 
 @stack('scripts')
 </body>

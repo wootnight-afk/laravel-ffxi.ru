@@ -9,10 +9,10 @@
     </div>
 
     {{-- Модальное окно с полноразмерным изображением --}}
-    <div x-data="{ zoomed: false }" style="position: relative;">
+    <div data-photo-zoom style="position: relative;">
         <div
             style="text-align: center; cursor: zoom-in; margin-bottom: 16px;"
-            x-on:click="zoomed = true"
+            data-photo-zoom-open
         >
             <img
                 src="{{ $photo->urlMedium() }}"
@@ -21,19 +21,17 @@
             >
         </div>
 
-        <template x-if="zoomed">
-            <div
-                style="position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: zoom-out;"
-                x-on:click="zoomed = false"
-                x-on:keydown.escape.window="zoomed = false"
+        <div
+            data-photo-zoom-overlay
+            hidden
+            style="position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: zoom-out;"
+        >
+            <img
+                src="{{ $photo->urlOriginal() }}"
+                alt="{{ $photo->caption ?: 'Фото' }}"
+                style="max-width: 95vw; max-height: 95vh;"
             >
-                <img
-                    src="{{ $photo->urlOriginal() }}"
-                    alt="{{ $photo->caption ?: 'Фото' }}"
-                    style="max-width: 95vw; max-height: 95vh;"
-                >
-            </div>
-        </template>
+        </div>
     </div>
 
     @if ($photo->caption)

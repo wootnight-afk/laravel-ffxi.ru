@@ -8,7 +8,7 @@
     <form
         method="POST"
         action="{{ route('register.store') }}"
-        x-data="registrationForm()"
+        data-nickname-check-url="{{ route('api.nickname.check') }}"
     >
         @csrf
 
@@ -24,32 +24,22 @@
                 autocomplete="username"
                 minlength="3"
                 maxlength="24"
-                x-on:input.debounce.500ms="checkNickname($event.target.value)"
+                data-nickname-check-input
             >
             @error('name')
                 <div class="form-error">{{ $message }}</div>
             @enderror
-            <div x-show="status === 'checking'" style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+            <div data-nickname-status="checking" hidden style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
                 Проверяем…
             </div>
-            <div x-show="status === 'available'" style="font-size: 13px; color: #15803d; margin-top: 4px;">
+            <div data-nickname-status="available" hidden style="font-size: 13px; color: #15803d; margin-top: 4px;">
                 ✓ Ник свободен
             </div>
-            <div x-show="status === 'taken'" style="font-size: 13px; color: #b45309; margin-top: 4px;">
+            <div data-nickname-status="taken" hidden style="font-size: 13px; color: #b45309; margin-top: 4px;">
                 Этот ник занят. Возможно, подойдут:
-                <div style="margin-top: 6px; display: flex; gap: 8px; flex-wrap: wrap;">
-                    <template x-for="s in suggestions" :key="s">
-                        <button
-                            type="button"
-                            class="btn"
-                            style="padding: 4px 10px; font-size: 13px;"
-                            x-on:click="pickSuggestion(s)"
-                            x-text="s"
-                        ></button>
-                    </template>
-                </div>
+                <div data-nickname-suggestions style="margin-top: 6px; display: flex; gap: 8px; flex-wrap: wrap;"></div>
             </div>
-            <div x-show="status === 'invalid' || status === 'blacklisted'" style="font-size: 13px; color: #dc2626; margin-top: 4px;">
+            <div data-nickname-status="invalid" hidden style="font-size: 13px; color: #dc2626; margin-top: 4px;">
                 Ник не подходит.
             </div>
         </div>
@@ -138,7 +128,7 @@
             </label>
         </div>
 
-        <button type="submit" class="btn btn-primary" x-bind:disabled="status === 'taken' || status === 'invalid' || status === 'blacklisted'">
+        <button type="submit" class="btn btn-primary" data-register-submit>
             Зарегистрироваться
         </button>
 
@@ -146,59 +136,4 @@
             Уже есть аккаунт? <a href="{{ route('login') }}">Войти</a>
         </div>
     </form>
-
-    @push('scripts')
-        <script>
-            function registrationForm() {
-                return {
-                    status: null,
-                    suggestions: [],
-                    async checkNickname(value) {
-                        if (! value || value.length < 3) {
-                            this.status = null;
-                            this.suggestions = [];
-                            return;
-                        }
-
-                        this.status = 'checking';
-
-                        try {
-                            const response = await fetch('{{ route('api.nickname.check') }}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                                },
-                                body: JSON.stringify({ name: value }),
-                            });
-
-                            if (! response.ok) {
-                                this.status = null;
-                                this.suggestions = [];
-                                return;
-                            }
-
-                            const data = await response.json();
-                            this.suggestions = data.suggestions ?? [];
-
-                            if (data.available) {
-                                this.status = 'available';
-                            } else {
-                                this.status = data.reason ?? 'invalid';
-                            }
-                        } catch (e) {
-                            this.status = null;
-                            this.suggestions = [];
-                        }
-                    },
-                    pickSuggestion(nickname) {
-                        document.getElementById('name').value = nickname;
-                        this.status = 'available';
-                        this.suggestions = [];
-                    },
-                };
-            }
-        </script>
-    @endpush
 @endsection
