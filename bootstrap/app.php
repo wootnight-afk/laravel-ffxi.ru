@@ -36,6 +36,13 @@ return Application::configure(basePath: dirname(__DIR__))
             ->withoutOverlapping();
     })
     ->withMiddleware(function (Middleware $middleware): void {
+        // The cookie banner acknowledgement is written by JavaScript as a plain
+        // (unencrypted) cookie, so it must be excluded from cookie encryption —
+        // otherwise EncryptCookies fails to decrypt it and drops the value.
+        $middleware->encryptCookies(except: [
+            'cookie_banner_ack',
+        ]);
+
         $middleware->web(append: [
             IdentifyGuest::class,
         ]);

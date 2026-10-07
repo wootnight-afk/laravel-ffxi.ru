@@ -4,12 +4,11 @@
 // (and therefore no Alpine runtime) is present, so it cannot rely on Alpine
 // directives. It is wired here with plain DOM APIs instead.
 
-const COOKIE_BANNER_KEY = 'cookie_banner_ack';
-const COOKIE_BANNER_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
-
 function dismissCookieBanner(banner) {
-    document.cookie =
-        COOKIE_BANNER_KEY + '=1; path=/; max-age=' + COOKIE_BANNER_MAX_AGE + '; samesite=lax';
+    // Persist first, hide second: a DOM error must never skip the cookie write.
+    // This cookie is set by JavaScript as a plain value and is excluded from
+    // Laravel's cookie encryption (see bootstrap/app.php).
+    document.cookie = 'cookie_banner_ack=1; path=/; max-age=31536000; SameSite=Lax';
     banner.remove();
 }
 
