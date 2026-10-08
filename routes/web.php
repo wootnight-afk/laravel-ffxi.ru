@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Cabinet\DangerZoneController;
+use App\Http\Controllers\Cabinet\MfaController;
 use App\Http\Controllers\Cabinet\MyGalleryController;
 use App\Http\Controllers\Cabinet\MyGalleryPhotoController;
 use App\Http\Controllers\Cabinet\MyNewsController;
@@ -117,6 +118,18 @@ Route::middleware('auth')->prefix('cabinet')->name('cabinet.')->group(function (
             ->name('security.password');
         Route::post('/security/email', [SecurityController::class, 'updateEmail'])
             ->name('security.email');
+
+        // Self-service MFA (ADR-009 §2.11) — own account only.
+        Route::post('/security/mfa/setup', [MfaController::class, 'setup'])
+            ->name('security.mfa.setup');
+        Route::post('/security/mfa/confirm', [MfaController::class, 'confirm'])
+            ->name('security.mfa.confirm');
+        Route::post('/security/mfa/disable', [MfaController::class, 'disable'])
+            ->name('security.mfa.disable');
+        Route::post('/security/mfa/regenerate-codes', [MfaController::class, 'regenerateRecoveryCodes'])
+            ->name('security.mfa.regenerate-codes');
+        Route::post('/security/mfa/cancel', [MfaController::class, 'cancel'])
+            ->name('security.mfa.cancel');
 
         Route::post('/danger/request', [DangerZoneController::class, 'request'])
             ->middleware('throttle:3,60')

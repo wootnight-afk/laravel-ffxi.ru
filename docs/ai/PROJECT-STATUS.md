@@ -1,8 +1,9 @@
 # Project Status — laravel-ffxi.ru
 
 ## HEAD
-`c025392` на ветке `main` (E10 — MFA documentation finalization; Stage 9
-закрыт `bb3bbf7`). E10.1 (docs D1–D8) — в рабочем дереве, без commit.
+`c65e1f7` на ветке `main` (E10.2 — escape-hatch `/admin/settings`). E10.1
+(`68f5eae`) и E10.2 (`c65e1f7`) запушены; E10.3 — в рабочем дереве, без commit.
+Stage 9 закрыт `bb3bbf7`.
 
 ## Прогресс по этапам (§30 context.md)
 
@@ -143,7 +144,7 @@
 
 См. docs/acceptance/stage-6.md §5 и docs/acceptance/stage-8.md §4.
 
-## MFA — ADR-009 / E10 (docs finalized E10.1, implementation NOT STARTED)
+## MFA — ADR-009 / E10 (E10.1–E10.3; implementation in progress)
 
 - `docs/adr/ADR-009-unified-mfa.md` — **Proposed / awaiting implementation**:
   unified site-wide MFA; глобальный gate `mfa_global_enabled` (default true);
@@ -152,6 +153,13 @@
   enforcement-матрица по маршрутам (§2.3); permission `mfa.manage` (admin-only,
   MFA reset); TOTP/QR-стек без `bacon`.
 - `docs/ai/E10-MFA-CONTRACT.md` — пофазный план E10.1–E10.8 + тестовая матрица (T1–T24).
+- **Прогресс реализации:**
+  - E10.2 ✅ — escape-hatch `/admin/settings` (`c65e1f7`).
+  - E10.3 ✅ — MFA setup `/cabinet/security` (self-service setup/confirm/disable/
+    regenerate/cancel; Blade + POST; только свой аккаунт; re-auth для disable и
+    regenerate; audit `mfa.enabled`/`mfa.disabled`; секреты/recovery codes не
+    логируются).
+- **Tests:** 708 passed (2291 assertions) после E10.3.
 - E10.1 (2026-10-08) закрыл пункты аудита E10-DOCS D1–D8 в документации:
   `mfa.manage` в `frontend-spec.md` §3.3/§7.6; синхронизация статусных документов;
   конкретная enforcement-матрица; TOTP/QR без composer-change; устранение Filament
@@ -171,9 +179,9 @@
 
 1. Stage 9 — Backup / restore / rollback — DONE / ACCEPTED
    (`docs/acceptance/stage-9.md`).
-2. E10 — Unified MFA (ADR-009) — E10.1 (docs D1–D8) finalized в рабочем дереве
-   (без commit); следующий шаг — E10.2 (escape-hatch / `/admin/settings`),
-   ожидает разрешения владельца.
+2. E10 — Unified MFA (ADR-009) — E10.1 + E10.2 запушены (`68f5eae`, `c65e1f7`);
+   E10.3 (MFA setup `/cabinet/security`) — в рабочем дереве, без commit;
+   следующий шаг — E10.4 (unified challenge + `RequireMfa`).
 3. Stage 10 — Tests (§9) — NOT STARTED, ожидает отдельного решения после
    локальной проверки проекта владельцем.
 4. Stages 11–15 — по §30 context.md (CI, staging, deployment, production,
