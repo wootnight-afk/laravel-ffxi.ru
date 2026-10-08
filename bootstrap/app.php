@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\IdentifyGuest;
 use App\Http\Middleware\RegistrationOpen;
+use App\Http\Middleware\RequireMfa;
 use App\Http\Middleware\SectionAccess;
 use App\Jobs\DispatchEventRemindersJob;
 use Illuminate\Console\Scheduling\Schedule;
@@ -50,6 +51,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'section.access' => SectionAccess::class,
             'registration.open' => RegistrationOpen::class,
+            'mfa.required' => RequireMfa::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

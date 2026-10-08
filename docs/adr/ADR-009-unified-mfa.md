@@ -138,9 +138,11 @@ Escape-hatch не означает снятия security-требований: �
   `mfa.challenge.verify`.
 - **UI:** Blade + обычный POST (Livewire для challenge не используется).
 - **Recovery code:** поддерживается.
-- **Успех:** session MFA verification = true; `redirect()->intended()`.
+- **Успех:** session-ключи `mfa_verified_user_id` (id текущего user) и
+  `mfa_verified_at` (timestamp); `redirect()->intended()`.
 - **Провал:** generic-ошибка без раскрытия деталей; rate limiting.
-- **Session state:** привязан к текущему authenticated user (§5).
+- **Session state:** привязан к текущему authenticated user (§5); проверка
+  сверяет `mfa_verified_user_id` с id текущего user.
 
 ### 2.6. TTL verification
 
@@ -285,9 +287,10 @@ MFA changes не используется. Текущий риск `SettingsSeed
 
 ## 4. SECURITY
 
-- Verification state привязан к текущему authenticated user; `mfa.verified = true`
-  без проверки соответствия пользователю не допускается — смена authenticated user
-  внутри session не должна позволять использовать чужой verification state.
+- Verification state привязан к текущему authenticated user; проверка
+  `mfa_verified_user_id` без сверки с текущим user не допускается — смена
+  authenticated user внутри session не должна позволять использовать чужой
+  verification state.
 - Secrets хранятся encrypted; recovery codes hashed.
 - Никакие секреты не попадают в audit/email/logs.
 - Rate limiting на challenge.

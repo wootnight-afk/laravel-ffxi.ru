@@ -18,6 +18,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventParticipantController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\MfaChallengeController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PlayerController;
@@ -77,7 +78,7 @@ Route::middleware('section.access:events')->group(function () {
 // Players (auth)
 // ------------------------------------------------------------------
 
-Route::middleware(['auth', 'section.access:players'])->group(function () {
+Route::middleware(['auth', 'section.access:players', 'mfa.required'])->group(function () {
     Route::get('/players', [PlayerController::class, 'dashboard'])->name('players.dashboard');
     Route::get('/players/directory', [PlayerController::class, 'directory'])->name('players.directory');
 });
@@ -86,7 +87,7 @@ Route::get('/activity', [ActivityController::class, 'index'])
     ->middleware('auth')
     ->name('activity.index');
 
-Route::middleware(['auth', 'section.access:player_profiles'])->group(function () {
+Route::middleware(['auth', 'section.access:player_profiles', 'mfa.required'])->group(function () {
     Route::get('/players/{user:name}', [PlayerController::class, 'show'])->name('players.show');
 });
 
@@ -207,5 +208,16 @@ Route::middleware('auth')->group(function () {
 
 Route::post('/api/nickname/check', [RegisterController::class, 'checkNickname'])
     ->middleware('guest')->name('api.nickname.check');
+
+// ------------------------------------------------------------------
+// Unified MFA challenge (ADR-009 §2.5)
+// ------------------------------------------------------------------
+
+Route::middleware('auth')->group(function () {
+    Route::get('/mfa/challenge', [MfaChallengeController::class, 'show'])->name('mfa.challenge');
+    Route::post('/mfa/challenge', [MfaChallengeController::class, 'verify'])
+        ->middleware('throttle:5,1')
+        ->name('mfa.challenge.verify');
+});
 
 Route::get('/{page:slug}', [PageController::class, 'show'])->name('page.show');

@@ -1,9 +1,9 @@
 # Project Status — laravel-ffxi.ru
 
 ## HEAD
-`c65e1f7` на ветке `main` (E10.2 — escape-hatch `/admin/settings`). E10.1
-(`68f5eae`) и E10.2 (`c65e1f7`) запушены; E10.3 — в рабочем дереве, без commit.
-Stage 9 закрыт `bb3bbf7`.
+`b0c68d9` на ветке `main` (E10.3 — MFA setup `/cabinet/security`). E10.1
+(`68f5eae`), E10.2 (`c65e1f7`), E10.3 (`b0c68d9`) запушены; E10.4 — в рабочем
+дереве, без commit. Stage 9 закрыт `bb3bbf7`.
 
 ## Прогресс по этапам (§30 context.md)
 
@@ -144,7 +144,7 @@ Stage 9 закрыт `bb3bbf7`.
 
 См. docs/acceptance/stage-6.md §5 и docs/acceptance/stage-8.md §4.
 
-## MFA — ADR-009 / E10 (E10.1–E10.3; implementation in progress)
+## MFA — ADR-009 / E10 (E10.1–E10.4; implementation in progress)
 
 - `docs/adr/ADR-009-unified-mfa.md` — **Proposed / awaiting implementation**:
   unified site-wide MFA; глобальный gate `mfa_global_enabled` (default true);
@@ -155,11 +155,16 @@ Stage 9 закрыт `bb3bbf7`.
 - `docs/ai/E10-MFA-CONTRACT.md` — пофазный план E10.1–E10.8 + тестовая матрица (T1–T24).
 - **Прогресс реализации:**
   - E10.2 ✅ — escape-hatch `/admin/settings` (`c65e1f7`).
-  - E10.3 ✅ — MFA setup `/cabinet/security` (self-service setup/confirm/disable/
-    regenerate/cancel; Blade + POST; только свой аккаунт; re-auth для disable и
-    regenerate; audit `mfa.enabled`/`mfa.disabled`; секреты/recovery codes не
-    логируются).
-- **Tests:** 708 passed (2291 assertions) после E10.3.
+  - E10.3 ✅ — MFA setup `/cabinet/security` (`b0c68d9`; self-service setup/confirm/
+    disable/regenerate/cancel; Blade + POST; только свой аккаунт; re-auth для
+    disable и regenerate; audit `mfa.enabled`/`mfa.disabled`).
+  - E10.4 ✅ — unified challenge `/mfa/challenge` + middleware `mfa.required`
+    (`RequireMfa`): enforcement для `/players` и admin-панели (persistent, покрывает
+    Livewire); session-ключи `mfa_verified_user_id`/`mfa_verified_at` (binding к user,
+    T24); global gate; escape-hatches; editor `/admin/profile` skip; rate limit 5/мин;
+    audit `mfa.challenge_success`/`mfa.challenge_failure`. Легаси-middleware
+    `EnsureAdminMultiFactorAuthentication` сохранён, но shadowed (удаление — E10.6).
+- **Tests:** 739 passed (2360 assertions) после E10.4.
 - E10.1 (2026-10-08) закрыл пункты аудита E10-DOCS D1–D8 в документации:
   `mfa.manage` в `frontend-spec.md` §3.3/§7.6; синхронизация статусных документов;
   конкретная enforcement-матрица; TOTP/QR без composer-change; устранение Filament
@@ -179,9 +184,9 @@ Stage 9 закрыт `bb3bbf7`.
 
 1. Stage 9 — Backup / restore / rollback — DONE / ACCEPTED
    (`docs/acceptance/stage-9.md`).
-2. E10 — Unified MFA (ADR-009) — E10.1 + E10.2 запушены (`68f5eae`, `c65e1f7`);
-   E10.3 (MFA setup `/cabinet/security`) — в рабочем дереве, без commit;
-   следующий шаг — E10.4 (unified challenge + `RequireMfa`).
+2. E10 — Unified MFA (ADR-009) — E10.1 + E10.2 + E10.3 запушены (`68f5eae`,
+   `c65e1f7`, `b0c68d9`); E10.4 (unified challenge + `RequireMfa`) — в рабочем
+   дереве, без commit; следующий шаг — E10.5 (Admin Settings → Security).
 3. Stage 10 — Tests (§9) — NOT STARTED, ожидает отдельного решения после
    локальной проверки проекта владельцем.
 4. Stages 11–15 — по §30 context.md (CI, staging, deployment, production,

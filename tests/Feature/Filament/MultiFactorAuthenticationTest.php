@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\RequireMfa;
 use App\Models\User;
 use App\Services\SettingsRepository;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
@@ -35,13 +36,15 @@ it('offers the app authentication setup action on the profile page', function ()
         ->assertSee('Включить');
 });
 
-it('redirects a required admin without app authentication to the setup page', function () {
+it('redirects a required admin without MFA to the cabinet security page', function () {
     $admin = makeMfaPanelUser('admin');
     app(SettingsRepository::class)->set('admin_2fa_required', true);
 
+    // Unified enforcement (ADR-009 §2.3) runs before the legacy Filament
+    // middleware and points the admin at the self-service setup page.
     $this->actingAs($admin)
         ->get('/admin/users')
-        ->assertRedirect('/admin/multi-factor-authentication/set-up');
+        ->assertRedirect('/cabinet/security');
 });
 
 it('keeps the admin settings escape-hatch reachable without app authentication', function () {
@@ -55,13 +58,15 @@ it('keeps the admin settings escape-hatch reachable without app authentication',
         ->assertOk();
 });
 
-it('keeps the required setup page reachable so enforcement does not loop', function () {
+it('does not loop between unified enforcement and the Filament setup page', function () {
     $admin = makeMfaPanelUser('admin');
     app(SettingsRepository::class)->set('admin_2fa_required', true);
 
+    // The Filament setup route is now shadowed by unified enforcement; the
+    // admin without MFA is sent to the self-service page, never back to setup.
     $this->actingAs($admin)
         ->get('/admin/multi-factor-authentication/set-up')
-        ->assertOk();
+        ->assertRedirect('/cabinet/security');
 });
 
 it('keeps the cabinet security escape-hatch outside the panel MFA middleware', function () {
@@ -82,14 +87,17 @@ it('never requires app authentication from editors', function () {
     $this->actingAs($editor)->get('/admin/news')->assertOk();
 });
 
-it('lets a required admin through once app authentication is enabled', function () {
+it('lets a required admin through once MFA is configured and verified', function () {
     $admin = makeMfaPanelUser('admin');
     $admin->saveAppAuthenticationSecret('JBSWY3DPEHPK3PXP');
     app(SettingsRepository::class)->set('admin_2fa_required', true);
 
     expect(AppAuthentication::make()->isEnabled($admin->refresh()))->toBeTrue();
 
-    $this->actingAs($admin)->get('/admin/users')->assertOk();
+    $this->actingAs($admin)
+        ->withSession([RequireMfa::SESSION_USER_ID_KEY => $admin->getKey()])
+        ->get('/admin/users')
+        ->assertOk();
 });
 
 it('stores app authentication secrets encrypted and hidden', function () {

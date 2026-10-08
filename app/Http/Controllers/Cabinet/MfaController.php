@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Cabinet;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\RequireMfa;
 use App\Services\AuditLogger;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Illuminate\Http\RedirectResponse;
@@ -120,6 +121,13 @@ class MfaController extends Controller
 
         $user->saveAppAuthenticationSecret(null);
         $user->saveAppAuthenticationRecoveryCodes(null);
+
+        // Drop any MFA verification for this user: it must not survive a
+        // re-enable within the same session (ADR-009 §2.5).
+        $request->session()->forget([
+            RequireMfa::SESSION_USER_ID_KEY,
+            RequireMfa::SESSION_VERIFIED_AT_KEY,
+        ]);
 
         $this->audit->log(
             action: 'mfa.disabled',
