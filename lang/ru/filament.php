@@ -84,6 +84,7 @@ return [
             'admin_2fa_required' => 'Обязательная MFA для admin',
             'mfa_global_enabled' => 'MFA глобально включена',
             'mfa_global_enabled_help' => 'При выключении MFA-enforcement отключается для всех ролей; существующие настройки пользователей сохраняются.',
+            'mfa_locked_production' => 'Заблокировано в production: MFA обязательна и не может быть отключена (ADR-009).',
             'admin_ip_allowlist' => 'IP allowlist (один IP/CIDR на строку)',
             'admin_ip_allowlist_help' => 'Пустой список разрешает доступ с любого IP. Изменение требует повторного ввода пароля. Не заблокируйте себя: проверьте текущий IP и не доверяйте proxy headers до настройки production proxies.',
             'admin_ip_allowlist_warning' => 'Проверьте адрес в allowlist до сохранения: неверное значение может закрыть вам доступ к панели.',

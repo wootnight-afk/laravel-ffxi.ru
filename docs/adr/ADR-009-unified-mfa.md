@@ -4,7 +4,7 @@
 |---|---|
 | Статус | **Proposed / awaiting implementation** (не Accepted до приёмки E10) |
 | Дата | 2026-10-07 |
-| Обновлено | 2026-10-08 (E10.1 — reconciliation D1–D8; решения владельца) |
+| Обновлено | 2026-10-08 (E10.1 — reconciliation D1–D8; E10.5b — production invariant §2.16) |
 | Этап | E10 — Unified MFA (вне нумерации §30 context.md; расширение Stage 8 R5) |
 | Связанные разделы | `STAGE-8-CONTRACT.md` §1 R5 (amendment), §3.4, §11; `frontend-spec.md` §3.1, §4, §6.2, §7.5, §7.6; `context.md` §13 (MFA, Session security); ADR-001 (стек), ADR-007 (доступ) |
 | Причина выделения | Расширенное решение владельца: единый MFA-челлендж для всех ролей вместо admin-only Filament MFA |
@@ -56,13 +56,16 @@ Read-only диагностика (2026-10-07) установила фактич�
   пользователя сохраняются и снова работают при повторном включении MFA.
 - **Архитектурный default: `mfa_global_enabled = true`.** Наличие функции MFA не
   означает её глобальное отключение по умолчанию.
+- **Production invariant:** в production `mfa_global_enabled` не может быть
+  ослаблена — effective enforcement форсирован `true` (§2.16).
 - Изменение runtime-БД в рамках этого ADR не производится (см. §7).
 
 ### 2.2. Admin requirement — `admin_2fa_required`
 
 Существующая настройка сохраняется. Смысл — только в связке с `mfa_global_enabled`
 (см. таблицу 2.1). `admin_2fa_required` **не влияет** на editor и user.
-**Архитектурный default: `admin_2fa_required = false`.**
+**Архитектурный default: `admin_2fa_required = false`.** В production requirement
+для admin форсирован независимо от настройки (§2.16).
 
 ### 2.3. Роли и матрица enforcement
 
@@ -129,6 +132,7 @@ Enforcement применяется только к authenticated-пользов�
 
 Escape-hatch не означает снятия security-требований: для sensitive operations
 применяется повторная аутентификация согласно security-политике проекта (§6).
+В production escape-hatches не позволяют ослабить MFA-инвариант (§2.16).
 
 ### 2.5. Unified challenge
 
@@ -264,6 +268,30 @@ MFA-настройки изменяются только через `SettingsRep
 MFA changes не используется. Текущий риск `SettingsSeeder` без `flush` фиксируется
 как отдельный тех-долг (не входит в scope ADR).
 
+### 2.16. Production MFA invariant
+
+В production MFA для администратора **технически обязательна** и не может быть
+ослаблена. Инвариант обеспечивается единым источником эффективной policy —
+`App\Services\Mfa\MfaPolicy`:
+
+| Среда | Effective global enforcement | Effective admin MFA requirement |
+|---|---|---|
+| `production` | **всегда `true`** (fail-closed) | **всегда `true`** для роли `admin` |
+| non-production | `settings.mfa_global_enabled` (default `true`) | `settings.admin_2fa_required` (default `false`) + роль `admin` |
+
+- В production ни `settings.mfa_global_enabled`, ни `settings.admin_2fa_required`
+  не могут ослабить инвариант: `MfaPolicy` возвращает `true` независимо от БД.
+- UI (`SettingsPage`) блокирует оба toggle (`disabled()` + helper-text
+  «Заблокировано в production»), а **server-side guard** в `save()` не персистит
+  ослабляющие значения (защита не полагается только на UI).
+- Environment (`app()->environment('production')`) используется **только для
+  hardening**, никогда как bypass. Fail-closed достигается тем, что при
+  незаданном `APP_ENV` Laravel default = `production` (`config/app.php`).
+- Новый env/config-флаг не вводится; behavior переключается штатным `APP_ENV`.
+- Escape-hatches `/admin/settings` и `/cabinet/security` сохраняются как
+  safety-valves, но **не дают обхода**: их эффективная policy остаётся
+  форсированной в production.
+
 ---
 
 ## 3. ПОСЛЕДСТВИЯ
@@ -362,6 +390,9 @@ admin/editor self-service; `admin_2fa_required` reserved, default false.
 9. Audit: `mfa.enabled`, `mfa.disabled`, `mfa.admin_reset`,
    `mfa.challenge_success`, `mfa.challenge_failure`; без секретов.
 10. Вводится permission `mfa.manage` (admin) для административного reset.
+11. Production invariant: в production MFA для admin обязательна и не может быть
+    ослаблена ни через настройки, ни через UI (§2.16); environment — только
+    hardening, не bypass.
 
 Пункты R5 о миграции `0001_01_01_000023`, хранении полей и recovery codes —
 без изменений.

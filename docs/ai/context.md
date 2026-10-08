@@ -350,10 +350,17 @@ Unified site-wide MFA (ADR-009; см. `docs/adr/ADR-009-unified-mfa.md`,
   `users.app_authentication_recovery_codes` (encrypted:array, hashed).
   Filament `AppAuthentication` — storage/compat без второго enforcement;
   двойного challenge нет.
+- **Production invariant (ADR-009 §2.16):** в production MFA для admin
+  технически обязательна и не может быть ослаблена — ни через
+  `admin_2fa_required`, ни через `mfa_global_enabled`, ни через UI
+  `/admin/settings` (server-side guard). Effective policy считает
+  `App\Services\Mfa\MfaPolicy` (fail-closed: `APP_ENV` default = production).
+  Environment используется только для hardening, не для bypass. Escape-hatches
+  `/cabinet/security` и `/admin/settings` сохраняются, но обхода не дают.
 
-> **Текущее runtime-состояние БД (2026-10-07):** `admin_2fa_required = true`
-> (запись от 2026-10-03). Это runtime state, **не** архитектурный default;
-> автоматически не изменяется.
+> **Текущее runtime-состояние dev-БД (2026-10-08):** `admin_2fa_required = false`
+> (для ручной приёмки в development); `mfa_global_enabled` — default `true`.
+> В production effective policy форсирует оба инварианта независимо от БД.
 
 ## Password hashing
 

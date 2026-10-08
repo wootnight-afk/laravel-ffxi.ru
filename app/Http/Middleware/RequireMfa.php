@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
-use App\Services\SettingsRepository;
+use App\Services\Mfa\MfaPolicy;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Unified MFA enforcement (ADR-009 §2.3–§2.4).
+ * Unified MFA enforcement (ADR-009 §2.3–§2.4, §2.16).
  *
  * Applied to `/players` and the admin panel. Enforcement is opt-in per user:
  * a user without a configured secret is only challenged when they are an admin
- * and `admin_2fa_required` is on. The verification state is bound to the
- * authenticated user id so it cannot be reused after a user switch (T24).
+ * and MFA is required for admins. The effective requirements come from
+ * {@see MfaPolicy}, which hardens them in production (fail-closed). The
+ * verification state is bound to the authenticated user id so it cannot be
+ * reused after a user switch (T24).
  *
  * Escape-hatches and pre-auth panel routes are always reachable.
  */
@@ -29,8 +31,10 @@ class RequireMfa
 
     public function handle(Request $request, Closure $next): Response
     {
-        // 1. Global gate (ADR-009 §2.1) — default enabled.
-        if (! app(SettingsRepository::class)->bool('mfa_global_enabled', true)) {
+        $policy = app(MfaPolicy::class);
+
+        // 1. Global gate (ADR-009 §2.1, §2.16) — production is fail-closed.
+        if (! $policy->globalEnabled()) {
             return $next($request);
         }
 
@@ -65,8 +69,7 @@ class RequireMfa
         }
 
         if (! $hasMfa) {
-            $required = app(SettingsRepository::class)->bool('admin_2fa_required', false)
-                && $user->hasRole('admin');
+            $required = $policy->adminMfaRequired($user);
 
             if ($required) {
                 return redirect()->guest(route('cabinet.tab', ['tab' => 'security']));

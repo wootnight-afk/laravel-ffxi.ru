@@ -1,9 +1,10 @@
 # Project Status — laravel-ffxi.ru
 
 ## HEAD
-`5274ed5` на ветке `main` (E10.4 — unified MFA challenge + `RequireMfa`). E10.1
-(`68f5eae`), E10.2 (`c65e1f7`), E10.3 (`b0c68d9`), E10.4 (`5274ed5`) запушены;
-E10.5 — в рабочем дереве, без commit. Stage 9 закрыт `bb3bbf7`.
+`15f084a` на ветке `main` (E10.5 — admin MFA management in settings). E10.1
+(`68f5eae`), E10.2 (`c65e1f7`), E10.3 (`b0c68d9`), E10.4 (`5274ed5`), E10.5
+(`15f084a`) — локально; E10.5b — в рабочем дереве, без commit. Stage 9 закрыт
+`bb3bbf7`.
 
 ## Прогресс по этапам (§30 context.md)
 
@@ -168,7 +169,11 @@ E10.5 — в рабочем дереве, без commit. Stage 9 закрыт `b
     `mfa_global_enabled`, список MFA-статуса пользователей, per-user reset через
     `ReAuthenticateAction`, audit `mfa.admin_reset`, email
     `MfaResetByAdminNotification`).
-- **Tests:** 759 passed (2433 assertions) после E10.5.
+  - E10.5b ✅ — production MFA invariant (`MfaPolicy`, fail-closed): в production
+    MFA для admin обязательна и не ослабляется ни через настройки, ни через UI
+    (`SettingsPage` UI-lock + server-side guard); environment — только hardening,
+    без нового env-флага; dev (`admin_2fa_required=false`) — вход по паролю.
+- **Tests:** 779 passed (2486 assertions) после E10.5b.
 - E10.1 (2026-10-08) закрыл пункты аудита E10-DOCS D1–D8 в документации:
   `mfa.manage` в `frontend-spec.md` §3.3/§7.6; синхронизация статусных документов;
   конкретная enforcement-матрица; TOTP/QR без composer-change; устранение Filament
@@ -179,10 +184,10 @@ E10.5 — в рабочем дереве, без commit. Stage 9 закрыт `b
 - **Расхождение `AuditLogger`** (security-specific IP: `STAGE-8-CONTRACT` §3.3 vs
   текущий default `recordIp = true`) — отдельный тех-долг Stage 8; закрыть до E10.7,
   если потребуется изменение.
-- **Runtime state:** в текущей БД `admin_2fa_required = true` (запись от
-  2026-10-03) при архитектурном default `false`; `mfa_global_enabled` добавляется
-  сидером (default `true`) при следующем `db:seed`. Автоматически не изменяется.
-- Порядок: E10.1 → E10.2 → E10.3 → E10.4 → E10.5 → E10.6 → E10.7 → E10.8.
+- **Runtime state:** в dev-БД `admin_2fa_required = false` (2026-10-08, для ручной
+  приёмки); `mfa_global_enabled` — default `true` (запись появляется сидером).
+  В production effective policy форсирует оба инварианта независимо от БД.
+- Порядок: E10.1 → E10.2 → E10.3 → E10.4 → E10.5 → E10.5b → E10.6 → E10.7 → E10.8.
 
 ## Порядок дальнейшей работы
 
@@ -190,8 +195,9 @@ E10.5 — в рабочем дереве, без commit. Stage 9 закрыт `b
    (`docs/acceptance/stage-9.md`).
 2. E10 — Unified MFA (ADR-009) — E10.1 + E10.2 + E10.3 + E10.4 запушены
    (`68f5eae`, `c65e1f7`, `b0c68d9`, `5274ed5`); E10.5 (admin MFA management) —
-   в рабочем дереве, без commit; следующий шаг — E10.6 (Filament MFA integration /
-   removal of competing enforcement).
+   `15f084a`; E10.5b (production MFA invariant) — в рабочем дереве, без commit;
+   следующий шаг — E10.6 (Filament MFA integration / removal of competing
+   enforcement).
 3. Stage 10 — Tests (§9) — NOT STARTED, ожидает отдельного решения после
    локальной проверки проекта владельцем.
 4. Stages 11–15 — по §30 context.md (CI, staging, deployment, production,

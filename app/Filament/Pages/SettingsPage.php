@@ -226,9 +226,16 @@ class SettingsPage extends Page implements HasTable
                     ->schema([
                         Toggle::make('mfa_global_enabled')
                             ->label(__('filament.settings.fields.mfa_global_enabled'))
-                            ->helperText(__('filament.settings.fields.mfa_global_enabled_help')),
+                            ->helperText(fn (): string => $this->mfaTogglesLocked()
+                                ? __('filament.settings.fields.mfa_locked_production')
+                                : __('filament.settings.fields.mfa_global_enabled_help'))
+                            ->disabled(fn (): bool => $this->mfaTogglesLocked()),
                         Toggle::make('admin_2fa_required')
-                            ->label(__('filament.settings.fields.admin_2fa_required')),
+                            ->label(__('filament.settings.fields.admin_2fa_required'))
+                            ->helperText(fn (): ?string => $this->mfaTogglesLocked()
+                                ? __('filament.settings.fields.mfa_locked_production')
+                                : null)
+                            ->disabled(fn (): bool => $this->mfaTogglesLocked()),
                         Textarea::make('admin_ip_allowlist_text')
                             ->label(__('filament.settings.fields.admin_ip_allowlist'))
                             ->helperText(__('filament.settings.fields.admin_ip_allowlist_help'))
@@ -300,8 +307,10 @@ class SettingsPage extends Page implements HasTable
             'ranks_enabled' => (bool) $data['ranks_enabled'],
             'default_profile_public' => (bool) $data['default_profile_public'],
             'guest_sections' => $data['guest_sections'],
-            'mfa_global_enabled' => (bool) $data['mfa_global_enabled'],
-            'admin_2fa_required' => (bool) $data['admin_2fa_required'],
+            'mfa_global_enabled' => (bool) ($data['mfa_global_enabled']
+                ?? $settings->bool('mfa_global_enabled', true)),
+            'admin_2fa_required' => (bool) ($data['admin_2fa_required']
+                ?? $settings->bool('admin_2fa_required', false)),
             'admin_ip_allowlist' => $allowlist,
             'admin_new_ip_notify' => (bool) $data['admin_new_ip_notify'],
             'bell_enabled' => (bool) $data['bell_enabled'],
@@ -309,6 +318,14 @@ class SettingsPage extends Page implements HasTable
             'notifications_enabled' => (bool) $data['notifications_enabled'],
             'activity_retention_days' => (int) $data['activity_retention_days'],
         ];
+
+        // Production invariant (ADR-009 §2.13): the MFA toggles cannot be
+        // weakened through the UI. The disabled state is UX-only, so the
+        // submitted values are discarded here and the stored values preserved.
+        if ($this->mfaTogglesLocked()) {
+            $values['mfa_global_enabled'] = $settings->bool('mfa_global_enabled', true);
+            $values['admin_2fa_required'] = $settings->bool('admin_2fa_required', false);
+        }
 
         $settings->setMany($values);
 
@@ -327,6 +344,15 @@ class SettingsPage extends Page implements HasTable
     public static function canManageMfa(): bool
     {
         return auth()->user()?->can('mfa.manage') ?? false;
+    }
+
+    /**
+     * In production the MFA toggles are locked: MFA is always enforced and
+     * cannot be weakened through the UI (ADR-009 §2.16).
+     */
+    private function mfaTogglesLocked(): bool
+    {
+        return app()->environment('production');
     }
 
     public function table(Table $table): Table
