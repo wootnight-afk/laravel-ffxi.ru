@@ -44,6 +44,37 @@ it('redirects a required admin without app authentication to the setup page', fu
         ->assertRedirect('/admin/multi-factor-authentication/set-up');
 });
 
+it('keeps the admin settings escape-hatch reachable without app authentication', function () {
+    $admin = makeMfaPanelUser('admin');
+    app(SettingsRepository::class)->set('admin_2fa_required', true);
+
+    // ADR-009 §2.4: /admin/settings must stay reachable so an admin can manage
+    // the global flags and never lock themselves out.
+    $this->actingAs($admin)
+        ->get('/admin/settings')
+        ->assertOk();
+});
+
+it('keeps the required setup page reachable so enforcement does not loop', function () {
+    $admin = makeMfaPanelUser('admin');
+    app(SettingsRepository::class)->set('admin_2fa_required', true);
+
+    $this->actingAs($admin)
+        ->get('/admin/multi-factor-authentication/set-up')
+        ->assertOk();
+});
+
+it('keeps the cabinet security escape-hatch outside the panel MFA middleware', function () {
+    $admin = makeMfaPanelUser('admin');
+    app(SettingsRepository::class)->set('admin_2fa_required', true);
+
+    // ADR-009 §2.4: /cabinet/security is a web route, not part of the panel
+    // MFA middleware, and must stay reachable without completed MFA.
+    $this->actingAs($admin)
+        ->get('/cabinet/security')
+        ->assertOk();
+});
+
 it('never requires app authentication from editors', function () {
     $editor = makeMfaPanelUser('editor');
     app(SettingsRepository::class)->set('admin_2fa_required', true);
