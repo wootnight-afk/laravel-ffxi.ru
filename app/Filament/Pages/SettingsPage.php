@@ -2,8 +2,13 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Actions\ReAuthenticateAction;
+use App\Models\User;
+use App\Notifications\MfaResetByAdminNotification;
 use App\Rules\IpAllowlist;
+use App\Services\AuditLogger;
 use App\Services\SettingsRepository;
+use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -13,14 +18,25 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Spatie\Permission\Models\Role;
 use UnexpectedValueException;
 use UnitEnum;
 
 /**
  * @property-read Schema $form
+ * @property-read Table $table
  */
-class SettingsPage extends Page
+class SettingsPage extends Page implements HasTable
 {
+    use InteractsWithTable;
+
     protected string $view = 'filament.pages.settings-page';
 
     protected static ?string $slug = 'settings';
@@ -208,6 +224,9 @@ class SettingsPage extends Page
                     ->columns(2),
                 Section::make(__('filament.settings.groups.security'))
                     ->schema([
+                        Toggle::make('mfa_global_enabled')
+                            ->label(__('filament.settings.fields.mfa_global_enabled'))
+                            ->helperText(__('filament.settings.fields.mfa_global_enabled_help')),
                         Toggle::make('admin_2fa_required')
                             ->label(__('filament.settings.fields.admin_2fa_required')),
                         Textarea::make('admin_ip_allowlist_text')
@@ -281,6 +300,7 @@ class SettingsPage extends Page
             'ranks_enabled' => (bool) $data['ranks_enabled'],
             'default_profile_public' => (bool) $data['default_profile_public'],
             'guest_sections' => $data['guest_sections'],
+            'mfa_global_enabled' => (bool) $data['mfa_global_enabled'],
             'admin_2fa_required' => (bool) $data['admin_2fa_required'],
             'admin_ip_allowlist' => $allowlist,
             'admin_new_ip_notify' => (bool) $data['admin_new_ip_notify'],
@@ -298,6 +318,117 @@ class SettingsPage extends Page
             ->send();
 
         $this->mount($settings);
+    }
+
+    /**
+     * Per-user MFA management is restricted to holders of `mfa.manage`
+     * (admin only; ADR-009 §2.10). Editors and users never hold it.
+     */
+    public static function canManageMfa(): bool
+    {
+        return auth()->user()?->can('mfa.manage') ?? false;
+    }
+
+    public function table(Table $table): Table
+    {
+        return $table
+            ->query(User::query()->with('roles'))
+            ->columns([
+                TextColumn::make('name')
+                    ->label(__('filament.resources.users.fields.name'))
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('email')
+                    ->label(__('filament.resources.users.fields.email'))
+                    ->searchable()
+                    ->toggleable(),
+                TextColumn::make('roles.name')
+                    ->label(__('filament.resources.users.fields.roles'))
+                    ->badge()
+                    ->separator(','),
+                TextColumn::make('mfa_enabled')
+                    ->label(__('filament.settings.mfa.fields.mfa_status'))
+                    ->badge()
+                    ->state(fn (User $record): bool => filled($record->getAppAuthenticationSecret()))
+                    ->formatStateUsing(fn (bool $state): string => $state
+                        ? __('filament.settings.mfa.status.on')
+                        : __('filament.settings.mfa.status.off'))
+                    ->color(fn (bool $state): string => $state ? 'success' : 'gray'),
+            ])
+            ->filters([
+                SelectFilter::make('mfa_status')
+                    ->label(__('filament.settings.mfa.fields.mfa_status'))
+                    ->options([
+                        'on' => __('filament.settings.mfa.status.on'),
+                        'off' => __('filament.settings.mfa.status.off'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return match ($data['value'] ?? null) {
+                            'on' => $query->whereNotNull('app_authentication_secret'),
+                            'off' => $query->whereNull('app_authentication_secret'),
+                            default => $query,
+                        };
+                    }),
+                SelectFilter::make('roles')
+                    ->label(__('filament.resources.users.fields.roles'))
+                    ->options(Role::query()->pluck('name', 'name')->all())
+                    ->query(function (Builder $query, array $data): Builder {
+                        $role = $data['value'] ?? null;
+
+                        return filled($role)
+                            ? $query->whereHas('roles', fn (Builder $roles): Builder => $roles->where('name', $role))
+                            : $query;
+                    }),
+            ])
+            ->recordActions([
+                $this->buildResetMfaAction(),
+            ])
+            ->defaultPaginationPageOption(25)
+            ->recordUrl(null);
+    }
+
+    /**
+     * Per-user MFA reset: re-auth (current admin password) + explicit
+     * confirmation. Only enabled for records that actually have MFA and only
+     * for holders of `mfa.manage`.
+     */
+    private function buildResetMfaAction(): Action
+    {
+        return ReAuthenticateAction::make(
+            name: 'resetMfa',
+            label: __('filament.settings.mfa.actions.reset'),
+            callback: function (?Model $record): void {
+                if (! $record instanceof User) {
+                    return;
+                }
+
+                abort_unless(static::canManageMfa(), 403);
+
+                /** @var User $actor */
+                $actor = auth()->user();
+
+                $record->saveAppAuthenticationSecret(null);
+                $record->saveAppAuthenticationRecoveryCodes(null);
+
+                // Security event: IP/UA are recorded; never any secrets.
+                app(AuditLogger::class)->log(
+                    action: 'mfa.admin_reset',
+                    subject: $record,
+                    old: ['mfa_enabled' => true],
+                    new: ['mfa_enabled' => false],
+                    actor: $actor,
+                );
+
+                $record->notify(new MfaResetByAdminNotification($actor));
+            },
+        )
+            ->icon('heroicon-o-shield-exclamation')
+            ->modalDescription(__('filament.settings.mfa.actions.reset_confirm'))
+            ->successNotificationTitle(fn (User $record): string => __('filament.settings.mfa.notifications.reset', [
+                'name' => $record->name,
+            ]))
+            ->visible(fn (): bool => static::canManageMfa())
+            ->disabled(fn (User $record): bool => blank($record->getAppAuthenticationSecret()));
     }
 
     /**
@@ -331,6 +462,7 @@ class SettingsPage extends Page
                 'players' => false,
                 'player_profiles' => false,
             ],
+            'mfa_global_enabled' => true,
             'admin_2fa_required' => false,
             'admin_ip_allowlist' => [],
             'admin_new_ip_notify' => true,

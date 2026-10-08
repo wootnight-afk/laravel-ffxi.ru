@@ -67,6 +67,9 @@ class RoleAndPermissionSeeder extends Seeder
             'audit.view',
             'guests.view',
             'ranks.manage',
+
+            // MFA (admin-only: per-user MFA reset; ADR-009 §2.10)
+            'mfa.manage',
         ];
 
         foreach ($permissions as $permission) {

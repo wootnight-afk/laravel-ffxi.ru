@@ -31,6 +31,7 @@ class SettingsSeeder extends Seeder
             'notifications_enabled' => true,
             'activity_retention_days' => 180,
             'admin_2fa_required' => false,
+            'mfa_global_enabled' => true,
             'admin_ip_allowlist' => [],
             'admin_new_ip_notify' => true,
             'timezone_display' => 'Europe/Moscow',
