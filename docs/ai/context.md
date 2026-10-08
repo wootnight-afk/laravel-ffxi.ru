@@ -128,10 +128,10 @@ Rollback разрешён только при совместимости.
 ## Разрешено добавить (фиксируется в ADR при подключении)
 
 - `league/commonmark` — Markdown;
-- `pragmarx/google2fa` + `bacon/bacon-qr-code` — 2FA/MFA (если нужно).
-  Фактически `pragmarx/google2fa` и `pragmarx/google2fa-qrcode` уже приходят
-  транзитивно; QR рендерится через `chillerlan/php-qrcode`, `bacon/bacon-qr-code`
-  не установлен. Необходимость отдельного composer-change — scope ADR-009 §2.8;
+- `pragmarx/google2fa` — 2FA/MFA (TOTP). Фактически `pragmarx/google2fa` v9.1.0 и
+  `pragmarx/google2fa-qrcode` v4.0.0 уже приходят транзитивно; QR рендерится через
+  `chillerlan/php-qrcode`. `bacon/bacon-qr-code` **не добавляется** (ADR-009 §2.8);
+  composer не изменяется;
 - `ezyang/htmlpurifier` — опционально как HTML-санитайзер (fallback —
   собственный `HtmlSanitizer` на DOMDocument);
 - npm: `chart.js` (виджеты), `photoswipe` (галерея; fallback — Alpine).
@@ -338,8 +338,14 @@ Unified site-wide MFA (ADR-009; см. `docs/adr/ADR-009-unified-mfa.md`,
   На editor/user не влияет (они всегда opt-in).
 - Единый challenge `/mfa/challenge` (`mfa.challenge` / `mfa.challenge.verify`)
   для всех ролей; verification действует до logout.
+- Enforcement-матрица по маршрутам — ADR-009 §2.3 (user/editor — `/players`;
+  editor — контентные `/admin/*`; admin — `/admin/*` кроме `/admin/settings`).
+- Административный MFA reset — permission `mfa.manage` (admin-only); self-service
+  им не защищается; reset-all не реализуется.
 - Escape-hatches: `/cabinet/security`, `/admin/settings`. Отдельной
   `/admin/settings/security` нет.
+- TOTP — `pragmarx/google2fa`; QR — существующий стек `pragmarx/google2fa-qrcode`
+  + `chillerlan/php-qrcode` (без `bacon/bacon-qr-code`, composer не меняется).
 - Storage — существующие `users.app_authentication_secret` (encrypted) и
   `users.app_authentication_recovery_codes` (encrypted:array, hashed).
   Filament `AppAuthentication` — storage/compat без второго enforcement;
@@ -1058,6 +1064,12 @@ Settings (key-value), Хранение аватаров (storage/app/public/avat
 ---
 
 # ИСТОРИЯ ВЕРСИЙ
+
+**4.0.2 (doc-reconciliation E10.1, стек не изменён)** — §13 MFA дополнен:
+ссылка на enforcement-матрицу ADR-009 §2.3, permission `mfa.manage` (admin-only,
+MFA reset), TOTP/QR-стек (`pragmarx/google2fa-qrcode` + `chillerlan/php-qrcode`,
+без `bacon`); §3 — `bacon/bacon-qr-code` исключён из «разрешено добавить».
+Версия спецификации 4.0 (FINAL) сохраняется.
 
 **4.0.1 (doc-reconciliation, стек не изменён)** — §13 MFA приведён к ADR-009
 (unified site-wide MFA): `mfa_global_enabled` (default true), `admin_2fa_required`

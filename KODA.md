@@ -70,13 +70,16 @@ Full project status: `docs/ai/PROJECT-STATUS.md`.
 Autonomous work rules: `docs/ai/MASTER-TASK.md`.
 
 Short summary:
-- HEAD: `5fdf413` on `main`.
+- HEAD: `c025392` on `main` (E10 MFA documentation; Stage 9 closed at `bb3bbf7`).
 - Stages 1–9: ACCEPTED (см. docs/acceptance/).
 - Stage 9 (Backup/restore/rollback): DONE / ACCEPTED — backup core +
   retention + admin BackupPage + restore (restore_requests, HMAC, CLI
   rollback) + scheduler (04:00 DB-only backup, 04:30 cleanup) + restore-test
   (isolated dev DB). Acceptance: docs/acceptance/stage-9.md.
 - Tests: 678 passed.
+- E10 (Unified MFA, ADR-009): E10.1 (docs D1–D8) finalized in the working tree
+  (uncommitted); implementation NOT STARTED.
 
-Next step: Stage 10 — Tests (§9) coverage — NOT STARTED, ожидает отдельного
-решения после локальной проверки проекта (см. PROJECT-STATUS.md).
+Next step: E10 — Unified MFA. E10.2 (escape-hatch / `/admin/settings`) awaits
+owner approval. Stage 10 — Tests (§9) — later, после локальной проверки
+(см. PROJECT-STATUS.md).

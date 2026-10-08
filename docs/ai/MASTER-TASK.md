@@ -157,11 +157,13 @@ memory_limit.
 - Осмысленный commit.
 - Отчёт в docs/acceptance/stage-N.md.
 
-## Текущий контракт — Stage 8
+## Текущий контракт
 
-См. `docs/ai/STAGE-8-CONTRACT.md`.
+Stage 8 (`docs/ai/STAGE-8-CONTRACT.md`) — **ACCEPTED**
+(`docs/acceptance/stage-8.md`). Stage 9 (`docs/ai/STAGE-9-CONTRACT.md`) —
+**ACCEPTED** (`docs/acceptance/stage-9.md`).
 
-Ключевые решения:
+Ключевые решения Stage 8:
 - Roles/Matrix — только admin, группа «Система».
 - Editor — только группа «Контент».
 - MFA — см. `docs/adr/ADR-009-unified-mfa.md` (unified site-wide; R5-amended),
@@ -170,17 +172,23 @@ memory_limit.
 - Audit без PII (R4).
 - Единый Markdown pipeline (R1).
 
-Подэтапы Stage 8:
+Подэтапы Stage 8 (все ✅, приёмка `docs/acceptance/stage-8.md`):
 - E1 ✅ — Panel + Dashboard
 - E2a ✅ — Suspended workflow
 - E2b ✅ — User + Role + Guest
 - E7 ✅ — Settings
 - E3 ✅ — Permissions Matrix
 - E4 ✅ — News + Comment
-- E5 ⏳ — Gallery + Page + Event
-- E6 ⏳ — EventType + Rank + Widget + ActivityLog
-- E8 ⏳ — MFA + IP allowlist + Audit + Requests
-- E9 ⏳ — Acceptance
+- E5 ✅ — Gallery + Page + Event
+- E6 ✅ — EventType + Rank + Widget + ActivityLog
+- E8 ✅ — MFA + IP allowlist + Audit + Requests
+- E9 ✅ — Acceptance
+
+## Текущий контракт — E10 (Unified MFA)
+
+См. `docs/adr/ADR-009-unified-mfa.md` + `docs/ai/E10-MFA-CONTRACT.md`.
+Порядок: E10.1 (docs) → E10.2 → E10.3 → E10.4 → E10.5 → E10.6 → E10.7 → E10.8.
+Реализация не начата; E10.1 — только документация.
 
 ## Как действовать при неопределённости
 

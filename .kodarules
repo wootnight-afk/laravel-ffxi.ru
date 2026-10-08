@@ -110,7 +110,7 @@ FORBIDDEN:
 ROLES (frontend-spec.md §3.1)
 ============================================================
 
-- admin   — full access, 2FA required
+- admin   — full access, MFA per ADR-009 (`mfa_global_enabled` + `admin_2fa_required`)
 - editor  — only "Content" group in admin
 - user    — authorized player
 - guest   — virtual role + tracked via guest_visitors (cookie 30 days)
@@ -124,10 +124,12 @@ CURRENT STATE — см. docs/ai/PROJECT-STATUS.md
 Правила автономной работы агента — см. docs/ai/MASTER-TASK.md
 
 Краткая справка:
-- HEAD: ab6060d
-- Stages 1–8: ACCEPTED (см. docs/acceptance/).
-- Stage 8 (Filament): 12 Resources + 2 custom Pages, MFA opt-in,
-  IP allowlist, audit trait (+ `user.roles_changed`), re-auth,
-  request workflow. Отчёт: docs/acceptance/stage-8.md.
-- Тесты: 549 passed.
-- Следующий шаг: Stage 9 — Backup/restore/rollback (Step 1).
+- HEAD: c025392 (E10 MFA docs; Stage 9 closed at bb3bbf7).
+- Stages 1–9: ACCEPTED (см. docs/acceptance/).
+- Stage 9 (Backup/restore/rollback): DONE / ACCEPTED. Отчёт:
+  docs/acceptance/stage-9.md.
+- Tests: 678 passed.
+- E10 (Unified MFA, ADR-009): E10.1 (docs D1–D8) finalized in the working tree
+  (uncommitted); implementation NOT STARTED.
+- Следующий шаг: E10.2 — escape-hatch / `/admin/settings` (ожидает разрешения
+  владельца).

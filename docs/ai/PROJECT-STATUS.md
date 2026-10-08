@@ -1,7 +1,8 @@
 # Project Status — laravel-ffxi.ru
 
 ## HEAD
-`5fdf413` на ветке `main` (Stage 9: E9.7 — restore test; E9.8 — acceptance).
+`c025392` на ветке `main` (E10 — MFA documentation finalization; Stage 9
+закрыт `bb3bbf7`). E10.1 (docs D1–D8) — в рабочем дереве, без commit.
 
 ## Прогресс по этапам (§30 context.md)
 
@@ -142,16 +143,25 @@
 
 См. docs/acceptance/stage-6.md §5 и docs/acceptance/stage-8.md §4.
 
-## MFA — ADR-009 / E10 (docs finalized, implementation NOT STARTED)
+## MFA — ADR-009 / E10 (docs finalized E10.1, implementation NOT STARTED)
 
 - `docs/adr/ADR-009-unified-mfa.md` — **Proposed / awaiting implementation**:
   unified site-wide MFA; глобальный gate `mfa_global_enabled` (default true);
   единый challenge `/mfa/challenge`; escape-hatches `/cabinet/security`,
-  `/admin/settings`; verification до logout; storage/compat Filament; R5-amendment.
+  `/admin/settings`; verification до logout; storage/compat Filament; R5-amendment;
+  enforcement-матрица по маршрутам (§2.3); permission `mfa.manage` (admin-only,
+  MFA reset); TOTP/QR-стек без `bacon`.
 - `docs/ai/E10-MFA-CONTRACT.md` — пофазный план E10.1–E10.8 + тестовая матрица (T1–T24).
-- Reconciliation: `STAGE-8-CONTRACT.md` §1 R5 / §3.4 / §11 (amendment),
-  `frontend-spec.md` §3.1/§4/§6.2/§7.5/§7.6, `context.md` §13,
-  `docs/acceptance/stage-8.md` (историческое примечание).
+- E10.1 (2026-10-08) закрыл пункты аудита E10-DOCS D1–D8 в документации:
+  `mfa.manage` в `frontend-spec.md` §3.3/§7.6; синхронизация статусных документов;
+  конкретная enforcement-матрица; TOTP/QR без composer-change; устранение Filament
+  profile MFA UI в E10.6; audit-API и расхождение `AuditLogger` зафиксированы.
+- **Enforcement-матрица (D5) закрыта:** `/players` — единая защищаемая область
+  (`players.dashboard`, `players.directory`, `players.show`); editor
+  `GET /admin/profile` вне матрицы; Filament setup-route нейтрализуется в E10.6.
+- **Расхождение `AuditLogger`** (security-specific IP: `STAGE-8-CONTRACT` §3.3 vs
+  текущий default `recordIp = true`) — отдельный тех-долг Stage 8; закрыть до E10.7,
+  если потребуется изменение.
 - **Runtime state:** в текущей БД `admin_2fa_required = true` (запись от
   2026-10-03) при архитектурном default `false`; `mfa_global_enabled` отсутствует.
   Автоматически не изменяется.
@@ -161,8 +171,9 @@
 
 1. Stage 9 — Backup / restore / rollback — DONE / ACCEPTED
    (`docs/acceptance/stage-9.md`).
-2. E10 — Unified MFA (ADR-009) — docs finalized, implementation NOT STARTED,
-   ожидает OK владельца на E10.1.
+2. E10 — Unified MFA (ADR-009) — E10.1 (docs D1–D8) finalized в рабочем дереве
+   (без commit); следующий шаг — E10.2 (escape-hatch / `/admin/settings`),
+   ожидает разрешения владельца.
 3. Stage 10 — Tests (§9) — NOT STARTED, ожидает отдельного решения после
    локальной проверки проекта владельцем.
 4. Stages 11–15 — по §30 context.md (CI, staging, deployment, production,

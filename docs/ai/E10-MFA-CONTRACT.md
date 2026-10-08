@@ -4,6 +4,7 @@
 |---|---|
 | Статус | Draft (awaiting implementation) |
 | Дата | 2026-10-07 |
+| Обновлено | 2026-10-08 (E10.1 — reconciliation D1–D8) |
 | Основание | `docs/adr/ADR-009-unified-mfa.md` (Proposed); amendment R5 |
 | Связанные | `STAGE-8-CONTRACT.md` §1 R5 (amended), §3.4, §11; `frontend-spec.md` §3.1, §4, §6.2, §7.5, §7.6; `context.md` §13 |
 
@@ -56,11 +57,17 @@ E10.5 → E10.6 → E10.7 → E10.8.
   `context.md` / acceptance-документов.
 - **Зависимости:** нет.
 - **Изменения:** только документация; recovery point (commit-метка) перед E10.2.
+  Закрываются пункты аудита E10-DOCS D1–D8: `mfa.manage` в функциональной
+  спецификации, синхронизация статусных документов (HEAD `c025392`), конкретная
+  матрица enforcement (ADR-009 §2.3), TOTP/QR-стек без `bacon`, устранение
+  Filament profile MFA UI в E10.6, фиксация audit-API и расхождения `AuditLogger`.
 - **Tests:** нет (docs).
 - **Acceptance criteria:** ADR-009 и контракт согласованы; R5-amendment внесён;
-  recovery point зафиксирован.
+  D1–D8 классифицированы; recovery point зафиксирован.
 - **Rollback / recovery point:** revert docs-коммита; код не затрагивается.
-- **DONE:** документы в рабочем дереве, противоречия reconciliation закрыты.
+- **DONE:** документы в рабочем дереве, противоречия reconciliation закрыты;
+  route-матрица D5 зафиксирована окончательно (`/players` как единая область;
+  editor `/admin/profile` вне матрицы; setup-route нейтрализуется в E10.6).
 
 ### E10.2 — Escape-hatch / `/admin/settings` access (S)
 
@@ -101,8 +108,11 @@ E10.5 → E10.6 → E10.7 → E10.8.
   `resources/views/mfa/challenge.blade.php`, `routes/web.php`, `bootstrap/app.php`.
 - **Зависимости:** E10.3.
 - **Изменения:** session-ключи verification (привязка к user), challenge GET/POST,
-  rate limit, recovery path, `redirect()->intended()`, применение к `/players` и
-  защищённым admin-маршрутам по матрице §2.3; escape-hatches исключены.
+  rate limit, recovery path, `redirect()->intended()`, применение к защищаемым
+  маршрутам по конкретной матрице `ADR-009` §2.3 (user/editor — раздел `/players`
+  целиком: `players.dashboard`, `players.directory`, `players.show`; editor —
+  контентные `/admin/*`; admin — `/admin/*` кроме `/admin/settings`);
+  escape-hatches исключены. `GET /admin/profile` для editor вне матрицы.
 - **Tests:** middleware-матрица (см. §4), challenge success/failure, recovery,
   logout-инвалидация, current-user binding.
 - **Acceptance criteria:** enforcement по матрице ролей; escape-hatches доступны.
@@ -117,9 +127,13 @@ E10.5 → E10.6 → E10.7 → E10.8.
 - **Зависимости:** E10.4.
 - **Изменения:** global toggle `mfa_global_enabled`, `admin_2fa_required`,
   список MFA-status, per-user reset (`requiresConfirmation` + `ReAuthenticateAction`).
-- **Tests:** авторизация reset (admin да, editor нет, self да), global toggle влияет
-  на enforcement, настройки сохраняются через `setMany`.
-- **Acceptance criteria:** admin управляет MFA; editor не может.
+- **`mfa.manage` scope:** permission назначается **только** роли `admin` и
+  существует **исключительно** для административного MFA reset; reset-all не
+  реализуется; self-service MFA им не защищается.
+- **Tests:** авторизация admin-reset (admin да, editor нет); self-service доступен
+  владельцу без `mfa.manage`; global toggle влияет на enforcement, настройки
+  сохраняются через `setMany`.
+- **Acceptance criteria:** admin управляет MFA (permission `mfa.manage`); editor не может.
 - **Rollback / recovery point:** revert фазы.
 - **DONE:** управление работает, permission enforced.
 
@@ -127,26 +141,50 @@ E10.5 → E10.6 → E10.7 → E10.8.
 
 - **Цель:** исключить двойной challenge; зафиксировать роль AppAuthentication.
 - **Файлы:** `app/Providers/Filament/AdminPanelProvider.php` (isRequired → false,
-  вывод middleware), при необходимости кастомный Filament Login page.
+  вывод middleware), `GET /admin/profile` (удаление Filament MFA action),
+  при необходимости кастомный Filament Login page.
 - **Зависимости:** E10.4.
 - **Изменения:** отключить встроенный login-time challenge; AppAuthentication —
-  только storage/compat; `/admin/multi-factor-authentication/*` не используется.
-- **Tests:** «no double challenge» — MFA спрашивается ровно один раз.
-- **Acceptance criteria:** один MFA-challenge на входе.
+  только storage/compat; Filament setup-route
+  `/admin/multi-factor-authentication/set-up` **нейтрализуется** как часть
+  устранения второго Filament MFA UX/enforcement (не используется).
+  Существующий самостоятельный Filament profile MFA UI (`/admin/profile`, действие
+  «2FA-приложение» из `AppAuthentication::getActions()`) **устраняется** как второй
+  self-service MFA интерфейс; единственное self-service место — `/cabinet/security`.
+  AppAuthentication остаётся storage/compat/primitive-слоем, но не независимым
+  MFA UX/enforcement.
+- **Tests:** «no double challenge» — MFA спрашивается ровно один раз; profile MFA UI
+  отсутствует.
+- **Acceptance criteria:** один MFA-challenge на входе; второго self-service MFA UI нет.
 - **Rollback / recovery point:** revert панели/логина.
-- **DONE:** двойной challenge отсутствует.
+- **DONE:** двойной challenge отсутствует; Filament profile MFA UI удалён.
 
 ### E10.7 — Audit + email (S/M)
 
 - **Цель:** аудит и уведомления.
-- **Файлы:** вызовы `AuditLogger` в MFA-контроллерах,
+- **Файлы:** вызовы `App\Services\AuditLogger` в MFA-контроллерах,
   `app/Notifications/MfaResetByAdminNotification.php` (новый).
 - **Зависимости:** E10.3–E10.5.
-- **Изменения:** 5 событий (ADR-009 §2.12); notification при admin reset.
+- **Изменения:** 5 событий (ADR-009 §2.12) через существующий audit API
+  `AuditLogger::log()` (таблица `admin_audit_logs`); notification при admin reset
+  по образцу `PasswordChangedNotification`.
+- **Audit API контракт:** MFA использует `App\Services\AuditLogger::log()`.
+  MFA implementation **не должна** логировать TOTP secret, QR payload, recovery
+  codes или полный MFA payload — ни в `old`/`new`, ни в `action`.
 - **Tests:** события пишутся без секретов; email отправляется без секретов.
 - **Acceptance criteria:** аудит/email по ADR-009 §2.12–2.13.
 - **Rollback / recovery point:** revert фазы.
 - **DONE:** события и уведомление работают.
+
+> **Блокирующий вопрос по `AuditLogger` (решение владельца до E10.7).**
+> `STAGE-8-CONTRACT.md` §3.3 требует security-specific записи IP
+> (`includeIp: true`, default `false`), а текущий `app/Services/AuditLogger.php`
+> имеет `recordIp` со значением по умолчанию `true`. Это отдельный технический
+> долг Stage 8, **не** MFA-задача. E10 его скрыто не исправляет и Stage 8
+> implementation не меняет. Если для корректной реализации MFA потребуется
+> изменение `AuditLogger` (например, security-запись IP для MFA-событий), это
+> оформляется отдельным решением владельца и не выполняется в рамках E10.7
+> самостоятельно.
 
 ### E10.8 — Full tests + acceptance + ADR finalization (M)
 
@@ -175,7 +213,7 @@ E10.5 → E10.6 → E10.7 → E10.8.
 | T7 | `/cabinet/security` escape-hatch | доступен при незавершённой MFA |
 | T8 | `/admin/settings` escape-hatch | доступен admin при незавершённой MFA |
 | T9 | `/admin/settings/security` | маршрут отсутствует (404) |
-| T10 | `/players` protection | при настроенном MFA и незавершённой verification → challenge |
+| T10 | `/players` protection | `players.dashboard`, `players.directory`, `players.show` при настроенном MFA и незавершённой verification → challenge |
 | T11 | editor content admin protection | `/admin/news|comments|gallery|pages|events` защищены при настроенном MFA |
 | T12 | full admin protection | весь `/admin/*` кроме `/admin/settings` защищён |
 | T13 | challenge success | verification = true; `redirect()->intended()` |
@@ -191,22 +229,39 @@ E10.5 → E10.6 → E10.7 → E10.8.
 | T23 | no double challenge | встроенный Filament и unified не требуют двух challenge |
 | T24 | current-user binding | смена authenticated user не позволяет использовать чужой verification |
 
+> T10/T11/T12 выполняются по конкретному route-списку ADR-009 §2.3.
+> `/players` — единая защищаемая область (dashboard/directory/show). `GET /admin/profile`
+> для editor вне матрицы; setup-route нейтрализуется в E10.6.
+
 ---
 
 ## 5. Риски и зависимости
 
 См. `ADR-009-unified-mfa.md` §9. Ключевые: двойной challenge (E10.6),
-middleware order, `mfa.manage`, stale settings cache, QR-стек (composer вне scope),
+middleware order, `mfa.manage`, stale settings cache, TOTP/QR-стек
+(`pragmarx/google2fa-qrcode` + `chillerlan/php-qrcode`, composer не меняется),
 legacy runtime `admin_2fa_required=true`.
 
 ---
 
 ## 6. Открытые вопросы (владельцу)
 
-Решения владельца зафиксированы; блокирующих ADR вопросов нет:
+Решения владельца зафиксированы (E10.1, 2026-10-08):
 
-1. QR-стек — решение владельца `bacon/bacon-qr-code`; фактическая необходимость
-   отдельного composer-change выносится в scope E10 (не блокирует ADR).
-2. Filament profile MFA UI — второй самостоятельный MFA-UX не создаётся;
-   основное self-service место `/cabinet/security` (решено).
+1. QR-стек — **решено**: используется существующий `pragmarx/google2fa-qrcode`
+   v4.0.0 + `chillerlan/php-qrcode`; `bacon/bacon-qr-code` не добавляется,
+   composer не изменяется.
+2. Filament profile MFA UI — **решено**: второй самостоятельный MFA-UX не
+   создаётся и существующий `/admin/profile` MFA UI устраняется в E10.6;
+   основное self-service место `/cabinet/security`.
 3. Форма challenge — Blade + POST (решено).
+4. Route-матрица enforcement (D5) — **решено**: `/players` защищается как единая
+   область (`players.dashboard`, `players.directory`, `players.show`); editor
+   `GET /admin/profile` вне матрицы; Filament setup-route нейтрализуется в E10.6.
+   Отдельных открытых route-вопросов нет.
+
+**Требует решения владельца (не блокирует E10.2, блокирует E10.7):**
+
+- Расхождение `AuditLogger` (security-specific IP, `STAGE-8-CONTRACT` §3.3 vs
+  текущий default `recordIp = true`) — отдельный тех-долг Stage 8; закрыть до
+  E10.7, если для MFA потребуется изменение `AuditLogger`.

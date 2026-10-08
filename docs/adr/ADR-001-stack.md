@@ -238,6 +238,11 @@ Filament 4 остаётся реальной резервной веткой (с
 > транзитивно с Filament v5.9.0. MFA-архитектура зафиксирована в
 > `docs/adr/ADR-009-unified-mfa.md` (unified site-wide MFA); `laravel/fortify`
 > не добавляется. Стек ADR-001 не изменяется.
+>
+> **Уточнение QR-стека (E10.1, 2026-10-08):** фактический QR-бэкенд —
+> `chillerlan/php-qrcode` (через `pragmarx/google2fa-qrcode` v4.0.0);
+> `bacon/bacon-qr-code` **не устанавливается**, `composer.json`/`composer.lock`
+> не изменяются. Стек ADR-001 остаётся без изменений.
 
 ### 4.2. Точный Laravel constraint Filament 4
 

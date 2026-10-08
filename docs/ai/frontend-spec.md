@@ -80,7 +80,9 @@
 глобальный gate. user/editor — opt-in; admin — opt-in при `admin_2fa_required=false`,
 обязан при `admin_2fa_required=true` (только когда global gate включён). Единый
 challenge `/mfa/challenge`; verification — до logout; escape-hatches —
-`/cabinet/security` и `/admin/settings`.
+`/cabinet/security` и `/admin/settings`. Enforcement-матрица по маршрутам —
+ADR-009 §2.3. Административный MFA reset — permission `mfa.manage` (admin-only,
+см. §3.3).
 
 **Неподтвердивший email**: логин и чтение — да; write-действия — 403
 (middleware `verified` + Policies). Баннер «Подтвердите email».
@@ -123,7 +125,12 @@ Spatie permissions и Policies; явные запреты Policies сохран�
 - Прочее: `pages.manage`, `dashboard.view`, `profile.edit_own`,
   `panel.access`, `users.manage`, `roles.manage`, `matrix.manage`,
   `settings.manage`, `widgets.manage`, `audit.view`, `guests.view`,
-  `ranks.manage`
+  `ranks.manage`, `mfa.manage`
+
+> **`mfa.manage` (ADR-009 §2.11).** Назначается **только** роли `admin`.
+> Существует **исключительно** для административного MFA reset; других
+> применений нет. Self-service MFA (`/cabinet/security`) этим permission **не**
+> защищается. Reset-all не реализуется. `editor` MFA reset недоступен.
 
 ## 3.4 `<x-user-identity>` — единая точка рендера
 
@@ -691,6 +698,10 @@ CRUD `dashboard_widgets`: title, type, is_active, sort_order
   trusted devices и длительные TTL не используются.
 - Escape-hatches (доступны без пройденного MFA): `/cabinet/security`
   (setup/disable/recovery) и `/admin/settings` (глобальные настройки, включая MFA).
+- Enforcement-матрица по маршрутам — ADR-009 §2.3 (user/editor — `/players`;
+  editor — контентные `/admin/*`; admin — `/admin/*` кроме `/admin/settings`).
+- **Административный MFA reset** — permission `mfa.manage` (admin-only, см. §3.3);
+  editor недоступен; reset-all не реализуется.
 - Rate limit 5/мин/IP + email о входе с нового IP.
 - Опциональный IP-allowlist.
 - Чувствительные операции (удаление, смена ролей/прав, security, disable MFA) —
@@ -813,6 +824,11 @@ REST API, мультиязычность, emoji-реакции, вложения
 ---
 
 # ИСТОРИЯ ВЕРСИЙ
+
+**1.2** — E10.1 reconciliation (D1): permission `mfa.manage` добавлен в §3.3
+(admin-only, только для административного MFA reset; self-service им не
+защищается; reset-all не реализуется). Ссылки на enforcement-матрицу ADR-009 §2.3
+и admin reset добавлены в §3.1 и §7.6. Продуктовые решения не менялись.
 
 **1.1** — reconciliation с `ADR-009` (unified site-wide MFA): §3.1 (MFA-политика
 ролей), §4 (`/mfa/challenge`), §6.2 (MFA в Security-вкладке кабинета),

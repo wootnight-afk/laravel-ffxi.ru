@@ -15,6 +15,12 @@
 - `E10-MFA-CONTRACT.md`: пофазный план E10.1–E10.8 + тестовая матрица T1–T24.
 - Reconciliation: `STAGE-8-CONTRACT.md` §1 R5 (amendment), `frontend-spec.md`,
   `context.md` §13, `docs/acceptance/stage-8.md` (историческое примечание).
+- E10.1 (2026-10-08) — закрытие аудита E10-DOCS D1–D8: `mfa.manage`
+  (admin-only, MFA reset) в `frontend-spec.md` §3.3/§7.6; конкретная
+  enforcement-матрица ADR-009 §2.3; TOTP/QR-стек без `bacon`
+  (`pragmarx/google2fa-qrcode` + `chillerlan/php-qrcode`); устранение Filament
+  profile MFA UI в E10.6; зафиксированы audit-API и расхождение `AuditLogger`;
+  синхронизированы `PROJECT-STATUS.md` / `MASTER-TASK.md` / `KODA.md`.
 - Code/DB/composer/migrations не изменялись.
 
 ### Stage 9 — Backup / Restore / Rollback (DONE / ACCEPTED)

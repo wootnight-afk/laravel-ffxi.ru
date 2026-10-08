@@ -4,6 +4,7 @@
 |---|---|
 | Статус | **Proposed / awaiting implementation** (не Accepted до приёмки E10) |
 | Дата | 2026-10-07 |
+| Обновлено | 2026-10-08 (E10.1 — reconciliation D1–D8; решения владельца) |
 | Этап | E10 — Unified MFA (вне нумерации §30 context.md; расширение Stage 8 R5) |
 | Связанные разделы | `STAGE-8-CONTRACT.md` §1 R5 (amendment), §3.4, §11; `frontend-spec.md` §3.1, §4, §6.2, §7.5, §7.6; `context.md` §13 (MFA, Session security); ADR-001 (стек), ADR-007 (доступ) |
 | Причина выделения | Расширенное решение владельца: единый MFA-челлендж для всех ролей вместо admin-only Filament MFA |
@@ -63,18 +64,56 @@ Read-only диагностика (2026-10-07) установила фактич�
 (см. таблицу 2.1). `admin_2fa_required` **не влияет** на editor и user.
 **Архитектурный default: `admin_2fa_required = false`.**
 
-### 2.3. Роли
+### 2.3. Роли и матрица enforcement
 
 Новые роли не вводятся: `user`, `editor`, `admin`.
 
-- **user** — MFA opt-in; при настроенном MFA защищаются `/players` и site-wide
-  защищённые действия по принятой матрице.
-- **editor** — MFA opt-in; при настроенном MFA защищаются `/players` и контентные
-  admin-маршруты: `/admin/news`, `/admin/comments`, `/admin/gallery`, `/admin/pages`,
-  `/admin/events`.
-- **admin** — при `mfa_global_enabled=true`: `admin_2fa_required=false` → opt-in;
-  `admin_2fa_required=true` → required. Защищается весь `/admin/*`, кроме escape-hatch
-  `/admin/settings`.
+Enforcement применяется только к authenticated-пользователю, у которого MFA
+**настроена и подтверждена**, и только при `mfa_global_enabled=true`. Если MFA не
+настроена (opt-in не активирован), middleware `mfa.required` не блокирует
+пользователя.
+
+**user** — MFA opt-in. При активной MFA защищается раздел `/players` как единая
+область:
+
+- `GET /players` (`players.dashboard`);
+- `GET /players/directory` (`players.directory`);
+- `GET /players/{user:name}` (`players.show`).
+
+`/cabinet/security` — escape-hatch.
+
+**editor** — MFA opt-in. При активной MFA защищаются:
+
+- раздел `/players` (те же три маршрута, что и у user);
+- разрешённые контентные admin-поверхности (R2 `STAGE-8-CONTRACT`):
+  `GET /admin/news`, `GET /admin/news/create`, `GET /admin/news/{record}/edit`,
+  `GET /admin/comments`, `GET /admin/comments/{record}/edit`,
+  `GET /admin/galleries`, `GET /admin/galleries/create`,
+  `GET /admin/galleries/{record}/edit`,
+  `GET /admin/pages`, `GET /admin/pages/create`, `GET /admin/pages/{record}/edit`,
+  `GET /admin/events`, `GET /admin/events/create`, `GET /admin/events/{record}/edit`.
+
+`GET /admin/profile` **не входит** в editor MFA-protected matrix (не является
+контентной admin-поверхностью); отдельной MFA escape-hatch из него не делается,
+новая функциональность для profile не создаётся. MFA UI внутри Filament profile
+устраняется в E10.6 (см. §2.9). `/cabinet/security` — escape-hatch.
+
+**admin** — при `mfa_global_enabled=true`: `admin_2fa_required=false` → opt-in;
+`admin_2fa_required=true` → required. При активной MFA защищается весь `/admin/*`,
+кроме escape-hatch `/admin/settings`. `/cabinet/security` — также escape-hatch.
+
+**Global gate** — `mfa_global_enabled=false` отключает enforcement для всех ролей;
+существующая MFA-конфигурация пользователей не удаляется; после повторного
+включения ранее настроенная MFA снова действует по матрице.
+
+> **Filament setup-route.** `/admin/multi-factor-authentication/set-up` — не
+> отдельный route-вопрос и не escape-hatch; это существующий Filament MFA
+> setup-route, который нейтрализуется в E10.6 вместе с устранением второго
+> Filament MFA UX/enforcement (§2.9). Новой архитектурной роли ему не придаётся.
+
+> Явно **вне** модели (не защищаются): `GET /activity`; вкладки `/cabinet/*`,
+> кроме `/cabinet/security`; `GET /admin/login` и `POST /admin/logout` (pre-auth);
+> `GET /admin/profile` для editor.
 
 ### 2.4. Escape-hatches (обязательный контракт)
 
@@ -122,12 +161,17 @@ audit/email/logs.
 
 ### 2.8. TOTP / QR
 
-TOTP — `pragmarx/google2fa`. Владельцем зафиксирован QR-стек `bacon/bacon-qr-code`.
-Техническое замечание: фактически QR уже работает через существующую зависимость
-`chillerlan/php-qrcode` (`google2fa-qrcode` v4.0.0); `bacon/bacon-qr-code` не
-установлен. Изменение `composer.json`/`composer.lock` — **вне scope** этой
-documentation-задачи; необходимость отдельного composer-change решается в
-E10 implementation scope.
+TOTP — `pragmarx/google2fa` v9.1.0. QR-рендеринг — **существующий стек без
+изменения зависимостей**:
+
+- `pragmarx/google2fa-qrcode` v4.0.0 (транзитивно через Filament);
+- `chillerlan/php-qrcode` (фактический QR-бэкенд).
+
+`bacon/bacon-qr-code` **не добавляется**; `composer.json`/`composer.lock` в E10
+не изменяются. MFA реализация использует существующие примитивы
+(`AppAuthentication::generateQrCodeDataUri()`, `pragmarx/google2fa-qrcode`)
+как есть. Любой будущий переход на `bacon` — отдельное решение владельца и
+отдельный composer-change вне E10.
 
 ### 2.9. Filament AppAuthentication
 
@@ -140,11 +184,17 @@ E10 implementation scope.
 - Unified MFA заменяет: enforcement, challenge, management UI.
 - Filament profile MFA UI **не должен** создавать второй самостоятельный MFA-UX.
   Основное self-service место — `/cabinet/security`.
+- Существующий Filament profile MFA UI (`GET /admin/profile`, действие
+  «2FA-приложение» из `AppAuthentication::getActions()`) **устраняется** как
+  самостоятельный self-service интерфейс — фаза E10.6. Единственный self-service
+  MFA интерфейс — `/cabinet/security`.
 - **Двойного challenge быть не должно**: ни встроенный, ни unified не должны
   требовать двух последовательных проверок. Устранение конкурирующего enforcement —
   фаза E10.6.
-- Что происходит с `/admin/multi-factor-authentication/*` — определяется в E10.6
-  (при отключении `isRequired` маршрут setup-required перестаёт применяться).
+- Filament setup-route `/admin/multi-factor-authentication/set-up`
+  **нейтрализуется** в E10.6 вместе с устранением второго Filament MFA
+  UX/enforcement (при отключении `isRequired` маршрут setup-required перестаёт
+  применяться). Отдельной escape-hatch он не является (см. §2.3).
 
 ### 2.10. Admin reset MFA
 
@@ -157,15 +207,22 @@ E10 implementation scope.
 
 ### 2.11. Authorization
 
-Новые роли не вводятся. Self-service — каждый пользователь над своим аккаунтом
-(setup/verify/disable/regenerate), отдельный permission не требуется.
-Административный reset — только `admin`; предлагаемое permission **`mfa.manage`**
-(admin only), по образцу `settings.manage`/`users.manage`. `editor` не может
-выполнять MFA reset.
+Новые роли не вводятся.
+
+- **Self-service** — каждый пользователь над своим аккаунтом
+  (setup/verify/disable/regenerate). Self-service **не защищается** permission
+  `mfa.manage`.
+- **Административный MFA reset** — permission **`mfa.manage`**, назначается
+  **только** роли `admin` (по образцу `settings.manage`/`users.manage`).
+  `editor` не может выполнять MFA reset.
+- `mfa.manage` существует **исключительно** для административного MFA reset;
+  других применений у permission нет.
+- **Reset-all не реализуется** (не MVP).
 
 ### 2.12. Audit
 
-Минимальный утверждённый набор (через существующий `AuditLogger`):
+Минимальный утверждённый набор. MFA использует существующий audit API
+`App\Services\AuditLogger::log()` (таблица `admin_audit_logs`):
 
 - `mfa.enabled`
 - `mfa.disabled`
@@ -176,6 +233,12 @@ E10 implementation scope.
 `mfa.reset` отдельно не нужен (self-reset = `mfa.disabled`; admin-reset =
 `mfa.admin_reset`). Никогда не записывать: TOTP secret, QR payload, recovery codes,
 полный MFA payload. Для `challenge_failure` учитывать шум и rate limiting.
+
+> **Расхождение Stage 8 (не исправляется в E10).** `STAGE-8-CONTRACT.md` §3.3
+> описывает security-specific запись IP (`AuditLogger::log(..., includeIp: true)`,
+> default `false`), тогда как текущий `app/Services/AuditLogger.php` имеет
+> `recordIp` со значением по умолчанию `true`. Это отдельный технический
+> долг Stage 8. E10 его скрыто не исправляет и Stage 8 implementation не меняет.
 
 ### 2.13. Email
 
@@ -321,5 +384,6 @@ admin/editor self-service; `admin_2fa_required` reserved, default false.
 - Legacy `admin_2fa_required=true` в текущей БД: runtime-состояние, снимается через
   escape-hatch + Settings, не автоматически.
 - Email pipeline: smtp/mailpit; часть notifications queued.
-- QR-стек: решение владельца — `bacon/bacon-qr-code`, технически работает
-  `chillerlan`; установка bacon = изменение composer (вне этого этапа).
+- QR-стек: используется существующий `pragmarx/google2fa-qrcode` v4.0.0 +
+  `chillerlan/php-qrcode`; `bacon/bacon-qr-code` не добавляется, composer в E10
+  не изменяется.
