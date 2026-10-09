@@ -10,30 +10,32 @@
             <p>Пока альбомов нет. Заходите позже.</p>
         </div>
     @else
-        <div class="gallery-grid">
-            @foreach ($albums as $album)
-                <div class="gallery-item">
-                    <a href="{{ route('gallery.album', $album->slug) }}" style="text-decoration: none;">
-                        @if ($album->coverPhoto)
-                            <img
-                                src="{{ $album->coverPhoto->urlThumb() }}"
-                                alt="{{ $album->title }}"
-                                class="gallery-thumb"
-                                loading="lazy"
-                            >
-                        @else
-                            <div class="img-placeholder gallery-thumb">Нет фото</div>
-                        @endif
+        @foreach ($albums as $album)
+            <h2 class="section-title">
+                <a href="{{ route('gallery.album', $album->slug) }}">{{ $album->title }}</a>
+            </h2>
 
-                        <div class="gallery-caption">
-                            {{ $album->title }}
-                            <span style="color: var(--text-muted); font-size: 12px;">
-                                ({{ $album->photos_count }})
-                            </span>
+            @if ($album->photos->isEmpty())
+                <p class="news-meta">В этом разделе пока нет фотографий.</p>
+            @else
+                <div class="gallery-grid">
+                    @foreach ($album->photos as $photo)
+                        <div class="gallery-item">
+                            <a href="{{ route('gallery.photo', [$album->slug, $photo->id]) }}">
+                                <img
+                                    src="{{ $photo->urlThumb() }}"
+                                    alt="{{ $photo->caption ?: 'Фото' }}"
+                                    class="gallery-thumb"
+                                    loading="lazy"
+                                >
+                            </a>
+                            @if ($photo->caption)
+                                <div class="gallery-caption">{{ $photo->caption }}</div>
+                            @endif
                         </div>
-                    </a>
+                    @endforeach
                 </div>
-            @endforeach
-        </div>
+            @endif
+        @endforeach
     @endif
 @endsection

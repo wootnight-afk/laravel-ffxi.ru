@@ -683,6 +683,32 @@ h2.section-title {
     color: var(--text-main);
 }
 
+/* --- Галерея --- */
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.gallery-item {
+    text-align: center;
+}
+
+.gallery-thumb {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    margin-bottom: var(--spacing-sm);
+    border-radius: 4px;
+    object-fit: cover;
+}
+
+.gallery-caption {
+    font-size: 13px;
+    color: var(--primary-color);
+}
+
 .form-group {
     margin-bottom: var(--spacing-md);
     max-width: 400px;

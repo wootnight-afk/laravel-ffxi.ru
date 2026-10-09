@@ -14,8 +14,7 @@ class GalleryController extends Controller
         $albums = Album::query()
             ->site()
             ->published()
-            ->withCount(['photos' => fn ($q) => $q->where('is_published', true)])
-            ->with('coverPhoto')
+            ->with(['photos' => fn ($q) => $q->where('is_published', true)->limit(6)])
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
