@@ -461,7 +461,7 @@ a:hover {
     padding: 0 var(--spacing-md);
 }
 
-header {
+body > header {
     position: fixed;
     top: 0;
     left: 0;
