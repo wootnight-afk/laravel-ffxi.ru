@@ -1060,6 +1060,14 @@ artisan) — через официальные инструменты (`composer
    (`registration_open=false`).
 8. Список соцплатформ — финальный (12 из frontend-spec §6.3).
 
+## Из frontend-задач (2026-10-11)
+
+9. Мелькание favicon phpMyAdmin в браузере: в dev-контуре причина вне проекта
+   (phpMyAdmin не на origin сайта; одна декларация `<link rel="icon">`; нет
+   preload/prefetch/service worker). Cache-busting не применялся. Актуально
+   только если в production phpMyAdmin окажется на том же origin — решение за
+   владельцем.
+
 **Закрыто в v4.0** (ранее открытые): ActivityLog (свои таблицы),
 Settings (key-value), Хранение аватаров (storage/app/public/avatars/),
 Объём backup (full), Формат backup (БД + файлы + manifest),
@@ -1071,6 +1079,10 @@ Settings (key-value), Хранение аватаров (storage/app/public/avat
 ---
 
 # ИСТОРИЯ ВЕРСИЙ
+
+**4.0.3 (doc-reconciliation, стек не изменён)** — §38: добавлен открытый вопрос
+о мелькании favicon phpMyAdmin (frontend-задачи 2026-10-11). Версия
+спецификации 4.0 (FINAL) сохраняется.
 
 **4.0.2 (doc-reconciliation E10.1, стек не изменён)** — §13 MFA дополнен:
 ссылка на enforcement-матрицу ADR-009 §2.3, permission `mfa.manage` (admin-only,

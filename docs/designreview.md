@@ -220,18 +220,22 @@ text
 Права — через spatie/laravel-permission + Policies.
 Отдельный пакет filament-shield не используется.
 
-8. Ассеты (public/img_site)
+8. Ассеты (public/img_site; логотипы и favicon — факт в public/)
 ⚠ Таблица-заглушка. Заполнить фактическими именами файлов из архива сайта.
 
 Файл	Назначение	Где используется
-favicon.ico	фавикон	все страницы
-logo-ffxi.gif	логотип FFXI	hero-блок (левая часть)
+favicon.ico (public/)	фавикон	все страницы сайта + админка (Filament)
+img/bx_default_logo.gif	логотип FFXI	шапка (все страницы)
+img/2a.png	логотип FFXI (крупный)	hero-блок на главной (левая часть)
 hero-party.gif	групповое изображение персонажей	главная
 news-restart.gif	промо перезапуска	/news
 news-trial.gif	промо пробной версии	/news
 player-*.jpg	аватары игроков	/players, /gallery
 area-*.jpg	скриншоты игровых зон	/gallery
 memory-*.jpg	архивные скриншоты	/gallery
+Обновлено (2026-10-11): фактические пути логотипов и favicon зафиксированы по
+реализации (шапка — `img/bx_default_logo.gif`, hero — `img/2a.png`, favicon —
+`public/favicon.ico`); остальные строки — по-прежнему заглушка.
 Правила:
 
 Имена — латиница, kebab-case.

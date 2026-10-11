@@ -129,6 +129,27 @@
 - Рассинхронизация migrations при restore старого dump — известный риск
   (§6.4 п.4), вне scope Stage 9.
 
+## Frontend — брендинг (логотипы + favicon)
+
+- Логотип в навбаре — `public/img/bx_default_logo.gif` в общем layout
+  (`resources/views/layouts/app.blade.php`), все публичные страницы; контейнер
+  `.logo-wrap` + рамка + оверлей на `[data-theme="dark"]` (токены палитры,
+  footprint 40px — шапка не выросла).
+- Логотип на главной — `public/img/2a.png` в `resources/views/home.blade.php`
+  через `.logo-wrap` (`max-height: 80px`, `border-radius: 4px`) — тот же паттерн.
+- Favicon — `public/favicon.ico` (0 → 1150 байт, рабочий ICO): публичный layout
+  (`asset('favicon.ico')`) + админка Filament (`AdminPanelProvider`
+  `->favicon(asset('favicon.ico'))`).
+- Tests: 779 passed (2486 assertions).
+- **Open issue:** мелькание favicon phpMyAdmin в браузере — в dev-контуре причина
+  вне проекта (phpMyAdmin не на origin сайта; одна декларация `<link rel="icon">`;
+  нет preload/prefetch/service worker). Cache-busting не применялся. См.
+  `context.md` §38.
+- **Хвост:** две косметические правки в `resources/css/app.css`
+  (`body > header` → `body>header` и пустая строка после
+  `@media (max-width: 767px) {`) — не по задаче, внешний источник, семантически
+  нейтральны; включены в коммит как есть. Откатить отдельной задачей.
+
 ## Контракты, которые НЕЛЬЗЯ менять
 
 - Roles: только user / editor / admin. Никаких owner/moderator/super_admin.

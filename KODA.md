@@ -79,6 +79,11 @@ Short summary:
 - Tests: 678 passed.
 - E10 (Unified MFA, ADR-009): E10.1 (docs D1–D8) finalized in the working tree
   (uncommitted); implementation NOT STARTED.
+- Frontend branding (working tree, uncommitted): header logo
+  (`img/bx_default_logo.gif`, shared layout), home hero logo (`img/2a.png`,
+  `.logo-wrap`), favicon (`public/favicon.ico` 0→1150 b; public layout via
+  `asset()` + `AdminPanelProvider` `->favicon()`). Open issue: phpMyAdmin favicon
+  flicker — cause outside the project in dev; cache-busting not applied.
 
 Next step: E10 — Unified MFA. E10.2 (escape-hatch / `/admin/settings`) awaits
 owner approval. Stage 10 — Tests (§9) — later, после локальной проверки

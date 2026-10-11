@@ -17,6 +17,7 @@
         })();
     </script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <title>@yield('title', 'FFXI Phoenix Server')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -25,7 +26,9 @@
 <header>
     <div class="nav-container">
         <a href="{{ route('home') }}" class="logo-link">
-            <div class="img-placeholder" style="width: 130px; height: 40px; border: none; font-size: 10px; color: #fff; background: transparent;">FINAL FANTASY XI</div>
+            <span class="logo-wrap">
+                <img src="{{ asset('img/bx_default_logo.gif') }}" alt="Final Fantasy XI">
+            </span>
         </a>
 
         <nav class="nav-links">

@@ -6,7 +6,9 @@
 
     <div class="hero">
         <div class="hero-logo">
-            <div class="img-placeholder" style="width: 200px; height: 80px; border: none;">FINAL FANTASY XI LOGO</div>
+            <div class="logo-wrap">
+                <img src="{{ asset('img/2a.png') }}" alt="Final Fantasy XI">
+            </div>
         </div>
         <div class="hero-text">
             <h1>Содружество игроков</h1>

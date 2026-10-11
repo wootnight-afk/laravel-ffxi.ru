@@ -436,6 +436,7 @@ a:hover {
 }
 
 @media (max-width: 767px) {
+
     .dashboard-widget--span-1,
     .dashboard-widget--span-2,
     .dashboard-widget--span-3 {
@@ -461,7 +462,7 @@ a:hover {
     padding: 0 var(--spacing-md);
 }
 
-body > header {
+body>header {
     position: fixed;
     top: 0;
     left: 0;
@@ -484,6 +485,8 @@ body > header {
 }
 
 .logo-link {
+    display: inline-flex;
+    align-items: center;
     text-decoration: none;
     flex-shrink: 0;
 }
@@ -624,6 +627,60 @@ body > header {
     padding: var(--spacing-lg);
     border-right: 1px solid var(--border-color);
     background: var(--bg-light);
+}
+
+/* Reusable framed container for logo assets with an opaque (non-transparent)
+ * background. The asset is framed in a themed container instead of trying to
+ * remove its background with CSS. Sizing is provided by context variants. */
+.logo-wrap {
+    position: relative;
+    display: inline-block;
+    border-radius: 4px;
+    background: var(--bg-card);
+    overflow: hidden;
+}
+
+.logo-wrap img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    border-radius: 4px;
+}
+
+/* Home hero variant. */
+.hero-logo .logo-wrap {
+    padding: 6px;
+}
+
+.hero-logo .logo-wrap img {
+    max-height: 80px;
+}
+
+/* Header navigation variant: keep the total logo footprint at 40px so the
+ * fixed header height does not grow (2px frame + 36px image). */
+.logo-link .logo-wrap {
+    padding: 2px;
+}
+
+.logo-link .logo-wrap img {
+    height: 36px;
+}
+
+/* Dark theme: mute the opaque white-background logo so it blends with the
+ * dark surface. Overlay color derives from the theme palette. */
+[data-theme="dark"] .logo-wrap::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--bg-body) 30%, transparent);
+    pointer-events: none;
+}
+
+[data-theme="dark"] .logo-wrap img {
+    opacity: 0.95;
+    filter: brightness(0.95);
 }
 
 .hero-text {

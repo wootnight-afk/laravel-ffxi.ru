@@ -49,6 +49,7 @@ class AdminPanelProvider extends PanelProvider
             )
             ->multiFactorAuthenticationRequiredMiddlewareName(EnsureAdminMultiFactorAuthentication::class)
             ->brandName('FFXI Phoenix')
+            ->favicon(asset('favicon.ico'))
             ->darkMode(true)
             ->colors([
                 // Teal-500 (#14b8a6) — единый бренд с публичным сайтом

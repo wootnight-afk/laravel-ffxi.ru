@@ -6,6 +6,29 @@
 
 ## [Unreleased]
 
+### Frontend — брендинг (логотипы в шапке/hero + favicon)
+
+- **Логотип в навбаре:** `public/img/bx_default_logo.gif` в общем layout
+  (`resources/views/layouts/app.blade.php`) вместо текстовой заглушки — на всех
+  публичных страницах. Контейнер `.logo-wrap` + тематическая рамка + оверлей на
+  тёмной теме (`[data-theme="dark"]`, токены палитры), footprint 40px (шапка не
+  выросла).
+- **Логотип на главной (hero):** `public/img/2a.png` в
+  `resources/views/home.blade.php` через `.logo-wrap` (`max-height: 80px`,
+  `border-radius: 4px`) — тот же паттерн подложки.
+- **Favicon:** `public/favicon.ico` (было 0 байт → 1150 байт, рабочий ICO);
+  подключён в публичном layout через `asset('favicon.ico')` и в админ-панели
+  Filament (`AdminPanelProvider` → `->favicon(asset('favicon.ico'))`). Покрывает
+  публичный сайт и админку.
+- **Open issue:** мелькание favicon phpMyAdmin в браузере — в dev-контуре причина
+  вне проекта (phpMyAdmin не на origin сайта; одна декларация `<link rel="icon">`;
+  нет preload/prefetch/service worker). Cache-busting не применялся.
+- **Хвост:** две косметические правки в `resources/css/app.css` (`body > header` →
+  `body>header`, пустая строка после `@media (max-width: 767px) {`) — не по
+  задаче, семантически нейтральны; включены как есть. Откатить отдельной задачей.
+- Не добавлялось: apple-touch-icon, размеры 32×32 и пр., service worker, правки
+  nginx.
+
 ### E10 — Unified MFA (docs finalized, implementation NOT STARTED)
 
 - `ADR-009-unified-mfa.md` (Proposed): unified site-wide MFA, глобальный gate

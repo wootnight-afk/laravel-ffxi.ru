@@ -720,6 +720,9 @@ CRUD `dashboard_widgets`: title, type, is_active, sort_order
   существующие токены.
 - Header: auth — аватар-меню + 🔔; гость — как в макете. На логине —
   ссылка «Создать аккаунт». Мобильная адаптация — по media-запросам.
+- Логотипы и favicon: шапка — `img/bx_default_logo.gif` (общий layout, все
+  страницы), hero на главной — `img/2a.png`, favicon — `public/favicon.ico`
+  (публичный сайт + админка Filament). Все ассеты — через `asset()`.
 - `admin.html` — UX-ориентир, реализовано средствами Filament 5.
 
 ## 8.2 Blade-компоненты
@@ -824,6 +827,10 @@ REST API, мультиязычность, emoji-реакции, вложения
 ---
 
 # ИСТОРИЯ ВЕРСИЙ
+
+**1.3** — §8.1: зафиксированы фактические ассеты логотипов (шапка —
+`img/bx_default_logo.gif`, hero — `img/2a.png`) и favicon (`public/favicon.ico`,
+публичный сайт + админка). Продуктовые решения не менялись.
 
 **1.2** — E10.1 reconciliation (D1): permission `mfa.manage` добавлен в §3.3
 (admin-only, только для административного MFA reset; self-service им не
