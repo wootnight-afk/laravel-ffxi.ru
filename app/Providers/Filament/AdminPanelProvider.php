@@ -90,7 +90,23 @@ class AdminPanelProvider extends PanelProvider
                 SetAdminPanelLocale::class,
                 EnsureAdminIpAllowed::class,
                 RequireMfa::class,
-            ], isPersistent: true)
+            ])
+            // Livewire re-applies persistent middleware to a "fake" request built
+            // via Request::duplicate(). That request's cookies are already
+            // decrypted, so re-running the cookie/session stack (EncryptCookies,
+            // AddQueuedCookiesToResponse, StartSession) double-decrypts them and
+            // nulls every encrypted cookie. AuthenticateSession then sees a null
+            // remember_web_* while viaRemember() is true and logs the user out on
+            // the next Livewire update. The Livewire update route already runs the
+            // full web stack, so only panel-specific middleware that is absent
+            // from it needs to be persistent here. Filament already registers
+            // Authenticate/AuthenticateSession persistently itself
+            // (FilamentServiceProvider::boot), and RequireMfa is registered
+            // app-wide (AppServiceProvider::boot), so neither is repeated here.
+            ->persistentMiddleware([
+                SetAdminPanelLocale::class,
+                EnsureAdminIpAllowed::class,
+            ])
             ->authMiddleware([
                 Authenticate::class,
             ]);
