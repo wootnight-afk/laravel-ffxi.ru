@@ -624,7 +624,7 @@ body>header {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: var(--spacing-lg);
+    padding: 0;
     border-right: 1px solid var(--border-color);
     background: var(--bg-light);
 }
@@ -651,10 +651,12 @@ body>header {
 /* Home hero variant. */
 .hero-logo .logo-wrap {
     padding: 6px;
+    width: 100%;
 }
 
 .hero-logo .logo-wrap img {
-    max-height: 80px;
+    width: 100%;
+    height: auto;
 }
 
 /* Header navigation variant: keep the total logo footprint at 40px so the
@@ -738,6 +740,13 @@ h2.section-title {
     line-height: 1.7;
     margin-bottom: var(--spacing-md);
     color: var(--text-main);
+}
+
+.home-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0 auto 24px;
 }
 
 /* --- Галерея --- */
@@ -926,7 +935,7 @@ footer {
     .hero-logo {
         border-right: none;
         border-bottom: 1px solid var(--border-color);
-        padding: var(--spacing-md);
+        padding: 0;
     }
 
     .hero-text {

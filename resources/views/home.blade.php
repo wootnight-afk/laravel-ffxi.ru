@@ -19,34 +19,11 @@
 
     <h1 class="page-title">Содружество игроков Final Fantasy XI — Phoenix Server</h1>
 
+    <img class="home-image" src="{{ asset('img/ffxi.webp') }}" alt="Final Fantasy XI — Phoenix Server" width="592" height="333">
+
     <div class="content-text">
         <p>Приветствую тебя, уважаемый искатель приключений! Ты оказался на страницах нашего сообщества игроков Final Fantasy XI – Phoenix Server. С радостью сообщаем, что этот сайт вновь распахнул свои двери после долгого перерыва! Несмотря на то, что некоторые русскоязычные игроки временно оставили волшебный мир Vana'diel, есть и те, кто продолжает путешествовать по его бескрайним просторам. Для них Final Fantasy XI стала не просто игрой — это настоящая вселенная, где каждый может найти новых друзей, делиться впечатлениями, ставить амбициозные цели или просто наслаждаться коллекционированием миссий и уникального снаряжения.</p>
         <p>Эта игра превратилась в настоящую историю, полную незабываемых моментов и эпических свершений. Каждый из нас, кто хоть раз погружался в этот мир, может вспомнить те волнующие мгновения, с которых всё начиналось, и увидеть, как сильно он изменился. Присоединяйся к нам в этом увлекательном путешествии и дай новую жизнь своим приключениям в Final Fantasy XI.</p>
     </div>
-
-    @if ($latestNews->isNotEmpty())
-        <h2 class="section-title">Последние новости</h2>
-        @foreach ($latestNews as $item)
-            <article class="news-item">
-                @if ($item->cover_path)
-                    <img
-                        src="{{ asset('storage/' . $item->cover_path) }}"
-                        alt="{{ $item->title }}"
-                        class="news-image"
-                        style="height: 200px;"
-                        loading="lazy"
-                    >
-                @endif
-
-                <h3 style="font-size: 16px; margin-bottom: 8px;">{{ $item->title }}</h3>
-                <p class="news-text">{{ $item->excerpt }}</p>
-
-                <div class="news-meta">
-                    <span>{{ $item->published_at?->format('d.m.Y') ?? '—' }}</span>
-                    <a href="{{ route('news.show', $item->slug) }}">Читать дальше →</a>
-                </div>
-            </article>
-        @endforeach
-    @endif
 
 @endsection
