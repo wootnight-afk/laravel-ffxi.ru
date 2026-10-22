@@ -318,7 +318,9 @@ resend verification 3/день.
 **Реализация:** spatie `section.{key}.view` (для ролей) + JSON
 `guest_sections` в `settings` (для гостей). Middleware
 `section.access:{key}`: auth → проверка permission; guest → проверка
-JSON. `Gate::before` для admin возвращает `true` только для abilities
+JSON. Для гостя закрытая секция → redirect на `/login` с `intended`
+(GET/HEAD, HTML); JSON-клиенты и не-GET запросы → 403 (ADR-010).
+`Gate::before` для admin возвращает `true` только для abilities
 с префиксом `section.`. Для остальных abilities действуют обычные
 Spatie permissions и Policies; явные запреты Policies сохраняются.
 Изменения — мгновенны (flush settings cache).
@@ -1079,6 +1081,11 @@ Settings (key-value), Хранение аватаров (storage/app/public/avat
 ---
 
 # ИСТОРИЯ ВЕРСИЙ
+
+**4.0.4 (doc-reconciliation, стек не изменён)** — §13: зафиксировано поведение
+гостя при закрытой секции Матрицы доступа — redirect на `/login` с `intended`
+(GET/HEAD, HTML), JSON и не-GET → 403; основание — ADR-010. Версия
+спецификации 4.0 (FINAL) сохраняется.
 
 **4.0.3 (doc-reconciliation, стек не изменён)** — §38: добавлен открытый вопрос
 о мелькании favicon phpMyAdmin (frontend-задачи 2026-10-11). Версия

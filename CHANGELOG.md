@@ -68,6 +68,20 @@
   `backup.cleanup`; тест провала совместимости.
 - **Открытый gap:** внешняя копия backup (Q6) не реализована (out of scope).
 
+### Access control — guest access denial (ADR-010)
+
+- `SectionAccess`: закрытая для гостя секция Матрицы → redirect на `/login`
+  вместо 404 для GET HTML-запросов; `Redirector::guest()` сохраняет исходный
+  URL в `intended`, поэтому после входа открывается запрошенная страница при
+  наличии `section.{key}.view` (frontend-spec.md §3.6/§9.17).
+- HEAD: redirect на `/login`, однако сохранение исходного URL не гарантируется
+  (поведение `Redirector::guest()`; нестандартная логика не добавлялась).
+- JSON-клиенты и не-GET запросы, дошедшие до middleware как гость → 403;
+  адрес изменяющего запроса в `intended` не сохраняется.
+- Авторизованный без `section.{key}.view` → 403 (без изменений).
+- 404 для отсутствующих объектов и скрытого приватностью контента не менялись.
+- Docs: `ADR-010`, `frontend-spec.md` 1.4, `context.md` 4.0.4.
+
 ## [Stage 8] — 2026-10-06 — Filament (ACCEPTED)
 
 - Полная админ-панель Filament: 12 Resources + `PermissionsMatrixPage`
