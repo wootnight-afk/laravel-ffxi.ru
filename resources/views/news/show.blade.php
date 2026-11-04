@@ -4,6 +4,8 @@
 
 @section('content')
     <article class="news-item" style="border-bottom: none;">
+        <h1 class="page-title">{{ $news->title }}</h1>
+
         @if ($news->cover_path)
             <img
                 src="{{ asset('storage/' . $news->cover_path) }}"
@@ -11,8 +13,6 @@
                 class="news-image"
             >
         @endif
-
-        <h1 class="page-title">{{ $news->title }}</h1>
 
         <div class="news-meta" style="margin-bottom: 24px;">
             <span>
@@ -22,7 +22,7 @@
                     {{ $news->user?->name ?? 'Автор' }}
                 @endif
             </span>
-            <span>{{ $news->published_at?->format('d.m.Y H:i') ?? '—' }}</span>
+            <span>{{ $news->published_at?->format('d.m.Y') ?? '—' }}</span>
         </div>
 
         <div class="content-text">

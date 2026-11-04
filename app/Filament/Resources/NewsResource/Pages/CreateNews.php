@@ -6,6 +6,7 @@ use App\Exceptions\ImageProcessingException;
 use App\Filament\Resources\NewsResource;
 use App\Models\News;
 use App\Services\NewsCoverUploader;
+use App\Services\NewsPublishedAtResolver;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -24,9 +25,8 @@ class CreateNews extends CreateRecord
             $data['user_id'] = auth()->id();
         }
 
-        if (($data['status'] ?? null) === News::STATUS_PUBLISHED && empty($data['published_at'])) {
-            $data['published_at'] = now();
-        }
+        $data['published_at'] = app(NewsPublishedAtResolver::class)
+            ->resolve($data['published_at'] ?? null);
 
         unset($data['cover']);
 

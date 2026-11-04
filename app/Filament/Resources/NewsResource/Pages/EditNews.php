@@ -6,6 +6,7 @@ use App\Exceptions\ImageProcessingException;
 use App\Filament\Resources\NewsResource;
 use App\Models\News;
 use App\Services\NewsCoverUploader;
+use App\Services\NewsPublishedAtResolver;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
@@ -21,9 +22,10 @@ class EditNews extends EditRecord
      */
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        if (($data['status'] ?? null) === News::STATUS_PUBLISHED && empty($data['published_at'])) {
-            $data['published_at'] = now();
-        }
+        $data['published_at'] = app(NewsPublishedAtResolver::class)->resolve(
+            $data['published_at'] ?? null,
+            $this->record instanceof News ? $this->record : null,
+        );
 
         unset($data['cover']);
 

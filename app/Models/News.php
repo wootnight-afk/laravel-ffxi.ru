@@ -96,9 +96,10 @@ class News extends Model
 
     public function isPublished(): bool
     {
+        // published_at is an editorial date (the date of the source
+        // announcement) and only orders the feed; it never gates visibility.
         return $this->status === self::STATUS_PUBLISHED
-            && $this->published_at !== null
-            && $this->published_at->isPast();
+            && $this->published_at !== null;
     }
 
     /**
@@ -108,8 +109,7 @@ class News extends Model
     public function scopePublished(Builder $query): Builder
     {
         return $query->where('status', self::STATUS_PUBLISHED)
-            ->whereNotNull('published_at')
-            ->where('published_at', '<=', now());
+            ->whereNotNull('published_at');
     }
 
     /**
@@ -136,6 +136,8 @@ class News extends Model
      */
     public function scopePinnedFirst(Builder $query): Builder
     {
-        return $query->orderByDesc('is_pinned')->orderByDesc('published_at');
+        return $query->orderByDesc('is_pinned')
+            ->orderByDesc('published_at')
+            ->orderByDesc('id');
     }
 }

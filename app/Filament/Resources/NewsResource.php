@@ -111,8 +111,14 @@ class NewsResource extends Resource
                         ->default(News::STATUS_DRAFT),
                     DateTimePicker::make('published_at')
                         ->label(__('filament.resources.news.fields.published_at'))
+                        ->native(false)
                         ->seconds(false)
-                        ->nullable(),
+                        ->displayFormat('d.m.Y H:i')
+                        // Not required by default (drafts may have no date), but a
+                        // published news item without published_at is invisible on
+                        // the site, so the date is mandatory once published.
+                        ->required(fn (callable $get): bool => $get('status') === News::STATUS_PUBLISHED)
+                        ->validationMessages(['required' => 'Укажите дату новости']),
                     Textarea::make('rejection_reason')
                         ->label(__('filament.resources.news.fields.rejection_reason'))
                         ->maxLength(300)
@@ -131,6 +137,9 @@ class NewsResource extends Resource
                     FileUpload::make('cover')
                         ->label(__('filament.resources.news.fields.cover'))
                         ->image()
+                        // Keep the UI in sync with NewsCoverUploader::ALLOWED_MIMES:
+                        // the file is processed manually in afterCreate/afterSave.
+                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                         ->maxSize(4096)
                         ->storeFiles(false),
                 ]),
