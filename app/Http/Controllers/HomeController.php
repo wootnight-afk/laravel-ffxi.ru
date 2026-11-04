@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\News;
+use App\Services\HomePageContent;
 use Illuminate\Contracts\View\View;
 
 class HomeController extends Controller
 {
-    public function index(): View
+    public function index(HomePageContent $home): View
     {
         $latestNews = News::query()
             ->site()
@@ -19,6 +20,7 @@ class HomeController extends Controller
 
         return view('home', [
             'latestNews' => $latestNews,
+            'home' => $home->view(),
         ]);
     }
 }

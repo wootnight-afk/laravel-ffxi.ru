@@ -150,6 +150,106 @@
   `@media (max-width: 767px) {`) — не по задаче, внешний источник, семантически
   нейтральны; включены в коммит как есть. Откатить отдельной задачей.
 
+## News — редактор шапки страницы `/news`
+
+- Админка: `App\Filament\Pages\NewsPage` (`/admin/news-page`), в сайдбаре
+  скрыта. Точка входа — header action «Редактор страницы» в `ListNews`
+  (рядом с «Создать»), виден только admin.
+- Хранение: `settings` + `SettingsRepository`, без миграций и моделей.
+  Ключи `news_page.*` (`meta_title`, `h1`, `body`, `main_image`,
+  `main_image_width`, `main_image_height`); отсутствие ключа или `null` =
+  дефолт (`Новости игры`, `img/ogp_eu.webp`, 1200×630, два прежних абзаца).
+- `app/Services/NewsPageContent.php` (новый): `defaults()`, `editable()`,
+  `view()`. `HomeImageUploader` расширен слотом `news_page` (карта
+  `dir`/`suffix`/`max`): `storage/app/public/news/header/{hash}_header.webp`,
+  WebP q85, `scaleDown` до 1920×1080 без апскейла.
+- Форма: Title, H1, Картинка шапки (`FileUpload` + тумблер сброса), Текст
+  (`MarkdownEditor`). Сохранение пишет `admin_audit_logs`
+  (`news_page.updated`).
+- Фронт: `NewsController::index()` → `newsPage`; шапка `news/index.blade.php`
+  из настроек, классы и порядок блоков сохранены, цикл и пагинация не
+  тронуты. Текст — `ContentRenderer`; пустой текст скрывает `.content-text`.
+- Docs: `frontend-spec.md` 1.8 (§6.4.2, §7.3, §9 сценарий 30),
+  `adminreview.md` §6.1, `CHANGELOG.md`.
+- Проверено: `php -l`, `git diff --check`; `/news` при дефолтах — текст
+  шапки совпадает с прежним после нормализации пробелов, 5 карточек и
+  пагинация идентичны; сохранение 1600×900 → WebP, отдача 200 `image/webp`;
+  сброс удаляет файл и возвращает 1200×630. Тестовые ключи, файлы и записи
+  аудита после проверки удалены.
+
+## Home — редактор Главной страницы (singleton)
+
+- Админка: `App\Filament\Pages\HomePage` (`/admin/home`, группа «Контент»,
+  `navigationSort = 0` — выше «Новости»). Filament 5 не умеет
+  singleton-ресурсы, поэтому страница кастомная (по паттерну `SettingsPage`):
+  без списка, сразу форма. Доступ — только `admin`.
+- Хранение: `settings` + `SettingsRepository`, без миграций и моделей. Ключи
+  `home.meta_title`, `home.h1`, `home.body`, `home.hero_logo`,
+  `home.main_image`, `home.main_image_width`, `home.main_image_height`;
+  отсутствие ключа или `null` = встроенный дефолт.
+- `app/Services/HomePageContent.php` (новый): `defaults()`, `editable()`,
+  `view()`. `app/Services/HomeImageUploader.php` (новый): слоты `hero`/`image`,
+  MIME-проверка JPEG/PNG/WebP, ≤ 4 МБ, ≤ 25 Мп, min сторона 100 px, WebP q85,
+  `scaleDown` без апскейла, `home/{slot}/{hash}_{slot}.webp`.
+- Форма: Title, H1, Hero-логотип, Основное изображение, Текст
+  (`MarkdownEditor`). Тумблеры «вернуть стандартное» видны только при
+  загруженном файле, удаляют файл и сбрасывают ключи. Сохранение пишет
+  `admin_audit_logs` (`home.updated`).
+- Фронт: `home.blade.php` → `HomePageContent::view()`; классы и структура
+  сохранены, для стандартного логотипа разметка не изменилась, для
+  загруженного — `logo-wrap--custom` + нейтральные правила в `app.css`.
+  Текст — `ContentRenderer`; пустой текст скрывает блок.
+- Docs: `frontend-spec.md` 1.7 (§6.15, §7.3, §9 сценарий 29),
+  `adminreview.md` §5, `CHANGELOG.md`.
+- Проверено: `php -l`, `git diff --check`; `/` при дефолтах совпадает с
+  прежним hero-блоком; 1600×900 → 1287×724 WebP, 415×100 без апскейла,
+  800×450 → `width="800" height="450"`; GIF/SVG/60×60/14.5 МБ отклонены;
+  сброс удаляет файлы. Тестовые ключи и записи аудита после проверки удалены.
+
+## News — обложки новостей
+
+- Баг «обложка не отображается»: `NewsCoverUploader::MIN_SIDE` (200)
+  отклонял файл `22822.jpg` (415×100) → `ImageProcessingException::tooSmall`,
+  `cover_path` оставался `NULL`. Порог снижен до 100.
+- `NewsCoverUploader`: без апскейла — `scaleDown()` вместо `cover()`, если
+  источник меньше 1280×720; результат всегда WebP q85 в
+  `storage/app/public/news/covers/{user_id}/`.
+- `news/show.blade.php`: порядок заголовок → обложка → метаданные → текст
+  (раньше обложка была над `<h1>`, а метаданные — над обложкой).
+- `news/index.blade.php`: обложка убрана из ленты.
+- `resources/css/app.css`: добавлено правило `.news-image` (отсутствовало).
+- `NewsResource`: `FileUpload` ограничен JPEG/PNG/WebP (`acceptedFileTypes`).
+- Docs: `frontend-spec.md` 1.6 §6.4.1 (форматы, хранение, URL, чек-лист
+  диагностики).
+- Проверено: детальная страница id=16 — `<h1>` → `<img>` → `.content-text`;
+  обложка HTTP 200 `image/webp`; лента `/news` — 0 вхождений `storage/news`;
+  PNG и WebP загружаются и отдаются.
+- Тесты не запускались и не добавлялись — отдельный этап.
+
+## News — редакционная дата `published_at`
+
+- `published_at` — редакционная дата (дата анонса источника), а не момент
+  выхода на сайте. Будущее/прошлое на видимость не влияет; видимость =
+  `status = published` + `published_at NOT NULL`; отложенной публикации нет.
+- `app/Models/News.php`: `isPublished()` / `scopePublished()` без проверки
+  «дата не в будущем»; `scopePinnedFirst()` + `orderByDesc('id')`
+  (tiebreaker).
+- `app/Services/NewsPublishedAtResolver.php` (новый): только дата →
+  `00:00:00`; при наличии новостей на дату → `max + 5 мин`; точное время
+  как есть; при редактировании без изменения даты — без сдвига.
+- `NewsResource`: `DateTimePicker` → `native(false)`, `displayFormat('d.m.Y
+  H:i')`, `required` при `published` + `validationMessages(['required' =>
+  'Укажите дату новости'])`.
+- `CreateNews` / `EditNews`: автоподстановка `now()` удалена, вызов
+  резолвера. «Опубликовать»/bulk по-прежнему используют `now()`.
+- Фронтенд: `/news` и `/news/{slug}` — только `d.m.Y`, без времени.
+- Docs: `frontend-spec.md` 1.5, `context.md` 4.0.5, `adminreview.md` §6,
+  `CHANGELOG.md`.
+- **TODO:** кабинет (`my-news.blade.php` — `H:i`, `MyNewsController` —
+  `now()`), таймзона `app.timezone = UTC`. Страницы «Главная» и «Новости» —
+  в параллельной доработке владельцем (WIP, не баг).
+- Тесты не запускались и не добавлялись — отдельный этап.
+
 ## Контракты, которые НЕЛЬЗЯ менять
 
 - Roles: только user / editor / admin. Никаких owner/moderator/super_admin.

@@ -6,6 +6,143 @@
 
 ## [Unreleased]
 
+### News — редактор шапки страницы `/news`
+
+- **Админка:** новая страница `App\Filament\Pages\NewsPage`
+  (`/admin/news-page`), в сайдбаре скрыта (`shouldRegisterNavigation()` =
+  false). Точка входа — header action «Редактор страницы» в `ListNews`, рядом
+  с «Создать»; для editor кнопка скрыта, потому что страница admin-only.
+- **Хранение:** `settings` через `SettingsRepository`, без миграций и
+  моделей. Ключи `news_page.meta_title`, `news_page.h1`, `news_page.body`,
+  `news_page.main_image`, `news_page.main_image_width`,
+  `news_page.main_image_height`; отсутствие ключа или `null` = дефолт
+  (`Новости игры`, `img/ogp_eu.webp`, 1200×630, два прежних абзаца).
+- **`App\Services\NewsPageContent`** (новый) — `defaults()`, `editable()`,
+  `view()`. Текст второго абзаца по умолчанию собран через одинарные
+  переносы: пустая строка в Markdown начала бы новый абзац, а на странице
+  это один `<p>` с мягкими переносами (визуально — как раньше).
+- **`HomeImageUploader`:** добавлен слот `news_page`; конфигурация слотов
+  сведена в карту `dir`/`suffix`/`max`, поэтому файл шапки попадает в
+  `storage/app/public/news/header/{hash}_header.webp` (WebP q85,
+  `scaleDown` до 1920×1080, без апскейла, ≤ 4 МБ).
+- **Форма:** Title, H1, Картинка шапки (`FileUpload` + тумблер «вернуть
+  стандартную»), Текст (`MarkdownEditor`). Сохранение пишет
+  `admin_audit_logs` (`news_page.updated`, old/new, без IP).
+- **Фронт:** `NewsController::index()` передаёт `newsPage`, шапка
+  `news/index.blade.php` выводится из настроек; классы (`page-title`,
+  `home-image`, `content-text`, `divider`), размеры (1200×630 по умолчанию) и
+  порядок блоков сохранены. Цикл новостей и пагинация не тронуты.
+- **Docs:** `frontend-spec.md` 1.8 — §6.4.2, §7.3, §9 (сценарий 30);
+  `adminreview.md` §6.1.
+- Проверено: `php -l`, `git diff --check`; `/news` при дефолтах —
+  whitespace-нормализованный текст шапки совпадает с прежним, 5 карточек и
+  пагинация идентичны; сохранение 1600×900 → WebP 1600×900 в
+  `news/header/`, отдача HTTP 200 `image/webp`; сброс удаляет файл и
+  возвращает `img/ogp_eu.webp` 1200×630.
+
+### Home — редактор Главной страницы (singleton)
+
+- **Админка:** новая страница `App\Filament\Pages\HomePage` (`/admin/home`,
+  группа «Контент», `navigationSort = 0` — выше «Новости»). Filament 5 не
+  поддерживает singleton-ресурсы, поэтому страница кастомная: без списка и без
+  записи, сразу форма. Доступ — только `admin` (`canAccess()`), editor пункт
+  не видит.
+- **Хранение:** существующая таблица `settings` через `SettingsRepository`,
+  без миграций и новых моделей. Ключи: `home.meta_title`, `home.h1`,
+  `home.body`, `home.hero_logo`, `home.main_image`,
+  `home.main_image_width`, `home.main_image_height`. Отсутствие ключа или
+  `null` = встроенный дефолт.
+- **`App\Services\HomePageContent`** (новый) — единый источник правды:
+  `defaults()`, `editable()`, `view()`. Дефолты повторяют прежнюю статичную
+  страницу (`img/bx_ffxi_logo.webp`, `img/ffxi.webp`, 592×333, два абзаца).
+- **`App\Services\HomeImageUploader`** (новый) — по образцу
+  `NewsCoverUploader`: слоты `hero`/`image`, проверка по фактическому MIME
+  (JPEG/PNG/WebP), ≤ 4 МБ, ≤ 25 Мп, короткая сторона ≥ 100 px, всегда
+  пере-кодирование в WebP q85, `scaleDown` без апскейла, случайное имя
+  `{random12}-{sha1[:8]}_{slot}.webp` в `storage/app/public/home/{slot}/`,
+  возврат `{path, width, height}`.
+- **Форма:** Title, H1, Hero-логотип, Основное изображение, Текст
+  (`MarkdownEditor`). Тумблеры «вернуть стандартное» видны только при
+  загруженном файле, удаляют файл и сбрасывают ключи в `null`. Сохранение
+  пишет `admin_audit_logs` (`home.updated`, old/new, без IP). Ошибка загрузки
+  отменяет сохранение целиком.
+- **Фронт:** `home.blade.php` переведён на `HomePageContent::view()`;
+  структура и классы (`hero hero--single`, `logo-wrap`, `page-title sr-only`,
+  `home-image`, `content-text`) сохранены. Для стандартного логотипа разметка
+  не изменилась; для загруженного добавляется `logo-wrap--custom` и
+  нейтральные правила в `app.css` (`aspect-ratio: auto`, `position: static`,
+  `width: 100%`), чтобы CSS-кроп дефолтного логотипа не применялся к
+  произвольному файлу. Текст выводится через `ContentRenderer`
+  (CommonMark + `HtmlSanitizer`); пустой текст скрывает блок.
+- **Docs:** `frontend-spec.md` 1.7 — §6.15, §7.3, §9 (сценарий 29);
+  `adminreview.md` §5 — пункт «Главная» в группе «Контент».
+- Проверено: `php -l`, `git diff --check`; `/` при дефолтах байт-в-байт
+  повторяет прежний hero-блок; загрузка 1600×900 → 1287×724 WebP, баннер
+  415×100 без апскейла, 800×450 → `width="800" height="450"`; GIF/SVG/60×60/
+  14.5 МБ отклонены; тумблеры сброса удаляют файлы и возвращают дефолт.
+
+### News — обложки новостей (загрузка, хранение, вывод)
+
+- **Первопричина бага «обложка не отображается»:** `NewsCoverUploader::MIN_SIDE
+  = 200` отклонял широкие баннеры. Файл `22822.jpg` имеет размер **415×100**,
+  поэтому `validate()` бросал `ImageProcessingException::tooSmall`, обложка не
+  сохранялась, а новость создавалась с `cover_path = NULL` (в UI оставалось
+  только уведомление). Порог снижен до 100 px — как в `AvatarUploader` и
+  `ImageProcessor` (там 50 px).
+- **Без апскейла:** если источник меньше целевого кадра 1280×720, применяется
+  `scaleDown()` (пропорции сохраняются) вместо `cover()`. Баннер 415×100
+  остаётся 415×100 вместо 7-кратного растягивания с кадрированием.
+- **Порядок на детальной странице:** `news/show.blade.php` — заголовок →
+  обложка → метаданные (автор, дата) → текст. Раньше `<img>` выводился **до**
+  `<h1>`, затем метаданные стояли выше обложки.
+- **Лента:** обложка убрана из `news/index.blade.php` — выводится только на
+  детальной странице.
+- **CSS:** добавлено правило `.news-image` (его не существовало вовсе) —
+  `display: block; max-width: 100%; height: auto; border-radius: 4px`
+  (маленький баннер не растягивается выше натурального размера).
+- **Админка:** `FileUpload` для обложки ограничен
+  `acceptedFileTypes(['image/jpeg','image/png','image/webp'])` — UI совпадает
+  с `NewsCoverUploader::ALLOWED_MIMES`.
+- **Docs:** `frontend-spec.md` 1.6 — новый §6.4.1 «Обложки новостей»
+  (форматы, лимиты, хранение, публичный URL, место вывода, чек-лист
+  диагностики), §6.4 и §7.3 приведены в соответствие.
+- Проверено: `22822.jpg` → `news/covers/3/…_cover.webp`, HTTP 200
+  `image/webp`; PNG и WebP загружаются и отдаются; в ленте обложек нет.
+
+### News — редакционная дата `published_at`
+
+- **Семантика:** `published_at` — редакционная дата (дата анонса
+  официального источника), а не момент выхода новости на сайте. Дата может
+  быть в будущем и в прошлом; на видимость не влияет. Видимость определяется
+  только `status = published` + `published_at IS NOT NULL`. Отложенной
+  публикации по расписанию нет и не будет.
+- **Модель:** `News::isPublished()` и `scopePublished()` больше не проверяют
+  «дата не в будущем» (`isPast()` / `published_at <= now()` удалены).
+  `scopePinnedFirst()` дополнен tiebreaker'ом `->orderByDesc('id')` —
+  порядок при равных датах детерминирован.
+- **Админка:** `DateTimePicker` для `published_at` получил `->native(false)`
+  (нативный `<input type="datetime-local">` не позволял сохранить только
+  дату — браузер блокировал отправку по `validity.badInput`),
+  `->displayFormat('d.m.Y H:i')` и условную обязательность при
+  `status = published` с сообщением «Укажите дату новости».
+- **Новый сервис:** `app/Services/NewsPublishedAtResolver.php` — только дата
+  → `00:00:00`, при наличии новостей на эту дату → `max(published_at) +
+  5 минут`, точное время сохраняется как есть, при редактировании без
+  изменения даты значение не сдвигается. Вызывается из
+  `CreateNews::mutateFormDataBeforeCreate()` и
+  `EditNews::mutateFormDataBeforeSave()`.
+- **Запрет `now()` при создании:** автоподстановка текущего времени удалена
+  из обеих страниц формы. Кнопки «Опубликовать» и «Массовая публикация»
+  по-прежнему используют `now()` — это ручное действие «опубликовать прямо
+  сейчас».
+- **Фронтенд:** лента `/news` и страница `/news/{slug}` показывают только
+  дату `d.m.Y`; время `H:i` на публичном сайте новостей не выводится.
+- **Docs:** `frontend-spec.md` 1.5 (§5.4, §6.4, §7.3, §9.28, §10),
+  `context.md` 4.0.5 (§11), `adminreview.md` §6.
+- **TODO (вне скоупа):** кабинет (`my-news.blade.php` — `H:i`,
+  `MyNewsController` — `now()`), таймзона `app.timezone = UTC`.
+- Тесты не запускались и не добавлялись — отдельный этап.
+
 ### Frontend — брендинг (логотипы в шапке/hero + favicon)
 
 - **Логотип в навбаре:** `public/img/bx_default_logo.gif` в общем layout

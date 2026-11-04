@@ -1,29 +1,23 @@
 @extends('layouts.app')
 
-@section('title', 'Содружество игроков Final Fantasy XI — Phoenix Server')
+@section('title', $home['metaTitle'])
 
 @section('content')
 
-    <div class="hero">
-        <div class="hero-logo">
-            <div class="logo-wrap">
-                <img src="{{ asset('img/2a.png') }}" alt="Final Fantasy XI">
-            </div>
-        </div>
-        <div class="hero-text">
-            <h1>Содружество игроков</h1>
-            <h2>Final Fantasy XI</h2>
-            <h3>Phoenix Server</h3>
+    <div class="hero hero--single">
+        <div class="logo-wrap{{ $home['heroLogoIsCustom'] ? ' logo-wrap--custom' : '' }}">
+            <img src="{{ $home['heroLogoUrl'] }}" alt="{{ $home['h1'] }}">
         </div>
     </div>
 
-    <h1 class="page-title">Содружество игроков Final Fantasy XI — Phoenix Server</h1>
+    <h1 class="page-title sr-only">{{ $home['h1'] }}</h1>
 
-    <img class="home-image" src="{{ asset('img/ffxi.webp') }}" alt="Final Fantasy XI — Phoenix Server" width="592" height="333">
+    <img class="home-image" src="{{ $home['mainImageUrl'] }}" alt="{{ $home['h1'] }}" width="{{ $home['mainImageWidth'] }}" height="{{ $home['mainImageHeight'] }}">
 
-    <div class="content-text">
-        <p>Приветствую тебя, уважаемый искатель приключений! Ты оказался на страницах нашего сообщества игроков Final Fantasy XI – Phoenix Server. С радостью сообщаем, что этот сайт вновь распахнул свои двери после долгого перерыва! Несмотря на то, что некоторые русскоязычные игроки временно оставили волшебный мир Vana'diel, есть и те, кто продолжает путешествовать по его бескрайним просторам. Для них Final Fantasy XI стала не просто игрой — это настоящая вселенная, где каждый может найти новых друзей, делиться впечатлениями, ставить амбициозные цели или просто наслаждаться коллекционированием миссий и уникального снаряжения.</p>
-        <p>Эта игра превратилась в настоящую историю, полную незабываемых моментов и эпических свершений. Каждый из нас, кто хоть раз погружался в этот мир, может вспомнить те волнующие мгновения, с которых всё начиналось, и увидеть, как сильно он изменился. Присоединяйся к нам в этом увлекательном путешествии и дай новую жизнь своим приключениям в Final Fantasy XI.</p>
-    </div>
+    @if ($home['bodyHtml'] !== '')
+        <div class="content-text">
+            {!! $home['bodyHtml'] !!}
+        </div>
+    @endif
 
 @endsection

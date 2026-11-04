@@ -4,12 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Comment;
 use App\Models\News;
+use App\Services\NewsPageContent;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
 class NewsController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request, NewsPageContent $page): View
     {
         $news = News::query()
             ->site()
@@ -20,6 +21,7 @@ class NewsController extends Controller
 
         return view('news.index', [
             'news' => $news,
+            'newsPage' => $page->view(),
         ]);
     }
 

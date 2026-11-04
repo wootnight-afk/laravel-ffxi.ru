@@ -4,6 +4,8 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\AdminDashboard;
 use App\Filament\Pages\BackupPage;
+use App\Filament\Pages\HomePage;
+use App\Filament\Pages\NewsPage;
 use App\Filament\Pages\PermissionsMatrixPage;
 use App\Filament\Pages\SettingsPage;
 use App\Filament\Widgets\AdminDashboardStats;
@@ -66,6 +68,8 @@ class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
                 AdminDashboard::class,
+                HomePage::class,
+                NewsPage::class,
                 PermissionsMatrixPage::class,
                 SettingsPage::class,
                 BackupPage::class,

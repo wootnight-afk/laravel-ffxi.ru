@@ -18,7 +18,14 @@ class NewsCoverUploader
 
     public const MAX_PIXELS = 25_000_000;      // 25 Mp
 
-    public const MIN_SIDE = 200;
+    /**
+     * Minimum length of the shorter side, in pixels.
+     *
+     * Covers are often wide banners (e.g. 415x100), so the guard must not
+     * assume a photo-like aspect ratio. Values below this limit are rejected
+     * as unreadable thumbnails.
+     */
+    public const MIN_SIDE = 100;
 
     public const COVER_WIDTH = 1280;
 
@@ -58,7 +65,15 @@ class NewsCoverUploader
         try {
             $image = $this->manager->decodePath($file->getRealPath());
             $image->orient();
-            $image->cover(self::COVER_WIDTH, self::COVER_HEIGHT);
+
+            // Never upscale: a cover smaller than the target box keeps its own
+            // dimensions and aspect ratio, otherwise a 415x100 banner would be
+            // blown up ~7x and cropped to an unreadable strip.
+            if ($image->width() < self::COVER_WIDTH || $image->height() < self::COVER_HEIGHT) {
+                $image->scaleDown(self::COVER_WIDTH, self::COVER_HEIGHT);
+            } else {
+                $image->cover(self::COVER_WIDTH, self::COVER_HEIGHT);
+            }
 
             $disk->put($path, (string) $image->encodeUsingFileExtension('webp', quality: self::QUALITY));
         } catch (Throwable $e) {

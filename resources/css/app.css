@@ -585,6 +585,20 @@ body>header {
     display: none !important;
 }
 
+/* Visually hidden but still exposed to assistive tech (clip technique, not
+ * display:none). Used for screen-reader-only labels and the SEO heading. */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 .login-link {
     color: var(--text-header);
     font-size: 14px;
@@ -617,6 +631,62 @@ body>header {
     cursor: pointer;
     position: relative;
     transition: background-color 0.3s, border-color 0.3s;
+}
+
+/* Home hero: single centred banner. The frame hugs the visible logo only,
+ * so transparent padding baked into the PNG is cropped away by CSS.
+ *
+ * Crop source — public/img/bx_ffxi_logo.png:
+ *   image 2172x724, visible (alpha bbox) 2125x603,
+ *   transparent margins: left 31, right 16, top 42, bottom 79 px.
+ * Percentages below are derived from those numbers; recalculate them if the
+ * PNG is replaced. `top` is a share of the box height (603), the rest are
+ * shares of the box width (2125). */
+.hero--single {
+    display: block;
+    width: 100%;
+    margin-bottom: var(--spacing-lg);
+    padding: 0;
+}
+
+.hero--single .logo-wrap {
+    display: block;
+    width: 100%;
+    aspect-ratio: 2125 / 603;
+    overflow: hidden;
+}
+
+.hero--single .logo-wrap img {
+    position: absolute;
+    /* The logo is drawn at 95% of the visible area and centred inside the
+     * box, so a small even margin remains on all sides; the box itself keeps
+     * its size. Values derived from the same alpha bbox as above:
+     *   width = 0.95 * 2172 / 2125
+     *   left  = (1 - 0.95) / 2 - (31 / 2172) * width
+     *   top   = (1 - 0.95) / 2 - (42 / 724) * (width * 724 / 2125) */
+    top: -4.1169%;
+    left: 1.1141%;
+    width: 97.1012%;
+    /* override base .logo-wrap img { max-width: 100% } so the crop survives */
+    max-width: none;
+    height: auto;
+}
+
+/* Custom hero logo uploaded through the admin home page editor.
+ * The crop maths above are derived from the alpha bounding box of the
+ * bundled asset (img/bx_ffxi_logo.webp) and cannot be applied to arbitrary
+ * uploads, so a replaced logo is rendered as a plain full-width image. */
+.hero--single .logo-wrap--custom {
+    aspect-ratio: auto;
+}
+
+.hero--single .logo-wrap--custom img {
+    position: static;
+    top: auto;
+    left: auto;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
 }
 
 .hero-logo {
@@ -660,13 +730,13 @@ body>header {
 }
 
 /* Header navigation variant: keep the total logo footprint at 40px so the
- * fixed header height does not grow (2px frame + 36px image). */
+ * fixed header height does not grow (no frame + 40px image). */
 .logo-link .logo-wrap {
-    padding: 2px;
+    padding: 0;
 }
 
 .logo-link .logo-wrap img {
-    height: 36px;
+    height: 40px;
 }
 
 /* Dark theme: mute the opaque white-background logo so it blends with the
@@ -687,12 +757,16 @@ body>header {
 
 .hero-text {
     flex: 1.5;
-    padding: var(--spacing-lg);
+    padding: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
     color: var(--primary-color);
     font-style: italic;
+}
+
+.hero-text__logo {
+    width: 100%;
 }
 
 .hero-text h1 {
@@ -713,7 +787,7 @@ body>header {
 .hero::after {
     content: '';
     display: block;
-    height: 6px;
+    height: 6.5px;
     background-color: var(--primary-color);
     position: absolute;
     bottom: 0;
@@ -747,6 +821,25 @@ h2.section-title {
     width: 100%;
     height: auto;
     margin: 0 auto 24px;
+    /* Same rounded corners as .gallery-thumb. */
+    border-radius: 4px;
+}
+
+/* Cover image of a single news item (detail page only).
+   max-width instead of width keeps small banners at their natural size
+   instead of upscaling them to the container width. */
+.news-image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto 24px;
+    border-radius: 4px;
+}
+
+.divider {
+    border: 0;
+    border-top: 1px solid var(--border-color);
+    margin: var(--spacing-lg) 0;
 }
 
 /* --- Галерея --- */

@@ -119,6 +119,7 @@ text
   🔑 Матрица доступа
 
 КОНТЕНТ
+  🏠 Главная
   📰 Новости                [badge: кол-во]
   💬 Комментарии            [badge: кол-во на модерации, danger]
   🖼 Галерея
@@ -145,13 +146,16 @@ text
 
 Новости — 20, Комментарии — 21, Галерея — 22, Страницы — 23, События — 24
 
+Главная — первым пунктом группы «Контент» (navigationSort 0 в коде, выше
+«Новости»).
+
 Журнал — 30, Настройки — 31
 
 6. Filament Resources
 Resource	Модель	Ключевые поля	Кастом
 UserResource	User	name, email, roles, status, avatar	смена ролей inline, блокировка
 RoleResource	Role	name, slug, permissions	только для admin
-NewsResource	News	title, slug, date, image, body, status	preview, публикация по расписанию
+NewsResource	News	title, slug, date, image, body, status	preview, публикация/снятие, редакционная дата
 CommentResource	Comment	text, author, target, status	модерация bulk-действиями
 GalleryResource	GalleryItem	image, caption, section, date	загрузка через intervention/image
 PageResource	Page	title, slug, content, is_published, roles	доступ настраивается через чекбоксы (см. §7)
@@ -165,6 +169,17 @@ ActivityLogResource	ActivityLog	user, action, target, ip, timestamp	read-only, �
 Дашборд — стандартный Filament Dashboard с виджетами (Stats + Chart).
 
 Настройки — SettingsPage с формами (общие, регистрация, логирование).
+
+Главная — HomePage (singleton): одна форма без списка записей (Title, H1,
+Hero-логотип, Основное изображение, текст). Хранение — `settings`, ключи
+`home.*`; загрузки — `HomeImageUploader` (JPEG/PNG/WebP, ≤ 4 МБ, WebP q85).
+Доступ — только admin. Детали — `frontend-spec.md` §6.15 и §7.3.
+
+Редактор страницы Новостей — NewsPage (`/admin/news-page`): в сайдбаре не
+показывается, открывается кнопкой «Редактор страницы» в шапке списка новостей
+(рядом с «Создать»). Поля: Title, H1, Картинка шапки (+ тумблер возврата к
+стандартной), Текст. Хранение — `settings`, ключи `news_page.*`. Доступ —
+только admin. Детали — `frontend-spec.md` §6.4.2 и §7.3.
 
 7. Форма создания/редактирования страницы
 Ключевое место админки. Реализуется как кастомная форма внутри PageResource.

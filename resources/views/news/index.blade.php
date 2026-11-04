@@ -1,9 +1,19 @@
 @extends('layouts.app')
 
-@section('title', 'Новости игры')
+@section('title', $newsPage['metaTitle'])
 
 @section('content')
-    <h1 class="page-title">Новости игры</h1>
+    <h1 class="page-title">{{ $newsPage['h1'] }}</h1>
+
+    <img class="home-image" src="{{ $newsPage['mainImageUrl'] }}" alt="{{ $newsPage['mainImageAlt'] }}" width="{{ $newsPage['mainImageWidth'] }}" height="{{ $newsPage['mainImageHeight'] }}">
+
+    @if ($newsPage['bodyHtml'] !== '')
+        <div class="content-text">
+            {!! $newsPage['bodyHtml'] !!}
+        </div>
+    @endif
+
+    <hr class="divider">
 
     @if ($news->isEmpty())
         <div class="content-text">
@@ -12,15 +22,6 @@
     @else
         @foreach ($news as $item)
             <article class="news-item">
-                @if ($item->cover_path)
-                    <img
-                        src="{{ asset('storage/' . $item->cover_path) }}"
-                        alt="{{ $item->title }}"
-                        class="news-image"
-                        loading="lazy"
-                    >
-                @endif
-
                 <h3 style="font-size: 18px; margin-bottom: 8px; color: var(--primary-color);">
                     {{ $item->title }}
                 </h3>

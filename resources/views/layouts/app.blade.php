@@ -27,14 +27,13 @@
     <div class="nav-container">
         <a href="{{ route('home') }}" class="logo-link">
             <span class="logo-wrap">
-                <img src="{{ asset('img/bx_default_logo.gif') }}" alt="Final Fantasy XI">
+                <img src="{{ asset('img/bx_default_logo.webp') }}" alt="Final Fantasy XI">
             </span>
         </a>
 
         <nav class="nav-links">
             <a href="{{ route('news.index') }}" class="{{ request()->routeIs('news.*') ? 'active' : '' }}">Новости игры</a>
             <a href="{{ route('gallery.index') }}" class="{{ request()->routeIs('gallery.*') ? 'active' : '' }}">Галерея</a>
-            <a href="{{ route('events.index') }}" class="{{ request()->routeIs('events.*') ? 'active' : '' }}">События</a>
             <a href="{{ route('players.dashboard') }}" class="{{ request()->routeIs('players.*') ? 'active' : '' }}">Игроки</a>
             <a href="{{ route('contacts') }}" class="{{ request()->routeIs('contacts') ? 'active' : '' }}">Контакты</a>
         </nav>
