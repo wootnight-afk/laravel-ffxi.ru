@@ -10,6 +10,9 @@ use App\Filament\Resources\EventResource\Pages\ListEvents;
 use App\Filament\Resources\EventResource\RelationManagers\ParticipantsRelationManager;
 use App\Models\Event;
 use App\Services\EventService;
+use App\Services\TimezoneOptions;
+use App\Services\TimezoneResolver;
+use App\Support\EventDateInput;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -23,6 +26,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -85,10 +89,19 @@ class EventResource extends Resource
                 ->columns(2),
             Section::make(__('filament.resources.events.sections.schedule'))
                 ->schema([
+                    Select::make('timezone')
+                        ->label(__('filament.resources.events.fields.timezone'))
+                        ->options(TimezoneOptions::options())
+                        ->searchable()
+                        ->required()
+                        ->default(fn (?Event $record): string => $record?->timezone
+                            ?: ($record?->exists ? 'UTC' : app(TimezoneResolver::class)->resolve(auth()->user()))),
                     DateTimePicker::make('starts_at')
                         ->label(__('filament.resources.events.fields.starts_at'))
                         ->required()
-                        ->seconds(false),
+                        ->seconds(false)
+                        ->timezone(fn (Get $get): string => (string) ($get('timezone') ?: 'UTC'))
+                        ->rule(self::localTimeRule()),
                     TextInput::make('duration_minutes')
                         ->label(__('filament.resources.events.fields.duration_minutes'))
                         ->numeric()
@@ -104,7 +117,9 @@ class EventResource extends Resource
                     DateTimePicker::make('registration_close')
                         ->label(__('filament.resources.events.fields.registration_close'))
                         ->seconds(false)
-                        ->nullable(),
+                        ->nullable()
+                        ->timezone(fn (Get $get): string => (string) ($get('timezone') ?: 'UTC'))
+                        ->rule(self::localTimeRule()),
                     Select::make('status')
                         ->label(__('filament.resources.events.fields.status'))
                         ->options(self::statusOptions())
@@ -211,6 +226,31 @@ class EventResource extends Resource
             'create' => CreateEvent::route('/create'),
             'edit' => EditEvent::route('/{record}/edit'),
         ];
+    }
+
+    /**
+     * Rejects non-existent and ambiguous local times before the picker state
+     * cast can silently normalize them (ADR-011 §2.7).
+     */
+    private static function localTimeRule(): \Closure
+    {
+        return static fn (Get $get): \Closure => static function (string $attribute, mixed $value, \Closure $fail) use ($get): void {
+            $timezone = (string) ($get('timezone') ?: 'UTC');
+
+            $local = $value instanceof \DateTimeInterface
+                ? $value->format('Y-m-d H:i')
+                : EventDateInput::normalize((string) $value);
+
+            if ($local === null) {
+                return;
+            }
+
+            [, $error] = EventDateInput::toUtc($local, $timezone);
+
+            if ($error !== null) {
+                $fail(EventDateInput::message($error));
+            }
+        };
     }
 
     /**

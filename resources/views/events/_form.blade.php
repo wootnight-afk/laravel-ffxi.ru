@@ -1,7 +1,10 @@
 @php
     $started = $event->exists && $event->starts_at->lessThanOrEqualTo(now());
-    $startsAt = $event->starts_at?->copy()->setTimezone($timezone)->format('Y-m-d\TH:i');
-    $registrationClose = $event->registration_close?->copy()->setTimezone($timezone)->format('Y-m-d\TH:i');
+    $timezoneOld = old('timezone', $event->exists ? ($event->timezone ?: 'UTC') : $defaultTimezone);
+    $formTimezone = is_string($timezoneOld) ? $timezoneOld : 'UTC';
+    $formTimezone = \App\Services\TimezoneOptions::isValid($formTimezone) ? $formTimezone : 'UTC';
+    $startsAt = $event->starts_at?->copy()->setTimezone($formTimezone)->format('Y-m-d\TH:i');
+    $registrationClose = $event->registration_close?->copy()->setTimezone($formTimezone)->format('Y-m-d\TH:i');
 @endphp
 
 <form method="POST" action="{{ $action }}" style="max-width: 760px;">
@@ -45,8 +48,18 @@
 
     @if (! $started)
         <div class="form-group">
-            <label for="event-starts-at">Дата и время ({{ $timezone }})</label>
-            <input id="event-starts-at" class="form-control" type="datetime-local" name="starts_at" required value="{{ old('starts_at', $startsAt) }}">
+            <label for="event-timezone">Часовой пояс</label>
+            <select id="event-timezone" class="form-control" name="timezone" required>
+                @foreach ($timezoneOptions as $identifier => $label)
+                    <option value="{{ $identifier }}" @selected($formTimezone === $identifier)>{{ $label }}</option>
+                @endforeach
+            </select>
+            @error('timezone')<div class="form-error">{{ $message }}</div>@enderror
+        </div>
+
+        <div class="form-group">
+            <label for="event-starts-at">Дата и время ({{ $formTimezone }})</label>
+            <input id="event-starts-at" class="form-control" type="datetime-local" name="starts_at" required value="{{ old('_starts_at_local', $startsAt) }}">
             @error('starts_at')<div class="form-error">{{ $message }}</div>@enderror
         </div>
 
@@ -63,8 +76,8 @@
         </div>
 
         <div class="form-group">
-            <label for="event-registration-close">Регистрация до (необязательно, {{ $timezone }})</label>
-            <input id="event-registration-close" class="form-control" type="datetime-local" name="registration_close" value="{{ old('registration_close', $registrationClose) }}">
+            <label for="event-registration-close">Регистрация до (необязательно, {{ $formTimezone }})</label>
+            <input id="event-registration-close" class="form-control" type="datetime-local" name="registration_close" value="{{ old('_registration_close_local', $registrationClose) }}">
             @error('registration_close')<div class="form-error">{{ $message }}</div>@enderror
         </div>
     @endif

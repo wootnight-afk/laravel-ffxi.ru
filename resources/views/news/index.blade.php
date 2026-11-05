@@ -29,7 +29,7 @@
                 <p class="news-text">{{ $item->excerpt }}</p>
 
                 <div class="news-meta">
-                    <span>{{ $item->published_at?->format('d.m.Y') ?? '—' }}</span>
+                    <span>{{ $item->displayPublishedAt() }}</span>
                     <a href="{{ route('news.show', $item->slug) }}">Читать дальше →</a>
                 </div>
             </article>

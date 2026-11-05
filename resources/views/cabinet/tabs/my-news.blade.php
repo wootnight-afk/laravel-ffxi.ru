@@ -138,9 +138,9 @@
                             <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">{{ $item->excerpt }}</div>
                         @endif
                         <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">
-                            {{ $item->created_at->format('d.m.Y H:i') }}
+                            <x-datetime :value="$item->created_at" />
                             @if ($item->status === \App\Models\News::STATUS_PUBLISHED && $item->published_at)
-                                · опубликовано {{ $item->published_at->format('d.m.Y H:i') }}
+                                · опубликовано {{ $item->displayPublishedAt() }}
                                 · просмотров: {{ $item->views }}
                             @endif
                         </div>

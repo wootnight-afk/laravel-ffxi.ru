@@ -20,7 +20,7 @@
                 <article class="news-item" style="padding: 14px; border: 1px solid var(--border-color); border-radius: 8px;">
                     <p class="news-meta">
                         {{ $event->type?->icon }} {{ $event->type?->title ?? 'Событие' }}
-                        · {{ $event->starts_at->copy()->setTimezone($timezone)->format('d.m.Y H:i') }}
+                        · @include('events._time', ['event' => $event])
                     </p>
                     <h3 style="font-size: 17px;">
                         <a href="{{ route('events.show', $event) }}">{{ $event->title }}</a>

@@ -36,7 +36,7 @@
             </div>
 
             <div style="font-size: 13px; color: var(--text-muted);">
-                Дата регистрации: {{ $user->created_at->format('d.m.Y') }}
+                Дата регистрации: <x-naive-date :value="$user->created_at" />
             </div>
 
             @if ($isOwner)
@@ -73,7 +73,7 @@
                         </h3>
                         <p class="news-text">{{ $item->excerpt }}</p>
                         <div class="news-meta">
-                            <span>{{ $item->published_at?->format('d.m.Y') ?? '—' }}</span>
+                            <span>{{ $item->displayPublishedAt() }}</span>
                             <a href="{{ route('news.show', $item->slug) }}">Читать дальше →</a>
                         </div>
                     </article>

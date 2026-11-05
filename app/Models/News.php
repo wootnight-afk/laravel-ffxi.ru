@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Services\ContentRenderer;
+use App\Services\TimezoneResolver;
+use App\Support\DateFormat;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -100,6 +102,29 @@ class News extends Model
         // announcement) and only orders the feed; it never gates visibility.
         return $this->status === self::STATUS_PUBLISHED
             && $this->published_at !== null;
+    }
+
+    /**
+     * Single display contract for the news publication date (ADR-011 §2.6).
+     *
+     * Site news carry an editorial calendar date: it is never converted.
+     * Player news carry a real moment: it is shown in the viewer timezone.
+     */
+    public function displayPublishedAt(?string $timezone = null, ?string $locale = null): string
+    {
+        if ($this->published_at === null) {
+            return DateFormat::PLACEHOLDER;
+        }
+
+        $locale ??= app()->getLocale();
+
+        if ($this->isSite()) {
+            return DateFormat::date($this->published_at, $locale);
+        }
+
+        $timezone ??= app(TimezoneResolver::class)->resolve(auth()->user());
+
+        return DateFormat::moment($this->published_at, $timezone, $locale);
     }
 
     /**

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\TimezoneResolver;
+use App\Support\DateFormat;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -35,7 +37,11 @@ class LoginController extends Controller
         if ($user->isBanned()) {
             Auth::logout();
             throw ValidationException::withMessages([
-                'email' => 'Аккаунт заблокирован до '.$user->banned_until->format('d.m.Y H:i').'.',
+                'email' => 'Аккаунт заблокирован до '.DateFormat::moment(
+                    $user->banned_until,
+                    app(TimezoneResolver::class)->resolve($user),
+                    app()->getLocale(),
+                ).'.',
             ]);
         }
 

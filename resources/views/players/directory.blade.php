@@ -54,7 +54,7 @@
                     <div style="display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 12px; color: var(--text-muted);">
                         <span>Новостей: <strong>{{ $user->news_count }}</strong></span>
                         <span>Комментариев: <strong>{{ $user->comments_count }}</strong></span>
-                        <span>Регистрация: <strong>{{ $user->created_at->format('d.m.Y') }}</strong></span>
+                        <span>Регистрация: <strong><x-naive-date :value="$user->created_at" /></strong></span>
                     </div>
                 </div>
             @endforeach

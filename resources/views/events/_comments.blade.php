@@ -9,7 +9,7 @@
         <article id="comment-{{ $comment->id }}" style="padding: 16px 0; border-bottom: 1px solid var(--border-color);">
             <p class="news-meta">
                 <strong>{{ $comment->user?->name ?? '[аккаунт удалён]' }}</strong>
-                · {{ $comment->created_at->format('d.m.Y H:i') }}
+                · <x-datetime :value="$comment->created_at" />
                 @if ($comment->edited_at)
                     · изменён
                 @endif
@@ -27,7 +27,7 @@
                 <div style="margin: 12px 0 0 24px; padding-left: 12px; border-left: 2px solid var(--border-color);">
                     <p class="news-meta">
                         <strong>{{ $reply->user?->name ?? '[аккаунт удалён]' }}</strong>
-                        · {{ $reply->created_at->format('d.m.Y H:i') }}
+                        · <x-datetime :value="$reply->created_at" />
                         @if ($reply->status === \App\Models\Comment::STATUS_PENDING)
                             · на модерации
                         @elseif ($reply->status === \App\Models\Comment::STATUS_REJECTED)

@@ -11,7 +11,8 @@ use App\Models\Event;
 use App\Models\EventType;
 use App\Services\ContentRenderer;
 use App\Services\EventService;
-use App\Services\SettingsRepository;
+use App\Services\TimezoneOptions;
+use App\Services\TimezoneResolver;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -23,7 +24,6 @@ class EventController extends Controller
     public function __construct(
         private readonly EventService $events,
         private readonly ContentRenderer $contentRenderer,
-        private readonly SettingsRepository $settings,
     ) {}
 
     public function index(Request $request): View
@@ -47,7 +47,6 @@ class EventController extends Controller
             'events' => $query->paginate(12)->withQueryString(),
             'types' => EventType::query()->active()->orderBy('sort_order')->get(),
             'selectedType' => is_string($typeKey) ? $typeKey : '',
-            'timezone' => $this->displayTimezone(),
         ]);
     }
 
@@ -111,7 +110,6 @@ class EventController extends Controller
             'event' => $event,
             'descriptionHtml' => $this->contentRenderer->render($event->description),
             'comments' => $comments,
-            'timezone' => $this->displayTimezone(),
         ]);
     }
 
@@ -122,7 +120,8 @@ class EventController extends Controller
         return view('events.create', [
             'event' => new Event,
             'types' => EventType::query()->active()->orderBy('sort_order')->get(),
-            'timezone' => $this->displayTimezone(),
+            'timezoneOptions' => TimezoneOptions::options(),
+            'defaultTimezone' => $this->defaultTimezone(),
         ]);
     }
 
@@ -142,7 +141,8 @@ class EventController extends Controller
         return view('events.edit', [
             'event' => $event,
             'types' => EventType::query()->active()->orderBy('sort_order')->get(),
-            'timezone' => $this->displayTimezone(),
+            'timezoneOptions' => TimezoneOptions::options(),
+            'defaultTimezone' => $event->timezone ?: $this->defaultTimezone(),
         ]);
     }
 
@@ -170,8 +170,8 @@ class EventController extends Controller
             ->with('status', 'Событие отменено.');
     }
 
-    private function displayTimezone(): string
+    private function defaultTimezone(): string
     {
-        return $this->settings->string('timezone_display', 'Europe/Moscow');
+        return app(TimezoneResolver::class)->resolve(request()->user());
     }
 }

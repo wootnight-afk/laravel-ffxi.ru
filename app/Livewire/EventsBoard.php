@@ -6,7 +6,6 @@ use App\Enums\EventParticipantStatus;
 use App\Enums\EventStatus;
 use App\Models\Event;
 use App\Models\EventType;
-use App\Services\SettingsRepository;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
@@ -14,7 +13,7 @@ class EventsBoard extends Component
 {
     public string $type = '';
 
-    public function render(SettingsRepository $settings): View
+    public function render(): View
     {
         $query = Event::query()
             ->where('status', EventStatus::Planned)
@@ -35,7 +34,6 @@ class EventsBoard extends Component
         return view('livewire.events-board', [
             'events' => $query->get(),
             'types' => EventType::query()->active()->orderBy('sort_order')->get(),
-            'timezone' => $settings->string('timezone_display', 'Europe/Moscow'),
         ]);
     }
 }

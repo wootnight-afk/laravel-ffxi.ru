@@ -1,7 +1,7 @@
 <article class="news-item" style="padding: 18px; border: 1px solid var(--border-color); border-radius: 8px;">
     <div class="news-meta" style="margin-bottom: 8px;">
         <span>{{ $event->type?->icon }} {{ $event->type?->title ?? 'Событие' }}</span>
-        <span>{{ $event->starts_at->copy()->setTimezone($timezone)->format('d.m.Y H:i') }}</span>
+        <span>@include('events._time', ['event' => $event])</span>
     </div>
     <h2 style="font-size: 18px; margin: 0 0 8px;">
         <a href="{{ route('events.show', $event) }}">{{ $event->title }}</a>

@@ -22,7 +22,7 @@
                     {{ $news->user?->name ?? 'Автор' }}
                 @endif
             </span>
-            <span>{{ $news->published_at?->format('d.m.Y') ?? '—' }}</span>
+            <span>{{ $news->displayPublishedAt() }}</span>
         </div>
 
         <div class="content-text">

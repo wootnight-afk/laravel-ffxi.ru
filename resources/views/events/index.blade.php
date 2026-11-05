@@ -31,7 +31,7 @@
     @else
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px;">
             @foreach ($events as $event)
-                @include('events._card', ['event' => $event, 'timezone' => $timezone])
+                @include('events._card', ['event' => $event])
             @endforeach
         </div>
 

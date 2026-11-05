@@ -455,6 +455,7 @@ return [
                 'type' => 'Тип',
                 'description' => 'Описание (Markdown)',
                 'location' => 'Место',
+                'timezone' => 'Часовой пояс',
                 'starts_at' => 'Начало',
                 'duration_minutes' => 'Длительность (минуты)',
                 'max_participants' => 'Максимум участников',

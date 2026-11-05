@@ -40,7 +40,7 @@
 
     <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">
         @if ($photo->taken_at)
-            Снято: {{ $photo->taken_at->format('d.m.Y') }}
+            Снято: <x-naive-date :value="$photo->taken_at" />
         @endif
         @if ($photo->width && $photo->height)
             · {{ $photo->width }}×{{ $photo->height }}

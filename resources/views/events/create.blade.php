@@ -7,7 +7,8 @@
     @include('events._form', [
         'event' => $event,
         'types' => $types,
-        'timezone' => $timezone,
+        'timezoneOptions' => $timezoneOptions,
+        'defaultTimezone' => $defaultTimezone,
         'action' => route('events.store'),
         'method' => 'POST',
     ])

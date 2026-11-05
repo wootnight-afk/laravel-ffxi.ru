@@ -240,22 +240,47 @@ it('enforces the participant limit between two and one hundred', function (int $
     'too high' => [101],
 ]);
 
-it('converts entered display time to UTC and displays it in the configured timezone', function () {
-    app(SettingsRepository::class)->set('timezone_display', 'Europe/Moscow');
+it('converts the declared local event time to UTC and displays UTC first', function () {
     $leader = d22User();
+    $leader->forceFill(['timezone' => 'Europe/Moscow'])->save();
     $type = d22Type();
 
     $this->actingAs($leader)->post(route('events.store'), [
         'type_id' => $type->id,
         'title' => 'Timezone event',
         'description' => 'An event used to verify timezone conversion.',
+        'timezone' => 'Europe/Moscow',
         'starts_at' => '2030-01-01T12:00',
     ])->assertRedirect();
 
     $event = Event::query()->where('title', 'Timezone event')->firstOrFail();
 
-    expect($event->starts_at->copy()->setTimezone('UTC')->format('Y-m-d H:i'))->toBe('2030-01-01 09:00');
-    $this->get(route('events.show', $event))->assertSee('01.01.2030 12:00');
+    expect($event->timezone)->toBe('Europe/Moscow')
+        ->and($event->starts_at->copy()->setTimezone('UTC')->format('Y-m-d H:i'))->toBe('2030-01-01 09:00');
+
+    $this->get(route('events.show', $event))->assertSee('01.01.2030 09:00 (UTC)');
+});
+
+it('shows the viewer local time next to UTC when the viewer timezone is known', function () {
+    $event = d22Event(d22User(), [
+        'timezone' => 'Europe/Moscow',
+        'starts_at' => '2030-01-01 09:00:00',
+    ]);
+
+    $this->withUnencryptedCookie('tz', 'Europe/Berlin')
+        ->get(route('events.show', $event))
+        ->assertOk()
+        ->assertSee('01.01.2030 09:00 (UTC)')
+        ->assertSee('10:00 Europe/Berlin');
+});
+
+it('shows only UTC for an event without a declared timezone', function () {
+    $event = d22Event(d22User());
+
+    $this->withUnencryptedCookie('tz', 'Europe/Berlin')
+        ->get(route('events.show', $event))
+        ->assertOk()
+        ->assertDontSee('Europe/Berlin');
 });
 
 it('allows the leader to edit an upcoming event', function () {

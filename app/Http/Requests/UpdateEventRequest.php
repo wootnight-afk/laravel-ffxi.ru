@@ -39,6 +39,7 @@ class UpdateEventRequest extends FormRequest
             'title' => ['sometimes', 'required', 'string', 'max:150'],
             'description' => ['sometimes', 'required', 'string', 'max:10000'],
             'location' => ['sometimes', 'nullable', 'string', 'max:120'],
+            'timezone' => ['sometimes', 'required', 'string', 'max:64', 'timezone'],
             'starts_at' => ['sometimes', 'required', 'date', 'after:now'],
             'duration_minutes' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:65535'],
             'max_participants' => ['sometimes', 'nullable', 'integer', 'min:2', 'max:100'],

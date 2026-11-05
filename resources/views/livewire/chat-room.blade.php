@@ -12,6 +12,10 @@
     x-on:chat-history-loaded.window="$nextTick(() => { $refs.messages.scrollTop = $refs.messages.scrollHeight - previousHeight })"
     x-on:chat-new-messages.window="if ($event.detail.scroll) scrollToEnd()"
 >
+    @php
+        $viewerTimezone = app(\App\Services\TimezoneResolver::class)->resolve(auth()->user());
+    @endphp
+
     <header class="community-chat__header">
         <h2 class="section-title">Общий чат</h2>
     </header>
@@ -22,7 +26,7 @@
             @if (auth()->user()->chat_banned_permanently)
                 навсегда.
             @else
-                до {{ auth()->user()->chat_banned_until->timezone(config('app.timezone'))->format('d.m.Y H:i') }}.
+                до <x-datetime :value="auth()->user()->chat_banned_until" />.
             @endif
         </p>
     @endif
@@ -44,12 +48,12 @@
             @endphp
             @foreach ($messages as $message)
                 @php
-                    $messageDate = $message->created_at->toDateString();
-                    $dateLabel = $message->created_at->isToday()
-                        ? 'Сегодня'
-                        : ($message->created_at->isYesterday()
-                            ? 'Вчера'
-                            : $message->created_at->format('d.m.Y'));
+                    $messageDate = $message->created_at->copy()->setTimezone($viewerTimezone)->toDateString();
+                    $dateLabel = \App\Support\DateFormat::localDayLabel(
+                        $message->created_at,
+                        $viewerTimezone,
+                        app()->getLocale(),
+                    );
                 @endphp
 
                 @if ($messageDate !== $previousDate)
@@ -90,9 +94,7 @@
                             </span>
                         @endif
 
-                        <time class="news-meta" datetime="{{ $message->created_at->toIso8601String() }}">
-                            {{ $message->created_at->format('H:i') }}
-                        </time>
+                        <x-datetime :value="$message->created_at" format="time" class="news-meta" />
                     </div>
 
                     @if ($canModerate)

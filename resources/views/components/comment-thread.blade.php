@@ -22,7 +22,7 @@
                             {{ $comment->user?->name ?? '[аккаунт удалён]' }}
                         </strong>
                         <span style="color: var(--text-muted);">
-                            · {{ $comment->created_at->format('d.m.Y H:i') }}
+                            · <x-datetime :value="$comment->created_at" />
                             @if ($comment->edited_at)
                                 · <em>(изменён)</em>
                             @endif
@@ -88,7 +88,7 @@
                             <div style="padding: 8px 0;">
                                 <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">
                                     <strong>{{ $reply->user?->name ?? '[аккаунт удалён]' }}</strong>
-                                    · {{ $reply->created_at->format('d.m.Y H:i') }}
+                                    · <x-datetime :value="$reply->created_at" />
                                 </div>
                                 <div style="font-size: 14px; line-height: 1.6; white-space: pre-wrap;">{{ $reply->body }}</div>
                             </div>

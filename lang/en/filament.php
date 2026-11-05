@@ -455,6 +455,7 @@ return [
                 'type' => 'Type',
                 'description' => 'Description (Markdown)',
                 'location' => 'Location',
+                'timezone' => 'Timezone',
                 'starts_at' => 'Start',
                 'duration_minutes' => 'Duration (minutes)',
                 'max_participants' => 'Maximum participants',

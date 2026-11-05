@@ -35,6 +35,7 @@ class StoreEventRequest extends FormRequest
             'title' => ['required', 'string', 'max:150'],
             'description' => ['required', 'string', 'max:10000'],
             'location' => ['nullable', 'string', 'max:120'],
+            'timezone' => ['required', 'string', 'max:64', 'timezone'],
             'starts_at' => ['required', 'date', 'after:now'],
             'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:65535'],
             'max_participants' => ['nullable', 'integer', 'min:2', 'max:100'],

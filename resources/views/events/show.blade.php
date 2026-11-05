@@ -6,7 +6,7 @@
     <article class="news-item">
         <p class="news-meta">
             {{ $event->type?->icon }} {{ $event->type?->title ?? 'Событие' }}
-            · {{ $event->starts_at->copy()->setTimezone($timezone)->format('d.m.Y H:i') }}
+            · @include('events._time', ['event' => $event])
             @if ($event->duration_minutes)
                 · {{ $event->duration_minutes }} мин.
             @endif
@@ -20,7 +20,7 @@
 
         @if ($event->registration_close)
             <p class="news-meta">
-                Регистрация до {{ $event->registration_close->copy()->setTimezone($timezone)->format('d.m.Y H:i') }}
+                Регистрация до @include('events._time', ['event' => $event, 'value' => $event->registration_close])
             </p>
         @endif
 
