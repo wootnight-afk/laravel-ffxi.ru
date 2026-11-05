@@ -6,6 +6,48 @@
 
 ## [Unreleased]
 
+### L2 ADR-011 — резолверы, cookie и middleware (в рабочем дереве, без commit)
+
+Переключение языка и определение часового пояса. Миграций нет.
+
+- **Новые классы:** `App\Services\LocaleResolver` (auth: `users.locale` →
+  session → cookie `locale` → `Accept-Language` → `ru`; гость: session →
+  cookie → `Accept-Language` → `ru`; невалидные значения игнорируются; вне
+  HTTP — `ru`); `App\Services\TimezoneResolver` (`users.timezone` → cookie
+  `tz` → `UTC`, `isFallback()`, валидация IANA, session не используется, вне
+  HTTP — `UTC`); `App\Http\Middleware\SetLocale`;
+  `App\Http\Controllers\LocaleController`; `App\Support\LocaleCookie`.
+  `TimezoneResolver` зарегистрирован singleton в `AppServiceProvider` —
+  `resolve()` и `isFallback()` описывают одно разрешение в рамках запроса
+  (дефект D2 из аудита L2).
+- **Маршрут:** `POST /locale` (`locale.update`) — `throttle:30,60`. Гость:
+  session + cookie; авторизованный: сначала `users.locale`, затем session и
+  cookie; при ошибке записи session и cookie не меняются.
+- **Middleware:** `SetLocale` подключён в `web` после `IdentifyGuest`;
+  `SetAdminPanelLocale` переведён на общий резолвер (жёсткий `ru` убран,
+  `persistentMiddleware` сохранён).
+- **Cookie:** `locale` (сервер) и `tz` (JavaScript,
+  `Intl.DateTimeFormat().resolvedOptions().timeZone`) — plain, 1 год,
+  path `/`, `SameSite=Lax`; исключены из шифрования в `bootstrap/app.php`.
+  «Авто» в профиле удаляет cookie `locale`.
+- **UI:** `resources/views/components/language-switcher.blade.php` — POST-форма
+  без JavaScript, встроена в шапку; `<html lang>` выводится из локали; блок
+  `.locale-switcher` в `resources/css/app.css`.
+- **Админка:** `lang/en/filament.php` — английский аналог
+  `lang/ru/filament.php` (та же структура, 388 ключей);
+  `lang/ru/filament.php` и Filament-ресурсы не изменялись.
+- **Профиль:** сообщения `PreferencesController` для `locale`
+  актуализированы; сообщения `timezone` оставлены до L3.
+- **Тесты:** `tests/Feature/Localization/LocaleResolutionTest.php`,
+  `LocaleSwitchTest.php`, `TimezoneResolutionTest.php` — 36 тестов /
+  159 assertions. `tests/TestCase.php` объявляет `Accept-Language: ru-RU`
+  по умолчанию (тестовый клиент Symfony подставляет `en-us`).
+  Полный прогон: 852 passed, 5 failed — те же предсуществующие падения
+  (ADR-010), к L2 не относятся.
+- **Не затронуто:** `app.timezone` (`UTC`), `.env`, миграции, MFA, роли,
+  доступ к разделам, механика отображения дат.
+- **Далее:** L3–L6 — NOT STARTED.
+
 ### L1 ADR-011 — поля локали и часового пояса (DONE / ACCEPTED)
 
 Этап L1 завершён и принят 2026-11-05. Реализация — только хранение

@@ -4,6 +4,7 @@ use App\Http\Middleware\IdentifyGuest;
 use App\Http\Middleware\RegistrationOpen;
 use App\Http\Middleware\RequireMfa;
 use App\Http\Middleware\SectionAccess;
+use App\Http\Middleware\SetLocale;
 use App\Jobs\DispatchEventRemindersJob;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
@@ -37,15 +38,22 @@ return Application::configure(basePath: dirname(__DIR__))
             ->withoutOverlapping();
     })
     ->withMiddleware(function (Middleware $middleware): void {
-        // The cookie banner acknowledgement is written by JavaScript as a plain
-        // (unencrypted) cookie, so it must be excluded from cookie encryption —
-        // otherwise EncryptCookies fails to decrypt it and drops the value.
+        // The cookie banner acknowledgement and the localization cookies are
+        // written as plain (unencrypted) values: the banner flag by JavaScript,
+        // `locale` by the server and `tz` by JavaScript. They must be excluded
+        // from cookie encryption — otherwise EncryptCookies fails to decrypt
+        // them and drops the value (ADR-011 §9 L2).
         $middleware->encryptCookies(except: [
             'cookie_banner_ack',
+            'locale',
+            'tz',
         ]);
 
+        // SetLocale runs after IdentifyGuest: the session is already started and
+        // the resolved locale can rely on session, cookie and Accept-Language.
         $middleware->web(append: [
             IdentifyGuest::class,
+            SetLocale::class,
         ]);
 
         $middleware->alias([

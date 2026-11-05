@@ -28,6 +28,30 @@ function initCookieBanner() {
 }
 
 // ---------------------------------------------------------------------
+// Browser timezone cookie
+// ---------------------------------------------------------------------
+// The server reads `tz` on every render (ADR-011 §2.3), so the browser zone is
+// stored as a plain cookie (excluded from cookie encryption). No reload is
+// performed: the first request of a new visitor is served in UTC, the next one
+// already uses the browser timezone.
+
+const TZ_COOKIE = 'tz';
+
+function initTimezoneCookie() {
+    try {
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+        if (!timezone) {
+            return;
+        }
+
+        document.cookie = `${TZ_COOKIE}=${encodeURIComponent(timezone)}; path=/; max-age=31536000; SameSite=Lax`;
+    } catch (e) {
+        // Intl unavailable — the server keeps the UTC fallback.
+    }
+}
+
+// ---------------------------------------------------------------------
 // Theme toggle
 // ---------------------------------------------------------------------
 // The initial theme is applied by the inline anti-FOUC script in the layout
@@ -239,6 +263,7 @@ function initNicknameCheck() {
 
 function initPublicScripts() {
     initCookieBanner();
+    initTimezoneCookie();
     initThemeToggle();
     initPhotoZoom();
     initNicknameCheck();

@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateLocalePreferenceRequest;
 use App\Http\Requests\UpdateTimezonePreferenceRequest;
 use App\Models\User;
 use App\Services\LocalePreference;
+use App\Support\LocaleCookie;
 use Illuminate\Http\RedirectResponse;
 use Throwable;
 
@@ -38,10 +39,17 @@ class PreferencesController extends Controller
         }
 
         $message = $locale === null
-            ? 'Выбран автоматический язык интерфейса. Настройка сохранена; применение будет включено на следующем этапе.'
-            : 'Язык интерфейса сохранён. Переключение языка будет включено на следующем этапе.';
+            ? 'Выбран автоматический язык интерфейса: применяется язык браузера.'
+            : 'Язык интерфейса сохранён и применён.';
 
-        return $this->profileRedirect()->with('status', $message);
+        // Keep the plain `locale` cookie in sync with the stored preference;
+        // "auto" removes it so a stale guest value cannot override
+        // Accept-Language (ADR-011 §2.2).
+        return $this->profileRedirect()
+            ->with('status', $message)
+            ->withCookie($locale === null
+                ? LocaleCookie::forget()
+                : LocaleCookie::make($locale, $request->isSecure()));
     }
 
     public function updateTimezone(UpdateTimezonePreferenceRequest $request): RedirectResponse

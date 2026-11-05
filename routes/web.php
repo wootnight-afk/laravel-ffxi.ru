@@ -18,6 +18,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventParticipantController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MfaChallengeController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\PageController;
@@ -34,6 +35,12 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/cookie', fn () => view('cookie'))->name('cookie');
 Route::get('/privacy', fn () => view('privacy'))->name('privacy');
+
+// Explicit interface language switch (ADR-011 §2.2). POST only, so the
+// catch-all page route at the bottom of this file cannot shadow it.
+Route::post('/locale', LocaleController::class)
+    ->middleware('throttle:30,60')
+    ->name('locale.update');
 
 Route::get('/news', [NewsController::class, 'index'])
     ->middleware('section.access:news')

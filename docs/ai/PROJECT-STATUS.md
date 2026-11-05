@@ -1,10 +1,12 @@
 # Project Status — laravel-ffxi.ru
 
 ## HEAD
-`814d468` на ветке `main` (home page & news page content editors). E10.1
-(`68f5eae`), E10.2 (`c65e1f7`), E10.3 (`b0c68d9`), E10.4 (`5274ed5`), E10.5
-(`15f084a`), E10.5b (`bf6a551`) — закоммичены. Stage 9 закрыт `bb3bbf7`.
-ADR-011 L1 — в рабочем дереве, без commit (DONE / ACCEPTED 2026-11-05).
+`e6099e9` на ветке `main` (ADR-011 L1 — locale and timezone storage),
+опубликован в `origin/main`. E10.1 (`68f5eae`), E10.2 (`c65e1f7`), E10.3
+(`b0c68d9`), E10.4 (`5274ed5`), E10.5 (`15f084a`), E10.5b (`bf6a551`) —
+закоммичены. Stage 9 закрыт `bb3bbf7`.
+ADR-011 L2 — в рабочем дереве, без commit (реализация завершена, ожидает
+проверки владельца).
 
 ## Прогресс по этапам (§30 context.md)
 
@@ -312,10 +314,11 @@ ADR-011 L1 — в рабочем дереве, без commit (DONE / ACCEPTED 20
   В production effective policy форсирует оба инварианта независимо от БД.
 - Порядок: E10.1 → E10.2 → E10.3 → E10.4 → E10.5 → E10.5b → E10.6 → E10.7 → E10.8.
 
-## Локализация и часовые пояса — ADR-011 (L1 DONE / ACCEPTED; L2–L6 NOT STARTED)
+## Локализация и часовые пояса — ADR-011 (L1 DONE / ACCEPTED; L2 DONE, ожидает проверки; L3–L6 NOT STARTED)
 
 - `docs/adr/ADR-011-localization-and-timezones.md` — **Partially accepted**:
-  L0 — DONE; **L1 — DONE / ACCEPTED (2026-11-05)**; L2–L6 — NOT STARTED.
+  L0 — DONE; **L1 — DONE / ACCEPTED (2026-11-05)**;
+  **L2 — реализовано, ожидает проверки владельца**; L3–L6 — NOT STARTED.
   Архитектура: независимость языка интерфейса и часового пояса; три
   семантики времени (календарная дата / локальный момент / международное
   UTC); пояс: `users.timezone` → cookie `tz` (IANA браузера) → `UTC`;
@@ -343,6 +346,46 @@ ADR-011 L1 — в рабочем дереве, без commit (DONE / ACCEPTED 20
   при невалидных сохранённых значениях; `Locale::from()` вне `try`;
   расхождение перечня файлов L1; неполное покрытие ветки `forget`;
   `old()` после ошибки БД; стоимость построения списка поясов.
+- **L2 — реализовано (в рабочем дереве, без commit):**
+  - `App\Services\LocaleResolver` — auth: `users.locale` → session → cookie
+    `locale` → `Accept-Language` → `ru`; гость: session → cookie →
+    `Accept-Language` → `ru`; невалидные значения игнорируются; вне HTTP
+    (CLI, queue, scheduler) — `ru`;
+  - `App\Services\TimezoneResolver` — `users.timezone` → cookie `tz` → `UTC`,
+    `isFallback()`; валидация через `TimezoneOptions::isValid()`; session не
+    используется; вне HTTP — `UTC`; зарегистрирован singleton, чтобы
+    `resolve()` и `isFallback()` описывали одно разрешение (D2 аудита);
+  - `App\Http\Middleware\SetLocale` — подключён в `web` после
+    `IdentifyGuest`; `SetAdminPanelLocale` переведён на общий резолвер
+    (остаётся в `persistentMiddleware`, жёсткий `ru` убран);
+  - `App\Http\Controllers\LocaleController` + `POST /locale`
+    (`locale.update`, `throttle:30,60`): гость — session + cookie; auth —
+    `users.locale` → session → cookie; при ошибке записи session и cookie
+    не меняются;
+  - `App\Support\LocaleCookie` — plain-cookie `locale` (1 год, path `/`,
+    `SameSite=Lax`, `HttpOnly`); «Авто» в профиле удаляет cookie;
+  - `bootstrap/app.php` — `encryptCookies(except: ['cookie_banner_ack',
+    'locale', 'tz'])`;
+  - `resources/js/app.js` — cookie `tz` из
+    `Intl.DateTimeFormat().resolvedOptions().timeZone` (1 год, plain, без
+    перезагрузки);
+  - `resources/views/components/language-switcher.blade.php` — POST-форма
+    без JS, встроена в `.header-right`; `<html lang>` из локали;
+    CSS-блок `.locale-switcher`;
+  - `lang/en/filament.php` — английский аналог `lang/ru/filament.php`
+    (388 ключей, структура совпадает); `lang/ru/filament.php` не изменялся;
+  - `PreferencesController` — сообщения для `locale` актуализированы;
+    сообщения `timezone` оставлены до L3;
+  - тесты: `tests/Feature/Localization/{LocaleResolutionTest,
+    LocaleSwitchTest, TimezoneResolutionTest}.php` — 36 тестов /
+    159 assertions; `tests/TestCase.php` объявляет `Accept-Language: ru-RU`
+    по умолчанию (тестовый клиент Symfony подставляет `en-us`), чтобы
+    Filament-тесты оставались детерминированными;
+  - полный Pest — 852 passed, 5 failed (те же предсуществующие падения
+    ADR-010); Pint — 1 предсуществующая ошибка (`HomeImageUploader.php`);
+    Larastan — 1 предсуществующая ошибка (`NewsPage.php:186`);
+  - `app.timezone` (`UTC`), `.env`, миграции, MFA, роли и доступ к разделам
+    не изменялись.
 - **В dev-БД** миграции L1 применены адресно (`--path`), обычный `migrate`
   не запускался; 5 существующих пользователей — `locale`/`timezone` `NULL`,
   данные не переписывались; `restore_requests` не затронута (её миграция
@@ -366,10 +409,10 @@ ADR-011 L1 — в рабочем дереве, без commit (DONE / ACCEPTED 20
   по локали. `timezone_display` — legacy, не удаляется до проверки всех
   читателей.
 - **Этапы:** L0 документация — DONE → **L1 миграции и профиль — DONE /
-  ACCEPTED** → L2 резолверы и cookie — NOT STARTED → L3 компоненты и
-  разделы — NOT STARTED → L4 Filament (`FilamentTimezone` + UTC-pin) —
-  NOT STARTED → L5 полная локализация RU/EN — NOT STARTED → L6 тесты и
-  приёмка — NOT STARTED. L7 (URL-префиксы) — отложено.
+  ACCEPTED** → **L2 резолверы и cookie — DONE, ожидает проверки** →
+  L3 компоненты и разделы — NOT STARTED → L4 Filament (`FilamentTimezone` +
+  UTC-pin) — NOT STARTED → L5 полная локализация RU/EN — NOT STARTED →
+  L6 тесты и приёмка — NOT STARTED. L7 (URL-префиксы) — отложено.
 - **Открытые вопросы:** нет — вопросы ADR-011 §8 закрыты владельцем
   2026-11-04.
 
@@ -383,8 +426,9 @@ ADR-011 L1 — в рабочем дереве, без commit (DONE / ACCEPTED 20
    следующий шаг — E10.6 (Filament MFA integration / removal of competing
    enforcement).
 3. ADR-011 — локализация и часовые пояса — **L1 DONE / ACCEPTED**
-   (2026-11-05); L2–L6 NOT STARTED. Следующий шаг — L2 (резолверы, cookie,
-   middleware) — только после отдельного разрешения владельца.
+   (2026-11-05), L1 опубликован (`e6099e9`); **L2 реализован в рабочем
+   дереве и ожидает проверки владельца**; L3–L6 NOT STARTED. Следующий
+   шаг — приёмка L2, затем L3.
 4. Stage 10 — Tests (§9) — NOT STARTED, ожидает отдельного решения после
    локальной проверки проекта владельцем.
 5. Stages 11–15 — по §30 context.md (CI, staging, deployment, production,

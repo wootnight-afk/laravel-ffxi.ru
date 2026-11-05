@@ -531,6 +531,48 @@ body>header {
     flex-shrink: 0;
 }
 
+/* Language switcher: two submit buttons, no JavaScript required. */
+.locale-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.locale-switcher__option {
+    padding: 5px 8px;
+    border: none;
+    border-radius: 999px;
+    background: none;
+    color: var(--text-header);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.locale-switcher__option:hover {
+    background-color: rgba(255, 255, 255, 0.14);
+    color: #fff;
+}
+
+.locale-switcher__option.is-active {
+    background-color: #f0d87a;
+    color: #1a1a1a;
+    cursor: default;
+}
+
+.locale-switcher__option.is-active:hover {
+    background-color: #f0d87a;
+    color: #1a1a1a;
+}
+
 .theme-toggle {
     width: 36px;
     height: 36px;

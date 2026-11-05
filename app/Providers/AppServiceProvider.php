@@ -11,6 +11,7 @@ use App\Policies\RolePolicy;
 use App\Services\Backup\LocalBackupStorage;
 use App\Services\HtmlSanitizer;
 use App\Services\SettingsRepository;
+use App\Services\TimezoneResolver;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
@@ -28,6 +29,13 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->singleton(HtmlSanitizer::class);
         $this->app->singleton(SettingsRepository::class);
+
+        // The timezone resolver keeps the source of the last resolution so that
+        // isFallback() can be asked separately from resolve() (ADR-011 §2.3).
+        // A shared instance per request keeps both answers consistent when the
+        // resolver is pulled from the container in different places (L3 will
+        // render several timestamps per page).
+        $this->app->singleton(TimezoneResolver::class);
 
         // Backup subsystem (Stage 9). The storage abstraction is bound to the
         // local disk implementation so BackupService can be resolved from the

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -39,6 +39,8 @@
         </nav>
 
         <div class="header-right">
+            <x-language-switcher />
+
             <button type="button" class="theme-toggle" data-theme-toggle aria-label="Переключить тему">
                 <span class="theme-toggle__icon" data-theme-icon="light">☀</span>
                 <span class="theme-toggle__icon" data-theme-icon="dark">🌙</span>
