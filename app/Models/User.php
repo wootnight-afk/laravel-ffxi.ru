@@ -38,6 +38,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $marketing_consent_at
  * @property string|null $app_authentication_secret
  * @property array<string>|null $app_authentication_recovery_codes
+ * @property string|null $locale
+ * @property string|null $timezone
  */
 #[Fillable([
     'name', 'email', 'email_verified_at', 'password',
@@ -47,6 +49,7 @@ use Spatie\Permission\Traits\HasRoles;
     'chat_banned_until', 'chat_banned_permanently', 'banned_until', 'ban_reason',
     'status', 'deletion_requested_at', 'deletion_reason', 'suspended_at', 'suspension_reason',
     'pd_consent_at', 'pd_policy_version', 'marketing_consent_at',
+    'locale', 'timezone',
 ])]
 #[Hidden(['password', 'remember_token', 'app_authentication_secret', 'app_authentication_recovery_codes'])]
 class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, MustVerifyEmail

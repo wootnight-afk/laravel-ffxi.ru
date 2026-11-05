@@ -6,6 +6,96 @@
 
 ## [Unreleased]
 
+### L1 ADR-011 — поля локали и часового пояса (DONE / ACCEPTED)
+
+Этап L1 завершён и принят 2026-11-05. Реализация — только хранение
+предпочтений; переключение языка и применение пояса к датам не входят в L1.
+
+- **Миграции:** `0001_01_01_000025_add_locale_timezone_to_users_table.php` —
+  `users.locale` `varchar(16) null`, `users.timezone` `varchar(64) null`;
+  `0001_01_01_000026_add_timezone_to_events_table.php` — `events.timezone`
+  `varchar(64) null`. Без default и backfill; `down()` — `dropColumn`.
+  В dev-БД применены адресно (`--path`), существующие данные не
+  переписывались.
+- **Модели:** `User` — `locale`, `timezone` в `#[Fillable]` и `@property`;
+  `Event` — `timezone`. Без casts.
+- **Новые классы:** `App\Enums\Locale` (`ru`/`en`, единый источник
+  допустимых значений); `App\Services\TimezoneOptions` (`identifiers()`,
+  `grouped()`, `options()`, `label()`, `offset()`, `isValid()`);
+  `App\Services\LocalePreference` (сначала запись в БД, затем session;
+  ошибка БД не меняет session); `UpdateLocalePreferenceRequest`,
+  `UpdateTimezonePreferenceRequest`, `PreferencesController`.
+- **Маршруты:** `POST /cabinet/preferences/locale`
+  (`cabinet.preferences.locale`), `POST /cabinet/preferences/timezone`
+  (`cabinet.preferences.timezone`) — в группе `auth` + `verified`.
+- **Профиль:** блок «Язык и часовой пояс» — две независимые формы,
+  значение из БД, «Авто» = пустое значение, невалидные сохранённые
+  значения показываются отдельной опцией и не сбрасываются.
+  `UpdateProfileRequest` и основная форма профиля не изменялись.
+- **Админка:** `UserResource` — поля `locale` и `timezone` (nullable,
+  «Авто», валидация `in:ru,en` / `timezone`, grouped options);
+  `lang/ru/filament.php` — подписи, подсказки и сообщения. Editor доступа
+  к `UserResource` не получил.
+- **Тесты:** `tests/Feature/Cabinet/PreferencesTest.php`,
+  `tests/Feature/Filament/UserLocaleTimezoneTest.php`,
+  `tests/Unit/LocaleAndTimezoneOptionsTest.php` — 40 тестов /
+  172 assertions. Полный прогон: 816 passed, 5 failed — предсуществующее
+  расхождение тестов с ADR-010 (`65f9ca4`), к L1 не относится.
+- **Принятые ограничения (P1–P8):** отсутствие явной проверки в
+  `LocalePreference`; возможность прямого присваивания полей модели;
+  блокировка сохранения формы Filament при невалидных сохранённых
+  значениях; `Locale::from()` вне `try`; расхождение исходного перечня
+  файлов; неполное покрытие ветки `forget`; `old()` после ошибки БД;
+  стоимость построения 419 подписей поясов. Зафиксированы в ADR-011 §9,
+  L1.1; в L1 не исправлялись.
+- **Не затронуто:** `app.timezone` (`UTC`), `.env`, `bootstrap/app.php`,
+  MFA, роли, механизм отображения дат, `restore_requests`.
+- **Документация:** статусы синхронизированы — ADR-011 (Partially accepted,
+  L1 DONE / ACCEPTED, §9 L1.1), `PROJECT-STATUS.md`, `context.md` 4.1.1,
+  `frontend-spec.md` 2.0.1 (преамбула).
+- **Далее:** L2–L6 — NOT STARTED.
+
+### Docs — локализация и часовые пояса (ADR-011)
+
+Этап L0: документация подготовлена; реализации на тот момент не было.
+
+- **Новый ADR:** `docs/adr/ADR-011-localization-and-timezones.md` —
+  независимость языка интерфейса и часового пояса, три семантики времени
+  (календарная дата / локальный момент / международное UTC), источники
+  определения (профиль → cookie браузера → UTC для пояса; для языка:
+  авторизованный — `users.locale` → session → cookie → `Accept-Language` →
+  `ru`, гость — session → cookie → `Accept-Language` → `ru`), запрет
+  `date_default_timezone_set()`, UTC для аудита и backup.
+- **Уточнения после рассмотрения ADR:** `users.locale` — `varchar(16)`
+  (расширяемость без миграции); при переключении языка авторизованным
+  успех наступает только после записи `users.locale`, затем в той же
+  операции обновляется сессия (при ошибке записи сессия не меняется и
+  показывается ошибка), гостем — сессия и cookie;
+  DST-правила для событий (несуществующее и неоднозначное локальное время
+  отклоняются ошибкой валидации, произвольный UTC-момент не выбирается);
+  события с `timezone = NULL` не мигрируются и показываются только в UTC;
+  локальное время события — всем зрителям при валидном поясе; формат
+  EN-даты `Nov 04, 2026`; явный охват локализации RU/EN (что переводится и
+  что нет).
+- **Отменено:** `settings.timezone_display.ru` / `.en` и определение пояса
+  по локали (предыдущее предложение, сценарий C). `timezone_display`
+  остаётся legacy-ключом и не участвует в определении времени.
+- **`frontend-spec.md` 2.0:** новый §6.16 (включая §6.16.10 «Охват
+  локализации RU/EN»); §5.1 (`users.locale` `varchar(16)`,
+  `users.timezone`), §5.4 (`News::displayPublishedAt()`), §5.7
+  (`events.timezone`), §5.12 (legacy), §6.2, §6.4, §6.5, §6.6, §6.7,
+  §7.2, §7.3, §7.5, §9 (сценарии 31–34), §10. Статус: «FINAL» относится к
+  согласованному ТЗ, а не к реализованной функциональности.
+- **`context.md` 4.1:** §5 (UTC-хранение и новые поля), §13 (новый
+  подраздел «Локализация и часовые пояса»), §14 (часовые пояса в
+  админке). После L1 документ обновлён до 4.1.1.
+- **`adminreview.md`:** §6 (поля `locale`/`timezone`, UTC-журналы),
+  §6.1, §11, §13 (вопрос о мультиязычности закрыт).
+- **`privacy-policy-draft.md`:** cookie `locale`, `tz` в §5.1 — описаны
+  назначение и срок хранения; юридическая классификация не утверждается.
+- Код, миграции и БД на момент L0 **не изменялись**; `app.timezone = UTC`
+  сохранён (сохраняется и после L1).
+
 ### News — редактор шапки страницы `/news`
 
 - **Админка:** новая страница `App\Filament\Pages\NewsPage`

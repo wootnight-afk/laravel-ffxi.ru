@@ -15,11 +15,12 @@ use Illuminate\Support\Carbon;
 /**
  * @property Carbon $starts_at
  * @property Carbon|null $registration_close
+ * @property string|null $timezone
  * @property EventStatus $status
  */
 #[Fillable([
     'user_id', 'type_id', 'title', 'description', 'location', 'starts_at',
-    'duration_minutes', 'max_participants', 'registration_close', 'status',
+    'duration_minutes', 'max_participants', 'registration_close', 'timezone', 'status',
 ])]
 class Event extends Model
 {

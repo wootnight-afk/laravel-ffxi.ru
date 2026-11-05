@@ -37,7 +37,7 @@
         {{-- Контент таба --}}
         <div style="flex: 1; min-width: 0;">
             @if ($tab === 'profile')
-                @include('cabinet.tabs.profile', ['user' => $user])
+                @include('cabinet.tabs.profile', ['user' => $user, 'timezoneOptions' => $timezoneOptions])
             @elseif ($tab === 'social')
                 @include('cabinet.tabs.social', ['user' => $user])
             @elseif ($tab === 'news')

@@ -1,10 +1,10 @@
 # Project Status — laravel-ffxi.ru
 
 ## HEAD
-`15f084a` на ветке `main` (E10.5 — admin MFA management in settings). E10.1
+`814d468` на ветке `main` (home page & news page content editors). E10.1
 (`68f5eae`), E10.2 (`c65e1f7`), E10.3 (`b0c68d9`), E10.4 (`5274ed5`), E10.5
-(`15f084a`) — локально; E10.5b — в рабочем дереве, без commit. Stage 9 закрыт
-`bb3bbf7`.
+(`15f084a`), E10.5b (`bf6a551`) — закоммичены. Stage 9 закрыт `bb3bbf7`.
+ADR-011 L1 — в рабочем дереве, без commit (DONE / ACCEPTED 2026-11-05).
 
 ## Прогресс по этапам (§30 context.md)
 
@@ -246,7 +246,9 @@
 - Docs: `frontend-spec.md` 1.5, `context.md` 4.0.5, `adminreview.md` §6,
   `CHANGELOG.md`.
 - **TODO:** кабинет (`my-news.blade.php` — `H:i`, `MyNewsController` —
-  `now()`), таймзона `app.timezone = UTC`. Страницы «Главная» и «Новости» —
+  `now()`). Таймзона — архитектурно закрыта ADR-011: L1 (поля и профиль)
+  — DONE / ACCEPTED; отображение дат — этапы L2–L6, см. раздел
+  «Локализация и часовые пояса». Страницы «Главная» и «Новости» —
   в параллельной доработке владельцем (WIP, не баг).
 - Тесты не запускались и не добавлялись — отдельный этап.
 
@@ -310,16 +312,80 @@
   В production effective policy форсирует оба инварианта независимо от БД.
 - Порядок: E10.1 → E10.2 → E10.3 → E10.4 → E10.5 → E10.5b → E10.6 → E10.7 → E10.8.
 
+## Локализация и часовые пояса — ADR-011 (L1 DONE / ACCEPTED; L2–L6 NOT STARTED)
+
+- `docs/adr/ADR-011-localization-and-timezones.md` — **Partially accepted**:
+  L0 — DONE; **L1 — DONE / ACCEPTED (2026-11-05)**; L2–L6 — NOT STARTED.
+  Архитектура: независимость языка интерфейса и часового пояса; три
+  семантики времени (календарная дата / локальный момент / международное
+  UTC); пояс: `users.timezone` → cookie `tz` (IANA браузера) → `UTC`;
+  язык: `users.locale` → сессия → cookie `locale` → `Accept-Language` → `ru`;
+  `app.timezone = UTC` неизменен; аудит и backup — всегда UTC.
+- **L1 — реализовано и принято:**
+  - миграции `0001_01_01_000025_add_locale_timezone_to_users_table.php`
+    (`users.locale` `varchar(16) null`, `users.timezone` `varchar(64) null`)
+    и `0001_01_01_000026_add_timezone_to_events_table.php`
+    (`events.timezone` `varchar(64) null`); без default и backfill;
+  - `App\Enums\Locale`, `App\Services\TimezoneOptions`,
+    `App\Services\LocalePreference` (сначала БД, затем session),
+    `UpdateLocalePreferenceRequest`, `UpdateTimezonePreferenceRequest`,
+    `PreferencesController`;
+  - маршруты `POST /cabinet/preferences/locale` и
+    `POST /cabinet/preferences/timezone` (группа `auth` + `verified`);
+  - профиль кабинета — две независимые формы; админка — поля `locale` и
+    `timezone` в `UserResource`; `lang/ru/filament.php`;
+  - `UpdateProfileRequest` и основная форма профиля не изменялись;
+  - тесты L1: 40 passed / 172 assertions; полный Pest — 816 passed,
+    5 failed (предсуществующее расхождение с ADR-010, к L1 не относится).
+- **Принятые ограничения P1–P8** (не исправлялись, зафиксированы в
+  ADR-011 §9, L1.1): отсутствие явной проверки в `LocalePreference`;
+  прямое присваивание полей модели; блокировка сохранения формы Filament
+  при невалидных сохранённых значениях; `Locale::from()` вне `try`;
+  расхождение перечня файлов L1; неполное покрытие ветки `forget`;
+  `old()` после ошибки БД; стоимость построения списка поясов.
+- **В dev-БД** миграции L1 применены адресно (`--path`), обычный `migrate`
+  не запускался; 5 существующих пользователей — `locale`/`timezone` `NULL`,
+  данные не переписывались; `restore_requests` не затронута (её миграция
+  по-прежнему Pending).
+- **Документация:** `frontend-spec.md` 2.0.1 (новый §6.16, включая §6.16.10
+  «Охват локализации RU/EN»; преамбула синхронизирована с L1),
+  `context.md` 4.1.1 (§5, §13, §14),
+  `adminreview.md` (§6, §6.1, §11, §13),
+  `privacy-policy-draft.md` §5.1, `CHANGELOG.md`.
+- **Уточнения владельца (2026-11-04):** `users.locale` — `varchar(16)`;
+  приоритеты языка: auth — `users.locale` → session → cookie →
+  `Accept-Language` → `ru`, гость — session → cookie → `Accept-Language` →
+  `ru`; переключение авторизованным успешно только после записи
+  `users.locale`, затем обновляется сессия (при ошибке записи сессия не
+  меняется, показывается ошибка), гостем — сессия и cookie; DST-правила
+  для событий (несуществующее и неоднозначное локальное время
+  отклоняются); события с `timezone = NULL`
+  — только UTC; локальное время события — всем при валидном поясе; формат
+  EN-даты `Nov 04, 2026`.
+- **Отменено:** `settings.timezone_display.ru` / `.en` и определение пояса
+  по локали. `timezone_display` — legacy, не удаляется до проверки всех
+  читателей.
+- **Этапы:** L0 документация — DONE → **L1 миграции и профиль — DONE /
+  ACCEPTED** → L2 резолверы и cookie — NOT STARTED → L3 компоненты и
+  разделы — NOT STARTED → L4 Filament (`FilamentTimezone` + UTC-pin) —
+  NOT STARTED → L5 полная локализация RU/EN — NOT STARTED → L6 тесты и
+  приёмка — NOT STARTED. L7 (URL-префиксы) — отложено.
+- **Открытые вопросы:** нет — вопросы ADR-011 §8 закрыты владельцем
+  2026-11-04.
+
 ## Порядок дальнейшей работы
 
 1. Stage 9 — Backup / restore / rollback — DONE / ACCEPTED
    (`docs/acceptance/stage-9.md`).
 2. E10 — Unified MFA (ADR-009) — E10.1 + E10.2 + E10.3 + E10.4 запушены
    (`68f5eae`, `c65e1f7`, `b0c68d9`, `5274ed5`); E10.5 (admin MFA management) —
-   `15f084a`; E10.5b (production MFA invariant) — в рабочем дереве, без commit;
+   `15f084a`; E10.5b (production MFA invariant) — `bf6a551`;
    следующий шаг — E10.6 (Filament MFA integration / removal of competing
    enforcement).
-3. Stage 10 — Tests (§9) — NOT STARTED, ожидает отдельного решения после
+3. ADR-011 — локализация и часовые пояса — **L1 DONE / ACCEPTED**
+   (2026-11-05); L2–L6 NOT STARTED. Следующий шаг — L2 (резолверы, cookie,
+   middleware) — только после отдельного разрешения владельца.
+4. Stage 10 — Tests (§9) — NOT STARTED, ожидает отдельного решения после
    локальной проверки проекта владельцем.
-4. Stages 11–15 — по §30 context.md (CI, staging, deployment, production,
+5. Stages 11–15 — по §30 context.md (CI, staging, deployment, production,
    update UI).

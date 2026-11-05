@@ -6,6 +6,7 @@ use App\Exceptions\ImageProcessingException;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Services\AvatarUploader;
 use App\Services\ContentRenderer;
+use App\Services\TimezoneOptions;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,6 +32,7 @@ class CabinetController extends Controller
         return view('cabinet.show', [
             'user' => $user,
             'tab' => $tab,
+            'timezoneOptions' => $tab === 'profile' ? TimezoneOptions::grouped() : [],
         ]);
     }
 

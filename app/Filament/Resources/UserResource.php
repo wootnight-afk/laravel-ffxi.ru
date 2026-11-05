@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\Locale;
 use App\Enums\UserStatus;
 use App\Filament\Actions\ReAuthenticateAction;
 use App\Filament\Concerns\LogsAdminActivity;
@@ -10,6 +11,7 @@ use App\Filament\Resources\UserResource\Pages\ListUsers;
 use App\Filament\Resources\UserResource\RelationManagers\SocialLinksRelationManager;
 use App\Models\User;
 use App\Services\AdminActivityLogger;
+use App\Services\TimezoneOptions;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DateTimePicker;
@@ -23,6 +25,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\Rule;
 use UnitEnum;
 
 class UserResource extends Resource
@@ -76,11 +79,76 @@ class UserResource extends Resource
                 ->searchable()
                 ->preload()
                 ->nullable(),
+            Select::make('locale')
+                ->label(__('filament.resources.users.fields.locale'))
+                ->options(fn (?User $record): array => self::localeOptions($record))
+                ->placeholder(__('filament.resources.users.fields.locale_auto'))
+                ->helperText(__('filament.resources.users.fields.locale_help'))
+                ->nullable()
+                ->rules(['nullable', 'string', 'max:16', Rule::in(Locale::values())])
+                ->validationMessages([
+                    'in' => __('filament.resources.users.fields.locale_invalid'),
+                    'max' => __('filament.resources.users.fields.locale_max'),
+                ]),
+            Select::make('timezone')
+                ->label(__('filament.resources.users.fields.timezone'))
+                ->options(fn (?User $record): array => self::timezoneOptions($record))
+                ->placeholder(__('filament.resources.users.fields.timezone_auto'))
+                ->helperText(__('filament.resources.users.fields.timezone_help'))
+                ->searchable()
+                ->nullable()
+                ->rules(['nullable', 'string', 'max:64', 'timezone'])
+                ->validationMessages([
+                    'timezone' => __('filament.resources.users.fields.timezone_invalid'),
+                    'max' => __('filament.resources.users.fields.timezone_max'),
+                ]),
             DateTimePicker::make('email_verified_at')
                 ->label(__('filament.resources.users.fields.email_verified_at'))
                 ->seconds(false)
                 ->nullable(),
         ]);
+    }
+
+    /**
+     * Keep an unsupported stored locale visible so an admin can correct it
+     * manually instead of silently resetting it to "auto".
+     *
+     * @return array<string, string>
+     */
+    private static function localeOptions(?User $record): array
+    {
+        $options = Locale::options();
+        $current = $record?->locale;
+
+        if ($current !== null && ! in_array($current, Locale::values(), true)) {
+            $options = [
+                $current => __('filament.resources.users.fields.locale_invalid_option', ['value' => $current]),
+            ] + $options;
+        }
+
+        return $options;
+    }
+
+    /**
+     * Keep an unsupported stored timezone visible so an admin can correct it
+     * manually instead of silently resetting it to "auto".
+     *
+     * @return array<string, array<string, string>>
+     */
+    private static function timezoneOptions(?User $record): array
+    {
+        $options = TimezoneOptions::grouped();
+        $current = $record?->timezone;
+
+        if ($current !== null && ! TimezoneOptions::isValid($current)) {
+            $options = [
+                __('filament.resources.users.fields.timezone_invalid_group') => [
+                    $current => __('filament.resources.users.fields.timezone_invalid_option', ['value' => $current]),
+                ],
+            ] + $options;
+        }
+
+        return $options;
     }
 
     public static function table(Table $table): Table

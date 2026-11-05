@@ -1,6 +1,6 @@
 # ТЗ: FFXI Phoenix community portal — Laravel + Filament
 
-**Версия:** 4.0 (FINAL)
+**Версия:** 4.1.1 (FINAL)
 **Назначение:** основной технический контекст проекта.
 **Файл:** docs/ai/context.md
 **Статус:** рабочий документ, сопровождается вместе с кодом.
@@ -37,8 +37,8 @@ Tech Lead и DevOps-архитектор. Проект ведётся одним
 
 ## Что это
 
-**FFXI Phoenix community portal** — русскоязычное сообщество игроков
-Final Fantasy XI (сервер Phoenix).
+**FFXI Phoenix community portal** — сообщество игроков Final Fantasy XI
+(сервер Phoenix). Интерфейс — RU/EN (ADR-011), аудитория международная.
 
 - **Публичная часть:** новости, галерея, статические страницы, события.
 - **Сообщество (auth):** страницы игроков, каталог, дашборд (чат, события,
@@ -173,6 +173,33 @@ PHP 8.4 = dev = CI = production.
 
 MySQL 8.4, utf8mb4. Dev/CI — контейнер `mysql:8.4`; prod — MySQL Timeweb.
 SQLite запрещён.
+
+**Время в БД — всегда UTC.** `app.timezone = 'UTC'` неизменен (ADR-011).
+Все `timestamp`/`datetime` хранят момент в UTC; часовой пояс зрителя
+применяется только на границе отображения и ввода. Исключения —
+календарные метки (`news.published_at` для `scope=site`, `photos.taken_at`):
+они хранятся как введены и не конвертируются.
+
+Пользовательские предпочтения (ADR-011 §2.11) — **реализовано в L1
+(DONE / ACCEPTED)**:
+
+    users.locale    varchar(16) null   -- ru|en, NULL = авто
+    users.timezone  varchar(64) null   -- IANA, NULL = авто
+    events.timezone varchar(64) null   -- IANA, пояс объявления события
+
+Колонки созданы миграциями `0001_01_01_000025_add_locale_timezone_to_users_table`
+и `0001_01_01_000026_add_timezone_to_events_table`: `nullable`, без default
+и без backfill. Допустимые значения локали — `App\Enums\Locale`
+(`ru`, `en`).
+
+`users.locale` — `varchar(16)` (запас под будущие локали с региональным
+суффиксом); допустимые значения определяются списком
+`App\Enums\Locale` (L1), а не длиной колонки, поэтому расширение RU/EN не
+требует миграции.
+
+`settings.timezone_display` — **legacy**, в определении пользовательского
+времени не участвует, не удаляется до подтверждённого отсутствия
+читателей. `timezone_display.ru` / `.en` не вводятся.
 
 ---
 
@@ -326,6 +353,86 @@ Spatie permissions и Policies; явные запреты Policies сохран�
 
 Полная матрица и список секций — `frontend-spec.md` §4.
 
+## Локализация и часовые пояса
+
+Архитектурное решение — **ADR-011** (`docs/adr/ADR-011-localization-and-timezones.md`).
+Функциональные требования — `frontend-spec.md` §6.16.
+
+**Статус реализации (2026-11-05):** L0 — DONE; **L1 — DONE / ACCEPTED**
+(поля `users.locale`, `users.timezone`, `events.timezone`;
+`App\Enums\Locale`, `App\Services\TimezoneOptions`,
+`App\Services\LocalePreference`, FormRequest'ы, `PreferencesController`,
+два POST-маршрута в кабинете, поля в `UserResource`); L2–L6 — NOT STARTED.
+Принятые ограничения L1 (P1–P8) — ADR-011 §9, L1.1.
+
+**Инварианты:**
+
+- Язык интерфейса, локальное время пользователя и международное игровое
+  время — три независимые сущности. Пояс не выводится из локали.
+- `app.timezone = 'UTC'` не меняется. Глобальный
+  `date_default_timezone_set()` **запрещён**.
+- Хранение моментов — UTC; конвертация только при отображении и на вводе.
+- Календарные метки (`news.published_at` при `scope=site`,
+  `photos.taken_at`) не конвертируются.
+- `admin_audit_logs`, backup-журнал, системные события — всегда UTC.
+
+**Сервисы:**
+
+    App\Services\LocaleResolver    — (L2) язык: авторизованный — users.locale →
+                                     session → cookie → Accept-Language → ru;
+                                     гость — session → cookie →
+                                     Accept-Language → ru
+    App\Services\TimezoneResolver  — (L2) пояс: users.timezone → cookie tz
+                                     (IANA браузера) → UTC
+    App\Services\TimezoneOptions   — (L1) единый список IANA для UI
+                                     (подпись с текущим смещением)
+    App\Services\LocalePreference  — (L1) сохранение users.locale,
+                                     затем синхронизация session
+
+**Переключение языка (L1 — только сохранение).** Авторизованный: переключение
+считается успешным только после успешной записи `users.locale`; session
+обновляется после неё, в той же операции. При ошибке записи session **не**
+обновляется, пользователь получает сообщение об ошибке; фактическое
+применение языка к интерфейсу — L2. Гость: session и cookie `locale` (L2).
+Автоматически определённый язык в профиль не пишется.
+
+**Валидация.** `users.locale` — список поддерживаемых локалей;
+`users.timezone`, `events.timezone` и cookie `tz` — правило `timezone`
+(IANA) с fallback: локаль → `ru`, пояс → `UTC`. Одинаковая валидация для
+профиля и админки (L1), а также session и cookie (L2).
+
+**Вне HTTP-контекста** (CLI, queue, scheduler, тесты) резолверы
+возвращают `ru` / `UTC`.
+
+**Blade-компоненты** — раздельные, без параметра семантики:
+
+    <x-datetime>      — момент, конвертация в пояс зрителя
+    <x-naive-date>    — календарная метка, без конвертации
+    <x-utc-datetime>  — всегда UTC + пометка (UTC)
+
+**Filament.** `FilamentTimezone::set(fn () => TimezoneResolver::for(auth()->user()))`
+включает пояс админа для пользовательских колонок. Обязательный pin
+`->timezone('UTC')`: `news.published_at` (поле и колонка),
+`photos.taken_at`, `admin_audit_logs.created_at`, backup-журнал. `set()` и
+pin вводятся одним коммитом.
+
+**События и DST.** `starts_at`/`registration_close` — UTC; `events.timezone`
+фиксирует пояс объявления. Несуществующее локальное время (весенний
+переход) и неоднозначное (осенний переход) **отклоняются** ошибкой
+валидации — молчаливый выбор произвольного UTC-момента запрещён. События
+с `timezone = NULL` (созданные до миграции) не мигрируются и отображаются
+только в UTC. Локальное время события показывается всем зрителям, включая
+гостей, только при валидном поясе.
+
+**Охват локализации RU/EN.** Переводится: публичные страницы, кабинет,
+auth, системные сообщения, ошибки, уведомления, админ-панель Filament.
+Не переводится: пользовательский контент, названия игровых сущностей,
+админ-данные, SEO-метаданные, slug'и. Полный перечень —
+`frontend-spec.md` §6.16.10.
+
+**URL-префиксы `/ru`, `/en`** не вводятся (отдельное решение).
+**Внутриигровое время Vana'diel** — отдельная семантика, вне объёма.
+
 ## MFA
 
 Unified site-wide MFA (ADR-009; см. `docs/adr/ADR-009-unified-mfa.md`,
@@ -394,8 +501,10 @@ Policy + re-auth (пароль) + audit. ActivityLog read-only для редак
 
 - Cookie-баннер — **информирование** (без «принять/отклонить»):
   «Мы используем технические cookie для работы сайта (сессия, тема,
-  идентификатор гостя — 30 дней). Данные не передаются третьим лицам.»
-- Страница `/cookie` — полный список cookie.
+  идентификатор гостя — 30 дней, язык интерфейса, часовой пояс).
+  Данные не передаются третьим лицам.»
+- Страница `/cookie` — полный список cookie, включая `locale` и `tz`
+  (ADR-011 §2.2–2.3).
 - Страница `/privacy` — политика обработки ПД.
 - При регистрации — **два отдельных чекбокса**: «Согласен на обработку
   персональных данных» (обязательный) + «Согласен получать письма»
@@ -443,6 +552,12 @@ Policy + re-auth (пароль) + audit. ActivityLog read-only для редак
 
 Первый администратор — production-safe механизм; пароль не в Git.
 Демо-seeder отделён от production.
+
+**Часовые пояса в админке (ADR-011).** `FilamentTimezone` включается в
+`AdminPanelProvider` (пояс админа). Календарные метки и системные журналы
+закрепляются на UTC через `->timezone('UTC')`; иначе они сдвигаются
+вместе с пользовательскими колонками. Подробности — §13
+«Локализация и часовые пояса».
 
 ---
 
@@ -1050,7 +1165,9 @@ artisan) — через официальные инструменты (`composer
 ## Из adminreview.md §13
 
 3. RichEditor: TinyMCE / Tiptap / встроенный Filament?
-4. Мультиязычность в админке: нужна или только RU?
+4. ~~Мультиязычность в админке: нужна или только RU?~~ — **закрыто**
+   ADR-011: интерфейс RU/EN, `users.locale`, тот же `LocaleResolver`
+   (fallback `ru`); URL-префиксы не вводятся.
 5. Экспорт данных: CSV / XLSX / визуальная заглушка?
 
 ## Из ТЗ v4.0
@@ -1080,6 +1197,25 @@ Settings (key-value), Хранение аватаров (storage/app/public/avat
 ---
 
 # ИСТОРИЯ ВЕРСИЙ
+
+**4.1.1 (ADR-011 L1: DONE / ACCEPTED)** — §5: зафиксировано, что колонки
+`users.locale` (`varchar(16)`), `users.timezone`, `events.timezone` созданы
+миграциями L1 (`nullable`, без default/backfill), допустимые локали —
+`App\Enums\Locale`. §13: добавлен статус реализации (L0/L1 — DONE;
+L2–L6 — NOT STARTED) и перечень принятых ограничений L1 (P1–P8).
+Версия документа — 4.1.1; стек не изменён.
+
+**4.1 (ADR-011: локализация и часовые пояса)** — §5: зафиксировано
+хранение моментов в UTC, перечислены `users.locale` (`varchar(16)`),
+`users.timezone`, `events.timezone`; `settings.timezone_display` помечен
+legacy. §13: новый подраздел «Локализация и часовые пояса»
+(независимость locale/timezone, раздельные приоритеты `LocaleResolver`
+для авторизованного и гостя, синхронизация выбора, `TimezoneResolver`,
+`TimezoneOptions`, три семантики, Blade-компоненты, `FilamentTimezone` +
+UTC-pin, DST-правила для событий, охват локализации RU/EN, запрет
+`date_default_timezone_set()`, URL-префиксы вне объёма). §14 — заметка о
+часовых поясах в админке. Версия спецификации 4.0 (FINAL) сохраняется;
+стек не изменён.
 
 **4.0.5 (doc-reconciliation, стек не изменён)** — §11: из состава задач
 scheduler'а удалена «публикация отложенных новостей» — отложенной публикации

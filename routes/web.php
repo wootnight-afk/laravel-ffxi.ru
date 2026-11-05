@@ -22,6 +22,7 @@ use App\Http\Controllers\MfaChallengeController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PlayerController;
+use App\Http\Controllers\PreferencesController;
 use App\Http\Controllers\SocialLinkController;
 use Illuminate\Support\Facades\Route;
 
@@ -105,6 +106,10 @@ Route::middleware('auth')->prefix('cabinet')->name('cabinet.')->group(function (
     // Writing — requires a verified email (frontend-spec §3.1).
     Route::middleware('verified')->group(function () {
         Route::post('/profile', [CabinetController::class, 'updateProfile'])->name('profile.update');
+        Route::post('/preferences/locale', [PreferencesController::class, 'updateLocale'])
+            ->name('preferences.locale');
+        Route::post('/preferences/timezone', [PreferencesController::class, 'updateTimezone'])
+            ->name('preferences.timezone');
         Route::post('/avatar', [CabinetController::class, 'uploadAvatar'])
             ->middleware('throttle:10,60')
             ->name('avatar.upload');
