@@ -15,6 +15,7 @@ use App\Http\Middleware\EnsureAdminIpAllowed;
 use App\Http\Middleware\EnsureAdminMultiFactorAuthentication;
 use App\Http\Middleware\RequireMfa;
 use App\Http\Middleware\SetAdminPanelLocale;
+use App\Services\TimezoneResolver;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -24,6 +25,7 @@ use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Facades\FilamentTimezone;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -36,6 +38,13 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        // ADR-011 §2.9: пользовательские timestamp-компоненты Filament
+        // показываются в часовом поясе администратора. Closure вычисляется
+        // при каждом обращении, то есть уже после аутентификации запроса;
+        // строка, вычисленная здесь, зафиксировала бы null (panel()
+        // выполняется в packageBooted(), до HTTP-запроса).
+        FilamentTimezone::set(fn (): string => app(TimezoneResolver::class)->resolve(auth()->user()));
+
         return $panel
             ->default()
             ->id('admin')

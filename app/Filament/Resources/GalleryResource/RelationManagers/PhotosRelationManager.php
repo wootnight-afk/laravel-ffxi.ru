@@ -57,6 +57,8 @@ class PhotosRelationManager extends RelationManager
                 TextColumn::make('taken_at')
                     ->label(__('filament.resources.gallery.fields.taken_at'))
                     ->dateTime()
+                    // ADR-011 §2.9: момент съёмки хранится и показывается в UTC.
+                    ->timezone('UTC')
                     ->placeholder('—'),
             ])
             ->defaultSort('sort_order')

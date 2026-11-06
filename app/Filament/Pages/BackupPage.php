@@ -92,7 +92,9 @@ class BackupPage extends Page implements HasTable
             ->columns([
                 TextColumn::make('created_at')
                     ->label(__('filament.backup.fields.created_at'))
-                    ->dateTime(),
+                    ->dateTime()
+                    // ADR-011 §2.9: журнал backup всегда отображается в UTC.
+                    ->timezone('UTC'),
                 TextColumn::make('type')
                     ->label(__('filament.backup.fields.type'))
                     ->badge()

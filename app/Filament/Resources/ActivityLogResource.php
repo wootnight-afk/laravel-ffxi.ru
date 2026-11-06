@@ -48,6 +48,8 @@ class ActivityLogResource extends Resource
                 TextColumn::make('created_at')
                     ->label(__('filament.resources.audit_logs.fields.created_at'))
                     ->dateTime()
+                    // ADR-011 §2.9: системные журналы всегда отображаются в UTC.
+                    ->timezone('UTC')
                     ->sortable(),
                 TextColumn::make('user.name')
                     ->label(__('filament.resources.audit_logs.fields.actor'))

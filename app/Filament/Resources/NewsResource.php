@@ -114,6 +114,8 @@ class NewsResource extends Resource
                         ->native(false)
                         ->seconds(false)
                         ->displayFormat('d.m.Y H:i')
+                        // ADR-011 §2.9: редакционная дата — исключение, всегда UTC.
+                        ->timezone('UTC')
                         // Not required by default (drafts may have no date), but a
                         // published news item without published_at is invisible on
                         // the site, so the date is mandatory once published.
@@ -176,6 +178,8 @@ class NewsResource extends Resource
                 TextColumn::make('published_at')
                     ->label(__('filament.resources.news.fields.published_at'))
                     ->dateTime()
+                    // ADR-011 §2.9: редакционная дата — исключение, всегда UTC.
+                    ->timezone('UTC')
                     ->placeholder('—')
                     ->sortable(),
                 TextColumn::make('views')

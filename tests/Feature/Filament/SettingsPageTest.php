@@ -146,15 +146,17 @@ it('stores an empty IP allowlist as an empty JSON array, meaning allow all', fun
     expect(app(SettingsRepository::class)->get('admin_ip_allowlist'))->toBe([]);
 });
 
-it('rejects invalid timezones without partially saving other fields', function () {
+it('preserves the stored timezone_display when saving other settings', function () {
     $admin = makeSettingsPageUser('admin');
+
+    app(SettingsRepository::class)->set('timezone_display', 'Asia/Tokyo');
 
     Livewire::actingAs($admin)
         ->test(SettingsPage::class)
         ->set('data.registration_open', true)
-        ->set('data.timezone_display', 'Mars/Olympus')
         ->call('save')
-        ->assertHasErrors('data.timezone_display');
+        ->assertHasNoErrors();
 
-    expect(app(SettingsRepository::class)->bool('registration_open'))->toBeFalse();
+    expect(app(SettingsRepository::class)->get('timezone_display'))->toBe('Asia/Tokyo')
+        ->and(app(SettingsRepository::class)->bool('registration_open'))->toBeTrue();
 });

@@ -120,11 +120,6 @@ class SettingsPage extends Page implements HasTable
                             ->label(__('filament.settings.fields.pd_policy_version'))
                             ->required()
                             ->maxLength(20),
-                        TextInput::make('timezone_display')
-                            ->label(__('filament.settings.fields.timezone_display'))
-                            ->required()
-                            ->rule('timezone')
-                            ->maxLength(64),
                     ])
                     ->columns(2),
                 Section::make(__('filament.settings.groups.registration'))
@@ -291,7 +286,9 @@ class SettingsPage extends Page implements HasTable
 
         $values = [
             'pd_policy_version' => $data['pd_policy_version'],
-            'timezone_display' => $data['timezone_display'],
+            // ADR-011 §9 L4: поле убрано из формы, но ключ в БД сохраняется
+            // без изменений при сохранении остальных настроек.
+            'timezone_display' => $settings->get('timezone_display', $this->defaults()['timezone_display']),
             'registration_open' => (bool) $data['registration_open'],
             'player_news_moderation' => $data['player_news_moderation'],
             'comments_moderation' => $data['comments_moderation'],
