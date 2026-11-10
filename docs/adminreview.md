@@ -111,7 +111,7 @@ page_slug — технический ключ (используется в middl
 5. Структура сайдбара (Filament navigation)
 text
 ОСНОВНОЕ
-  ◧ Дашборд
+  ◧ Дашборд          [часы: UTC + устройство (Intl/cookie tz) + регион (users.secondary_timezone) (L6.4)]
 
 СООБЩЕСТВО
   👥 Пользователи          [badge: кол-во]
@@ -119,12 +119,14 @@ text
   🔑 Матрица доступа
 
 КОНТЕНТ
-  🏠 Главная
+  🏠 Главная           [L6.2: RU/EN контент]
   📰 Новости                [badge: кол-во]
   💬 Комментарии            [badge: кол-во на модерации, danger]
   🖼 Галерея
-  📄 Страницы
+  📄 Страницы          [L6.2: RU/EN контент]
   📋 События / Формы
+  🔗 Header-меню       [L6.1: CMS-навигация RU/EN]
+  📌 Footer-меню       [L6.1: CMS-навигация RU/EN]
 
 СИСТЕМА
   📜 Журнал событий
@@ -153,14 +155,14 @@ text
 
 6. Filament Resources
 Resource	Модель	Ключевые поля	Кастом
-UserResource	User	name, email, roles, status, avatar	смена ролей inline, блокировка
+UserResource	User	name, email, roles, status, avatar, locale, timezone	смена ролей inline, блокировка
 RoleResource	Role	name, slug, permissions	только для admin
-NewsResource	News	title, slug, date, image, body, status	preview, публикация/снятие, редакционная дата
+NewsResource	News	title, slug, date, image, body, status	preview, публикация/снятие, редакционная дата (метка, UTC-pin)
 CommentResource	Comment	text, author, target, status	модерация bulk-действиями
 GalleryResource	GalleryItem	image, caption, section, date	загрузка через intervention/image
 PageResource	Page	title, slug, content, is_published, roles	доступ настраивается через чекбоксы (см. §7)
-EventResource	Event	title, type, starts_at, status, submissions	просмотр заявок
-ActivityLogResource	ActivityLog	user, action, target, ip, timestamp	read-only, фильтры
+EventResource	Event	title, type, starts_at, timezone, status, submissions	просмотр заявок; пояс ввода + UTC-хранение
+ActivityLogResource	ActivityLog	user, action, target, ip, timestamp	read-only, фильтры; время всегда UTC
 Регистрируются через php artisan make:filament-resource {Model} --generate.
 
 6.1 Не Filament Resources, а кастомные страницы
@@ -170,16 +172,51 @@ ActivityLogResource	ActivityLog	user, action, target, ip, timestamp	read-only, �
 
 Настройки — SettingsPage с формами (общие, регистрация, логирование).
 
-Главная — HomePage (singleton): одна форма без списка записей (Title, H1,
-Hero-логотип, Основное изображение, текст). Хранение — `settings`, ключи
-`home.*`; загрузки — `HomeImageUploader` (JPEG/PNG/WebP, ≤ 4 МБ, WebP q85).
-Доступ — только admin. Детали — `frontend-spec.md` §6.15 и §7.3.
+Страницы — единый редактор `SitePageEditor`
+(`/admin/pages/create`, `/admin/pages/{record}/edit`): одна форма для CMS
+(`cms-{id}`) и системных страниц (`sys.home`, `sys.news.index`,
+`sys.gallery.index`, `sys.contacts`, `sys.events.index`,
+`sys.events.create`). Секции: содержание (RU/EN), slug, меню, SEO (RU/EN),
+изображения, компоненты; неприменимые секции отключены. CMS-страницы
+доступны editor, системные — только admin. Детали — `frontend-spec.md` §7.3,
+ключи — §6.15 и §6.4.2.
 
-Редактор страницы Новостей — NewsPage (`/admin/news-page`): в сайдбаре не
-показывается, открывается кнопкой «Редактор страницы» в шапке списка новостей
-(рядом с «Создать»). Поля: Title, H1, Картинка шапки (+ тумблер возврата к
-стандартной), Текст. Хранение — `settings`, ключи `news_page.*`. Доступ —
-только admin. Детали — `frontend-spec.md` §6.4.2 и §7.3.
+**L6.1 — Редакторы Header и Footer (CMS-инструменты).** Кастомные страницы
+в группе «Контент»: `HeaderPage` (`/admin/header`) и `FooterPage`
+(`/admin/footer`). Перевод существующих текстов Header/Footer выполнен в
+L5.1; L6.1 создаёт инструменты управления: RU/EN подписи пунктов меню,
+порядок, видимость, привязка к системным маршрутам или CMS-страницам,
+необязательные изображения. Системные элементы Header (язык, тема,
+activity bell, профиль, вход/выход) не управляются CMS. Поля Footer: RU/EN
+текст, произвольные ссылки (подписи по локалям), порядок, видимость,
+привязка к маршрутам/CMS-страницам. Адаптивность: `flex-wrap` для
+`.footer-links`, динамическая высота футера. Хранение — `settings` (JSON)
+или отдельная таблица (решение §38 Q10).
+
+**L6.4 — Мировое время Dashboard.** `AdminDashboard` (группа «Основное», sort 0)
+показывает три независимых циферблата в одной группе: **UTC** (всегда
+`UTC+00:00`), **устройство** (браузерный `Intl.DateTimeFormat().resolvedOptions().timeZone`,
+серверный fallback — cookie `tz` через `TimezoneResolver::browserTimezone()`,
+затем `UTC`; `users.timezone` не участвует) и **регион**
+(`users.secondary_timezone`). Виджет — `ClockWidget` (Filament widget),
+выводится **один раз** через `discoverWidgets()` в основной сетке Dashboard
+(`getHeaderWidgets()` не используется, иначе блок дублировался). Внутри —
+inline-селект выбора/сброса региона: весь каталог IANA (419 зон, 11 групп),
+`optionsLimit` = полный каталог (дефолтные 50 обрезали список до первых
+африканских зон), серверный поиск по идентификатору и городу.
+`users.secondary_timezone = NULL` — третий циферблат показывает placeholder
+`--:--:--` и подсказку выбора. Смещения пересчитываются на каждом тике
+Alpine (DST). `localStorage` не является основным хранилищем.
+
+**Часовые пояса (ADR-011 §2.9).** В админке включается `FilamentTimezone`
+(пояс администратора): пользовательские timestamp-колонки и `DateTimePicker`
+показывают время в его поясе. Календарные метки и системные журналы
+закрепляются на UTC явным `->timezone('UTC')`: `news.published_at` (поле и
+колонка), `photos.taken_at`, `admin_audit_logs.created_at`, backup-журнал;
+виджет последних аудит-записей — через `<x-utc-datetime>`. Включение
+`FilamentTimezone` и все pin-правки выполняются одним коммитом — иначе
+промежуточное состояние сдвигает метки и аудит. `settings.timezone_display`
+в определении пользовательского времени не участвует (legacy).
 
 7. Форма создания/редактирования страницы
 Ключевое место админки. Реализуется как кастомная форма внутри PageResource.
@@ -255,14 +292,14 @@ ActivityLogResource — read-only, доступен admin и editor (просм�
 
 create_page_role_access_table — матрица доступа (§4.1).
 
-create_activity_log_table — журнал событий (пакет spatie/laravel-activitylog или своя таблица).
+create_activity_log_table — журнал событий (собственные таблицы `activities` + `admin_audit_logs`, не spatie/activitylog).
 
 Изменения в users: status (enum: active/pending/blocked), avatar_path, last_login_at, last_login_ip.
 
 create_news_table, create_comments_table, create_gallery_items_table, create_pages_table, create_events_table — по мере подключения ресурсов.
 
 Решение по activitylog:
-Использовать spatie/laravel-activitylog ^4.x (совместим с Laravel 13). Не изобретать свою таблицу — экономит время.
+Собственные таблицы `activities` и `admin_audit_logs` (решение context.md §38). spatie/laravel-activitylog **не подключается**.
 
 10. Токены и тема админки
 Админка не обязана совпадать с публичным сайтом по цветам — это отдельный контур. В макете admin.html используется:
@@ -295,7 +332,7 @@ Filament Shield не используется. Права — только че�
 
 Все таблицы — Filament Tables, без самописных <table>.
 
-Действия администратора логируются через spatie/laravel-activitylog (модели с LogsActivity).
+Действия администратора логируются через `admin_audit_logs` (собственная таблица).
 
 Права проверяются и в UI, и в Policy. Скрытие пункта меню — не защита, а UX.
 
@@ -307,6 +344,35 @@ Admin не может удалить сам себя и не может снят
 
 Все загружаемые изображения обрабатываются через intervention/image (ресайз, thumbs).
 
+**Время в админке (ADR-011).** Пользовательские моменты — в поясе
+администратора; аудит (`admin_audit_logs`), backup-журнал и системные
+события — всегда UTC с пометкой `(UTC)`. `app.timezone = UTC` неизменен;
+глобальный `date_default_timezone_set()` запрещён. Календарные метки
+(`news.published_at` при `scope=site`, `photos.taken_at`) не
+конвертируются. Подробности — `frontend-spec.md` §6.16.
+
+**Переключатель языка в Filament (ADR-011 §2.24).** Расположение:
+непосредственно слева от профиля пользователя (`PanelsRenderHook::USER_MENU_BEFORE`).
+Точка вставки в vendor: `vendor/filament/filament/resources/views/components/user-menu.blade.php:43`
+— хук выводится непосредственно перед `<x-filament::dropdown>` (триггер-аватар).
+Регистрация через `Panel::renderHook()` в `AdminPanelProvider` или через
+`FilamentView::registerRenderHook()`. Переключатель — POST-форма без JS,
+использует `route('locale.update')`, `LocaleResolver`, `users.locale`.
+Язык публичной части и админ-панели согласованно определяется предпочтением
+пользователя. Навигационные группы (`NavigationGroup::make(__('filament.navigation.*'))`)
+должны резолвиться лениво (на рендере), чтобы смена локали администратора
+не нарушала сопоставление групп с ресурсами.
+
+**RU/EN CMS (ADR-011 §2.20–2.21).** CMS-страницы (`Page`), главная
+(`sys.home`), страница новостей (`sys.news.index`) и остальные системные
+страницы единого редактора — поддерживают RU/EN контент:
+`title`/`title_en`, `body`/`body_en`, `meta_title`/`meta_title_en`,
+`meta_description`/`meta_description_en` для `Page`; ключи `home.*`/`home.*_en`,
+`news_page.*`/`news_page.*_en` для `settings`. Fallback по отдельным полям:
+страница без EN-версии остаётся в английском меню; EN-заголовок с RU-текстом
+при отсутствии `body_en`. Данные другого языка не теряются при переключении
+в редакторе. SEO-поля — по локалям для CMS-страниц и Home/News.
+
 12. Связь с публичным сайтом
 Публичный сайт читает данные, созданные в админке (новости, галерея, страницы).
 
@@ -317,7 +383,7 @@ Admin не может удалить сам себя и не может снят
 Матрица доступа управляет публичными страницами. Внутренние страницы админки регулируются Policies, не матрицей.
 
 13. Открытые вопросы
-Библиотека для журнала событий: spatie/laravel-activitylog или своя таблица? Рекомендация — spatie.
+~~Библиотека для журнала событий: spatie/laravel-activitylog или своя таблица?~~ — **закрыто** (context.md §38): используются собственные таблицы `activities` и `admin_audit_logs`; spatie/activitylog не подключается.
 
 RichEditor: TinyMCE, Tiptap, или встроенный Filament RichEditor? Зависит от требований к верстке контента.
 
@@ -327,11 +393,32 @@ RichEditor: TinyMCE, Tiptap, или встроенный Filament RichEditor? З
 
 Объём первой фазы: только дашборд + пользователи + роли + матрица? Или сразу все ресурсы?
 
-Мультиязычность: нужна ли в админке, или только RU?
+Мультиязычность: решено — ADR-011. Интерфейс RU/EN, язык хранится в
+`users.locale`, часовой пояс — независимо в `users.timezone`. Админка
+использует тот же `LocaleResolver` (fallback `ru`). Языковые URL-префиксы
+не вводятся. **ADR-011 §2.16–2.25 (2026-11-06):** CMS-контент по локалям
+(§2.20–2.21), Header/Footer редакторы (§2.22–2.23), Filament language
+switcher (§2.24), Dashboard clocks (§2.25).
 
 Хранение аватаров: public/img_site/avatars/ (как публичные ассеты) или storage/app/public/?
 
 Экспорт данных (кнопки «Экспорт» в макете) — CSV, XLSX, или только визуальная заглушка?
+
+**L6.1 (Header/Footer редакторы):** Хранение — **закрыто** (ADR-011 §8.2):
+`settings`, JSON-массив `header.items` / `footer.items` + `footer.text_ru` /
+`footer.text_en`. Отдельная таблица не создаётся.
+
+**L6.2 (RU/EN CMS):** **Закрыто** (ADR-011 §8.2): Home/News — плоские ключи
+`settings` с суффиксом `_en` (`home.h1_en`, `home.body_en`,
+`home.meta_title_en`, `news_page.*_en`); `pages` — nullable-колонки
+`title_en`, `body_en`, `body_html_en`, `meta_title_en`, `meta_description_en`.
+Изображения общие для RU/EN.
+
+**L6.4 (Dashboard часы):** **Закрыто** (ADR-011 §8.2): `users.secondary_timezone`
+(миграция L6.4, применена) — третьи часы (регион); обновление виджета — Alpine.js
+`setInterval`, первый рендер серверный (без Livewire polling); смещения
+пересчитываются динамически (DST); выбор региона — inline в виджете (419 IANA-зон,
+optgroup по 11 регионам, поиск, кэш `TimezoneOptions` 1 час).
 
 14. Результат фазы (Definition of Done)
 Для текущего этапа админки:
@@ -344,7 +431,12 @@ RichEditor: TinyMCE, Tiptap, или встроенный Filament RichEditor? З
 □ EnsurePageAccess middleware — работает для публичных маршрутов.
 □ Дашборд с 4 stats-виджетами + Chart.
 □ Пункты сайдбара скрываются по правам.
-□ Activity log подключён (если Q1 решён в пользу spatie).
+□ Activity log подключён (собственные таблицы `activities` + `admin_audit_logs`).
+□ **L5.7:** Интерфейс админки полностью на выбранном языке (RU/EN); навигационные группы корректно отображаются при смене локали.
+□ **L6.3:** Переключатель языка в Filament (`USER_MENU_BEFORE`, слева от профиля); смена языка не нарушает навигацию.
+□ **L6.1:** Редакторы Header/Footer в группе «Контент»; системные элементы Header не затронуты; Footer не переполняется.
+□ **L6.2:** RU/EN CMS для Home/News/Pages; fallback по полям; страница без EN остаётся в меню.
+☑ **L6.4:** Dashboard часы: 3 циферблата (UTC / устройство / регион), Alpine `setInterval`, inline-селект региона, динамическое смещение (DST), `TimezoneResolver::browserTimezone()`.
 15. Ссылки
 Публичный сайт → docs/designreview.md
 

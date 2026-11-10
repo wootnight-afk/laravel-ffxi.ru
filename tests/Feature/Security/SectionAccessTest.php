@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Services\SettingsRepository;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Route;
 use Spatie\Permission\PermissionRegistrar;
 
 use function Pest\Laravel\actingAs;
@@ -12,7 +13,8 @@ use function Pest\Laravel\get;
 
 /**
  * Contract from frontend-spec.md §3.2 and §9.17:
- *   - guest without guest_sections[key] → 404 (not redirect to /login);
+ *   - guest without guest_sections[key]: HTML GET/HEAD → login redirect;
+ *   - guest JSON or mutating requests to a closed section → 403 (ADR-010);
  *   - auth user without section.{key}.view permission → 403;
  *   - changes take effect immediately (settings cache flushed on save).
  */
@@ -47,10 +49,11 @@ beforeEach(function () {
 // Guest — guest_sections JSON
 // ------------------------------------------------------------------
 
-it('returns 404 for guest when news section is disabled', function () {
+it('redirects guests to login when the news section is disabled', function () {
     disableGuestSection('news');
 
-    get(route('news.index'))->assertNotFound();
+    get(route('news.index'))->assertRedirect(route('login'))
+        ->assertSessionHas('url.intended', route('news.index'));
 });
 
 it('allows guest to read news when section is enabled', function () {
@@ -58,11 +61,35 @@ it('allows guest to read news when section is enabled', function () {
     get(route('news.index'))->assertOk();
 });
 
-it('returns 404 for guest when gallery section is disabled', function () {
+it('redirects guests to login when the gallery section is disabled', function () {
     disableGuestSection('gallery');
 
-    get(route('gallery.index'))->assertNotFound();
+    get(route('gallery.index'))->assertRedirect(route('login'))
+        ->assertSessionHas('url.intended', route('gallery.index'));
 });
+
+it('redirects guest HTML HEAD requests from a closed section to login', function () {
+    disableGuestSection('news');
+
+    $this->head(route('news.index'))->assertRedirect(route('login'));
+});
+
+it('rejects guest JSON requests to a closed section without setting intended', function () {
+    disableGuestSection('news');
+
+    $this->getJson(route('news.index'))->assertForbidden()
+        ->assertSessionMissing('url.intended');
+});
+
+it('rejects guest mutating requests to a closed section without setting intended', function (string $method) {
+    disableGuestSection('news');
+
+    Route::match([$method], '/section-access-write-test', fn () => response('unexpected'))
+        ->middleware(['web', 'section.access:news']);
+
+    $this->call($method, '/section-access-write-test')->assertForbidden()
+        ->assertSessionMissing('url.intended');
+})->with(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 // ------------------------------------------------------------------
 // Auth user — section.{key}.view permission

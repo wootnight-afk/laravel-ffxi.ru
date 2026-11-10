@@ -2,7 +2,7 @@
     <button
         class="activity-bell__trigger"
         type="button"
-        aria-label="Уведомления"
+        aria-label="{{ __('site.activity.bell.aria') }}"
         aria-expanded="false"
         x-bind:aria-expanded="open.toString()"
         x-on:click="open = !open"
@@ -13,7 +13,7 @@
         @endif
     </button>
 
-    <section class="activity-bell__dropdown" x-show="open" x-cloak aria-label="Уведомления">
+    <section class="activity-bell__dropdown" x-show="open" x-cloak aria-label="{{ __('site.activity.bell.aria') }}">
         <div class="activity-bell__tabs" role="tablist">
             <button
                 class="activity-bell__tab {{ $activeTab === 'community' ? 'is-active' : '' }}"
@@ -22,7 +22,7 @@
                 aria-selected="{{ $activeTab === 'community' ? 'true' : 'false' }}"
                 wire:click="selectTab('community')"
             >
-                Сообщество
+                {{ __('site.activity.bell.community') }}
                 @if ($unreadCommunityCount > 0)
                     <span>{{ $unreadCommunityCount > 99 ? '99+' : $unreadCommunityCount }}</span>
                 @endif
@@ -34,7 +34,7 @@
                 aria-selected="{{ $activeTab === 'personal' ? 'true' : 'false' }}"
                 wire:click="selectTab('personal')"
             >
-                Личные
+                {{ __('site.activity.bell.personal') }}
                 @if ($unreadPersonalCount > 0)
                     <span>{{ $unreadPersonalCount > 99 ? '99+' : $unreadPersonalCount }}</span>
                 @endif
@@ -44,7 +44,7 @@
         @if ($activeTab === 'community')
             <div class="activity-bell__list" role="tabpanel">
                 @if ($activities->isEmpty())
-                    <p class="news-meta activity-bell__empty">Новых событий сообщества нет.</p>
+                    <p class="news-meta activity-bell__empty">{{ __('site.activity.bell.community_empty') }}</p>
                 @else
                     @foreach ($activities as $activity)
                         @php
@@ -73,7 +73,7 @@
                                             <span>{{ $snapshot }}</span>
                                         @endif
                                     @elseif (! $snapshot && $subjectAccessible && $subjectUrl)
-                                        <a href="{{ $subjectUrl }}">перейти</a>
+                                        <a href="{{ $subjectUrl }}">{{ __('site.activity.go') }}</a>
                                     @endif
                                 </p>
                                 <time class="news-meta" datetime="{{ $activity->created_at->toIso8601String() }}">
@@ -86,30 +86,30 @@
 
                 @if ($unreadCommunityCount > 0)
                     <button class="activity-bell__mark-read" type="button" wire:click="markCommunityRead">
-                        Отметить прочитанными
+                        {{ __('site.activity.bell.mark_all_read') }}
                     </button>
                 @endif
             </div>
         @else
             <div class="activity-bell__list" role="tabpanel">
                 @if ($notifications->isEmpty())
-                    <p class="news-meta activity-bell__empty">Личных уведомлений пока нет.</p>
+                    <p class="news-meta activity-bell__empty">{{ __('site.activity.bell.personal_empty') }}</p>
                 @else
                     @foreach ($notifications as $notification)
                         @php
                             $notificationName = \Illuminate\Support\Str::afterLast($notification->type, '\\');
                             $notificationTitle = match ($notificationName) {
-                                'ChatMentionNotification' => 'Упоминание в чате',
-                                'ChatBannedNotification' => 'Вы заглушены в чате',
-                                'ChatUnbannedNotification' => 'Мут в чате снят',
-                                'EventCancelledNotification' => 'Событие отменено',
-                                'EventUpdatedNotification' => 'Событие обновлено',
-                                'EventParticipantJoinedNotification' => 'Новый участник события',
-                                'EventParticipantLeftNotification' => 'Участник покинул событие',
-                                'AccountDeletionRequestedNotification' => 'Запрос на удаление аккаунта',
-                                'PasswordChangedNotification' => 'Пароль изменён',
-                                'UserEmailChangedNotification' => 'Email изменён',
-                                default => 'Новое уведомление',
+                                'ChatMentionNotification' => __('site.activity.bell.types.ChatMentionNotification'),
+                                'ChatBannedNotification' => __('site.activity.bell.types.ChatBannedNotification'),
+                                'ChatUnbannedNotification' => __('site.activity.bell.types.ChatUnbannedNotification'),
+                                'EventCancelledNotification' => __('site.activity.bell.types.EventCancelledNotification'),
+                                'EventUpdatedNotification' => __('site.activity.bell.types.EventUpdatedNotification'),
+                                'EventParticipantJoinedNotification' => __('site.activity.bell.types.EventParticipantJoinedNotification'),
+                                'EventParticipantLeftNotification' => __('site.activity.bell.types.EventParticipantLeftNotification'),
+                                'AccountDeletionRequestedNotification' => __('site.activity.bell.types.AccountDeletionRequestedNotification'),
+                                'PasswordChangedNotification' => __('site.activity.bell.types.PasswordChangedNotification'),
+                                'UserEmailChangedNotification' => __('site.activity.bell.types.UserEmailChangedNotification'),
+                                default => __('site.activity.bell.types.default'),
                             };
                             $notificationActor = null;
                             foreach (['actor', 'participant', 'sender', 'moderator'] as $actorKey) {
@@ -146,13 +146,13 @@
                                         class="activity-bell__open"
                                         type="button"
                                         wire:click="openNotification('{{ $notification->id }}')"
-                                    >Открыть</button>
+                                    >{{ __('site.activity.bell.open') }}</button>
                                 @else
                                     <button
                                         class="activity-bell__open"
                                         type="button"
                                         wire:click="openNotification('{{ $notification->id }}')"
-                                    >Отметить прочитанным</button>
+                                    >{{ __('site.activity.bell.mark_read') }}</button>
                                 @endif
                             </div>
                         </article>

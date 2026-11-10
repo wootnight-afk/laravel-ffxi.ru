@@ -40,7 +40,7 @@ class MfaController extends Controller
         // Never overwrite an active secret: disable it first (with re-auth).
         if (filled($user->getAppAuthenticationSecret())) {
             return $this->backToSecurity()->withErrors([
-                'mfa' => 'MFA уже настроена. Сначала отключите текущую.',
+                'mfa' => __('site.cabinet.flash.mfa_already_enabled_disable_first'),
             ]);
         }
 
@@ -60,8 +60,8 @@ class MfaController extends Controller
         $validated = $request->validate([
             'code' => ['required', 'string', 'regex:/^\d{6}$/'],
         ], [
-            'code.required' => 'Введите код из приложения.',
-            'code.regex' => 'Код должен содержать 6 цифр.',
+            'code.required' => __('site.cabinet.validation.mfa_code_required'),
+            'code.regex' => __('site.cabinet.validation.mfa_code_regex'),
         ]);
 
         $user = $request->user();
@@ -69,13 +69,13 @@ class MfaController extends Controller
 
         if (filled($user->getAppAuthenticationSecret())) {
             return $this->backToSecurity()->withErrors([
-                'mfa' => 'MFA уже настроена.',
+                'mfa' => __('site.cabinet.flash.mfa_already_enabled'),
             ]);
         }
 
         if (! is_string($secret) || $secret === '') {
             return $this->backToSecurity()->withErrors([
-                'code' => 'Сессия настройки MFA истекла. Начните заново.',
+                'code' => __('site.cabinet.flash.mfa_session_expired'),
             ]);
         }
 
@@ -83,7 +83,7 @@ class MfaController extends Controller
 
         if (! $authentication->verifyCode($validated['code'], $secret)) {
             throw ValidationException::withMessages([
-                'code' => 'Неверный код. Попробуйте снова.',
+                'code' => __('site.cabinet.flash.mfa_invalid_code'),
             ]);
         }
 
@@ -116,7 +116,7 @@ class MfaController extends Controller
 
         // Idempotent: nothing to disable.
         if (blank($user->getAppAuthenticationSecret())) {
-            return $this->backToSecurity()->with('status', 'MFA не была настроена.');
+            return $this->backToSecurity()->with('status', __('site.cabinet.flash.mfa_not_started'));
         }
 
         $user->saveAppAuthenticationSecret(null);
@@ -137,7 +137,7 @@ class MfaController extends Controller
             actor: $user,
         );
 
-        return $this->backToSecurity()->with('status', 'MFA отключена.');
+        return $this->backToSecurity()->with('status', __('site.cabinet.flash.mfa_disabled'));
     }
 
     /**
@@ -154,7 +154,7 @@ class MfaController extends Controller
 
         if (blank($user->getAppAuthenticationSecret())) {
             return $this->backToSecurity()->withErrors([
-                'password' => 'MFA не настроена.',
+                'password' => __('site.cabinet.flash.mfa_not_configured'),
             ]);
         }
 
@@ -180,8 +180,8 @@ class MfaController extends Controller
         $request->validate([
             'password' => ['required', 'string', 'current_password'],
         ], [
-            'password.required' => 'Введите текущий пароль.',
-            'password.current_password' => 'Неверный текущий пароль.',
+            'password.required' => __('site.cabinet.validation.current_password_required'),
+            'password.current_password' => __('site.cabinet.validation.current_password_invalid'),
         ]);
     }
 

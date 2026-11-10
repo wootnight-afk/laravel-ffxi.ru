@@ -27,14 +27,6 @@ enum ActivityType: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::Registered => 'зарегистрировался',
-            self::NewsPublished => 'опубликовал новость',
-            self::PhotoPublished => 'опубликовал фото',
-            self::EventCreated => 'создал событие',
-            self::EventJoined => 'записался на событие',
-            self::CommentCreated => 'оставил комментарий',
-            self::ChatMessage => 'отправил сообщение в чат',
-        };
+        return __('site.activity.types.'.$this->value);
     }
 }

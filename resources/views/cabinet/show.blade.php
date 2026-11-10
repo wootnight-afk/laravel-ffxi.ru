@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
-@section('title', 'Мой кабинет')
+@section('title', __('site.cabinet.title'))
 
 @section('content')
-    <h1 class="page-title">Мой кабинет</h1>
+    <h1 class="page-title">{{ __('site.cabinet.title') }}</h1>
 
     <div style="display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap;">
         {{-- Сайдбар с табами --}}
@@ -11,13 +11,13 @@
             <ul style="list-style: none; padding: 0; margin: 0; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;">
                 @php
                     $tabs = [
-                        'profile' => 'Профиль',
-                        'social' => 'Социальные сети',
-                        'news' => 'Мои новости',
-                        'gallery' => 'Моя галерея',
-                        'events' => 'Мои события',
-                        'security' => 'Безопасность',
-                        'danger' => 'Опасная зона',
+                        'profile' => __('site.cabinet.tabs.profile'),
+                        'social' => __('site.cabinet.tabs.social'),
+                        'news' => __('site.cabinet.tabs.news'),
+                        'gallery' => __('site.cabinet.tabs.gallery'),
+                        'events' => __('site.cabinet.tabs.events'),
+                        'security' => __('site.cabinet.tabs.security'),
+                        'danger' => __('site.cabinet.tabs.danger'),
                     ];
                 @endphp
 
@@ -51,7 +51,7 @@
             @else
                 <div class="content-text">
                     <h2 class="section-title">{{ $tabs[$tab] }}</h2>
-                    <p style="color: var(--text-muted);">Раздел в разработке.</p>
+                    <p style="color: var(--text-muted);">{{ __('site.cabinet.in_development') }}</p>
                 </div>
             @endif
         </div>

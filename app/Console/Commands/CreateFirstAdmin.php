@@ -12,16 +12,16 @@ use Illuminate\Support\Facades\Validator;
 class CreateFirstAdmin extends Command
 {
     protected $signature = 'app:create-admin
-                            {--email= : Email администратора}
-                            {--name= : Ник администратора}
-                            {--password= : Пароль (если не указан — генерируется)}';
+                            {--email= : Email of the administrator}
+                            {--name= : Administrator nickname}
+                            {--password= : Password (generated when omitted)}';
 
     protected $description = 'Create the first administrator account (production-safe).';
 
     public function handle(NicknameSuggester $suggester): int
     {
-        $email = (string) ($this->option('email') ?? $this->ask('Email администратора'));
-        $name = (string) ($this->option('name') ?? $this->ask('Ник администратора'));
+        $email = (string) ($this->option('email') ?? $this->ask(__('site.console.create_admin.ask_email')));
+        $name = (string) ($this->option('name') ?? $this->ask(__('site.console.create_admin.ask_name')));
         $password = (string) ($this->option('password') ?? $this->generatePassword());
 
         $validator = Validator::make(
@@ -42,25 +42,25 @@ class CreateFirstAdmin extends Command
         }
 
         if (! $suggester->passesFormat($name)) {
-            $this->error('Ник не соответствует формату (3–24 символа, латиница/цифры/-/_ , начинается с буквы).');
+            $this->error(__('site.console.create_admin.invalid_name'));
 
             return self::FAILURE;
         }
 
         if ($suggester->isBlacklisted($name)) {
-            $this->error('Этот ник в чёрном списке.');
+            $this->error(__('site.console.create_admin.blacklisted'));
 
             return self::FAILURE;
         }
 
         if (User::query()->where('name', $name)->exists()) {
-            $this->error("Ник '{$name}' уже занят.");
+            $this->error(__('site.console.create_admin.name_taken', ['name' => $name]));
 
             return self::FAILURE;
         }
 
         if (User::query()->where('email', $email)->exists()) {
-            $this->error("Email '{$email}' уже занят.");
+            $this->error(__('site.console.create_admin.email_taken', ['email' => $email]));
 
             return self::FAILURE;
         }
@@ -83,20 +83,20 @@ class CreateFirstAdmin extends Command
                 return $user;
             });
         } catch (\Throwable $e) {
-            $this->error('Ошибка создания: '.$e->getMessage());
+            $this->error(__('site.console.create_admin.create_failed', ['error' => $e->getMessage()]));
 
             return self::FAILURE;
         }
 
         $this->newLine();
-        $this->info('Администратор создан успешно.');
+        $this->info(__('site.console.create_admin.created'));
         $this->newLine();
-        $this->line('  ID:     <fg=yellow>'.$user->id.'</>');
-        $this->line('  Ник:    <fg=yellow>'.$user->name.'</>');
-        $this->line('  Email:  <fg=yellow>'.$user->email.'</>');
-        $this->line('  Пароль: <fg=red;options=bold>'.$password.'</>');
+        $this->line('  '.__('site.console.create_admin.id').':     <fg=yellow>'.$user->id.'</>');
+        $this->line('  '.__('site.console.create_admin.name').':    <fg=yellow>'.$user->name.'</>');
+        $this->line('  '.__('site.console.create_admin.email').':  <fg=yellow>'.$user->email.'</>');
+        $this->line('  '.__('site.console.create_admin.password').': <fg=red;options=bold>'.$password.'</>');
         $this->newLine();
-        $this->warn('Сохраните пароль в защищённом месте. Он больше не будет показан.');
+        $this->warn(__('site.console.create_admin.save_password'));
         $this->newLine();
 
         return self::SUCCESS;

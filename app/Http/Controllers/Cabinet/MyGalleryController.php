@@ -38,7 +38,7 @@ class MyGalleryController extends Controller
 
         if ($current >= $limit) {
             return back()->withErrors([
-                'title' => "Достигнут лимит альбомов: {$limit}.",
+                'title' => __('site.cabinet.gallery.album_limit', ['limit' => $limit]),
             ]);
         }
 
@@ -53,7 +53,7 @@ class MyGalleryController extends Controller
 
         return redirect()
             ->route('cabinet.tab', ['tab' => 'gallery'])
-            ->with('status', 'Альбом создан.')
+            ->with('status', __('site.cabinet.flash.album_created'))
             ->with('open_album_id', $album->id);
     }
 
@@ -71,7 +71,7 @@ class MyGalleryController extends Controller
 
         return redirect()
             ->route('cabinet.tab', ['tab' => 'gallery'])
-            ->with('status', 'Альбом обновлён.')
+            ->with('status', __('site.cabinet.flash.album_updated'))
             ->with('open_album_id', $album->id);
     }
 
@@ -89,7 +89,7 @@ class MyGalleryController extends Controller
 
         return redirect()
             ->route('cabinet.tab', ['tab' => 'gallery'])
-            ->with('status', 'Альбом удалён.');
+            ->with('status', __('site.cabinet.flash.album_deleted'));
     }
 
     public function upload(UploadPhotosRequest $request, Album $album): RedirectResponse
@@ -100,7 +100,7 @@ class MyGalleryController extends Controller
         $files = $request->file('photos', []);
 
         if (! is_array($files) || $files === []) {
-            return back()->withErrors(['photos' => 'Выберите файлы для загрузки.']);
+            return back()->withErrors(['photos' => __('site.cabinet.flash.photos_selected')]);
         }
 
         $dailyLimit = $this->settings->int('gallery_max_photos_per_day', 50);
@@ -113,7 +113,7 @@ class MyGalleryController extends Controller
 
         if ($today + $requested > $dailyLimit) {
             return back()->withErrors([
-                'photos' => 'Сегодня можно загрузить ещё '.max(0, $dailyLimit - $today).'.',
+                'photos' => __('site.cabinet.gallery.daily_limit', ['count' => max(0, $dailyLimit - $today)]),
             ]);
         }
 
@@ -129,7 +129,7 @@ class MyGalleryController extends Controller
 
         return redirect()
             ->route('cabinet.tab', ['tab' => 'gallery'])
-            ->with('status', 'Загрузка запущена: '.$requested.' файл(ов). Обработка займёт несколько секунд.')
+            ->with('status', trans_choice('site.cabinet.gallery.upload_started', $requested))
             ->with('open_album_id', $album->id);
     }
 }

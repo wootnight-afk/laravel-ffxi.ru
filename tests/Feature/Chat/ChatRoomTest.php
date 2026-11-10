@@ -171,7 +171,7 @@ it('escapes message markup and shows deleted messages as tombstones', function (
         ->test(ChatRoom::class)
         ->set('deleteReason', 'Spam')
         ->call('deleteMessage', $message->id)
-        ->assertSee('сообщение удалено')
+        ->assertSee('message deleted')
         ->assertDontSee('alert(1)');
 
     expect($message->fresh()->is_deleted)->toBeTrue()

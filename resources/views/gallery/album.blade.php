@@ -13,7 +13,7 @@
 
     @if ($photos->isEmpty())
         <div class="content-text">
-            <p>В этом альбоме пока нет фотографий.</p>
+            <p>{{ __('site.gallery.album_empty_full') }}</p>
         </div>
     @else
         <div class="gallery-grid">
@@ -22,7 +22,7 @@
                     <a href="{{ route('gallery.photo', [$album->slug, $photo->id]) }}">
                         <img
                             src="{{ $photo->urlThumb() }}"
-                            alt="{{ $photo->caption ?: 'Фото' }}"
+                            alt="{{ $photo->caption ?: __('site.gallery.photo_alt') }}"
                             class="gallery-thumb"
                             loading="lazy"
                         >
@@ -40,6 +40,6 @@
     @endif
 
     <div style="margin-top: 32px;">
-        <a href="{{ route('gallery.index') }}">← Ко всем альбомам</a>
+        <a href="{{ route('gallery.index') }}">{{ __('site.gallery.back_to_albums') }}</a>
     </div>
 @endsection

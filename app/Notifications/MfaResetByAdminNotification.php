@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Models\User;
+use App\Notifications\Concerns\LocalizesMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -17,6 +18,7 @@ use Illuminate\Notifications\Notification;
  */
 class MfaResetByAdminNotification extends Notification
 {
+    use LocalizesMail;
     use Queueable;
 
     public function __construct(
@@ -33,14 +35,16 @@ class MfaResetByAdminNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
+        $locale = $this->mailLocale($notifiable);
+
         return (new MailMessage)
-            ->subject('MFA для вашего аккаунта сброшена администратором')
-            ->greeting('Здравствуйте!')
-            ->line('Двухфакторная аутентификация (MFA) для вашего аккаунта FFXI Phoenix была сброшена администратором.')
-            ->line('Чтобы снова защитить аккаунт, настройте MFA заново в разделе безопасности личного кабинета.')
-            ->action('Настроить MFA', route('cabinet.tab', ['tab' => 'security']))
-            ->line('Если вы не запрашивали сброс — свяжитесь с администрацией.')
-            ->salutation('— FFXI Phoenix');
+            ->subject($this->mailLine('mfa_reset_by_admin.subject', [], $locale))
+            ->greeting($this->mailLine('mfa_reset_by_admin.greeting', [], $locale))
+            ->line($this->mailLine('mfa_reset_by_admin.intro', [], $locale))
+            ->line($this->mailLine('mfa_reset_by_admin.hint', [], $locale))
+            ->action($this->mailLine('mfa_reset_by_admin.action', [], $locale), route('cabinet.tab', ['tab' => 'security']))
+            ->line($this->mailLine('mfa_reset_by_admin.warning', [], $locale))
+            ->salutation($this->mailLine('salutation', [], $locale));
     }
 
     /**

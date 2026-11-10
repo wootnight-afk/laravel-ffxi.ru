@@ -1,6 +1,6 @@
 @php
     $races = [
-        '' => '— не указана —',
+        '' => __('site.cabinet.profile.race_none'),
         'hume' => 'Hume',
         'elvaan' => 'Elvaan',
         'tarutaru' => 'Tarutaru',
@@ -30,7 +30,7 @@
                     required
                     style="font-size: 12px;"
                 >
-                <button type="submit" class="btn" style="margin-top: 6px; font-size: 13px;">Загрузить</button>
+                <button type="submit" class="btn" style="margin-top: 6px; font-size: 13px;">{{ __('site.cabinet.profile.upload') }}</button>
             </form>
 
             @if ($user->avatar_path)
@@ -41,9 +41,9 @@
                         type="submit"
                         class="btn"
                         style="font-size: 13px;"
-                        onclick="return confirm('Удалить аватар?');"
+                        onclick="return confirm('{{ __('site.cabinet.profile.delete_avatar_confirm') }}');"
                     >
-                        Удалить
+                        {{ __('site.cabinet.profile.delete') }}
                     </button>
                 </form>
             @endif
@@ -51,13 +51,13 @@
     </div>
 
     <div style="flex: 1; min-width: 240px;">
-        <h2 class="section-title" style="margin-top: 0;">Профиль</h2>
+        <h2 class="section-title" style="margin-top: 0;">{{ __('site.cabinet.tabs.profile') }}</h2>
 
         <form method="POST" action="{{ route('cabinet.profile.update') }}">
             @csrf
 
             <div class="form-group">
-                <label for="race">Раса</label>
+                <label for="race">{{ __('site.cabinet.profile.race') }}</label>
                 <select id="race" name="race" class="form-control">
                     @foreach ($races as $value => $label)
                         <option value="{{ $value }}" {{ old('race', $user->race) === $value ? 'selected' : '' }}>
@@ -69,7 +69,7 @@
             </div>
 
             <div class="form-group">
-                <label for="main_job">Main job</label>
+                <label for="main_job">{{ __('site.cabinet.profile.main_job') }}</label>
                 <input
                     type="text"
                     id="main_job"
@@ -77,30 +77,30 @@
                     class="form-control"
                     value="{{ old('main_job', $user->main_job) }}"
                     maxlength="10"
-                    placeholder="PLD, RDM, WHM…"
+                    placeholder="{{ __('site.cabinet.profile.main_job_placeholder') }}"
                 >
                 @error('main_job') <div class="form-error">{{ $message }}</div> @enderror
             </div>
 
             <div class="form-group" style="max-width: 100%;">
-                <label for="legend">Легенда (Markdown)</label>
+                <label for="legend">{{ __('site.cabinet.profile.legend') }}</label>
                 <textarea
                     id="legend"
                     name="legend"
                     class="form-control"
                     rows="8"
                     maxlength="4000"
-                    placeholder="Расскажите о своём персонаже…"
+                    placeholder="{{ __('site.cabinet.profile.legend_placeholder') }}"
                     style="resize: vertical;"
                 >{{ old('legend', $user->legend) }}</textarea>
                 <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
-                    Поддерживается Markdown: **жирный**, *курсив*, списки, ссылки.
+                    {{ __('site.cabinet.profile.markdown_hint') }}
                 </div>
                 @error('legend') <div class="form-error">{{ $message }}</div> @enderror
             </div>
 
             <div class="form-group">
-                <label for="phone">Телефон (необязательно)</label>
+                <label for="phone">{{ __('site.cabinet.profile.phone') }}</label>
                 <input
                     type="text"
                     id="phone"
@@ -111,7 +111,7 @@
                 >
                 <label style="display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 13px;">
                     <input type="checkbox" name="phone_is_public" value="1" {{ old('phone_is_public', $user->phone_is_public) ? 'checked' : '' }}>
-                    Показывать телефон в профиле
+                    {{ __('site.cabinet.profile.phone_public') }}
                 </label>
                 @error('phone') <div class="form-error">{{ $message }}</div> @enderror
             </div>
@@ -120,20 +120,19 @@
                 <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.5;">
                     <input type="checkbox" name="is_profile_public" value="1" {{ old('is_profile_public', $user->is_profile_public) ? 'checked' : '' }} style="margin-top: 3px;">
                     <span>
-                        <strong>Открытый профиль</strong><br>
-                        Другие игроки увидят вашу легенду, новости, фото и соцсети.
+                        <strong>{{ __('site.cabinet.profile.public_profile') }}</strong><br>
+                        {{ __('site.cabinet.profile.public_profile_hint') }}
                     </span>
                 </label>
             </div>
 
-            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <button type="submit" class="btn btn-primary">{{ __('site.cabinet.profile.save') }}</button>
         </form>
 
         <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border-color);">
-            <h2 class="section-title">Язык и часовой пояс</h2>
+            <h2 class="section-title">{{ __('site.cabinet.profile.locale_section') }}</h2>
             <p style="color: var(--text-muted); font-size: 13px; line-height: 1.6;">
-                Здесь сохраняются ваши предпочтения. Фактическое переключение языка интерфейса
-                и применение часового пояса к датам будут включены на следующих этапах.
+                {{ __('site.cabinet.profile.locale_section_hint') }}
             </p>
 
             @php
@@ -151,11 +150,11 @@
                     @csrf
 
                     <div class="form-group">
-                        <label for="locale">Язык интерфейса</label>
+                        <label for="locale">{{ __('site.cabinet.profile.locale') }}</label>
                         <select id="locale" name="locale" class="form-control">
-                            <option value="" @selected($localeValue === '')>Авто — по языку браузера</option>
+                            <option value="" @selected($localeValue === '')>{{ __('site.cabinet.profile.locale_auto') }}</option>
                             @if (! $localeIsKnown)
-                                <option value="{{ $localeValue }}" selected>{{ $localeValue }} (недопустимый код)</option>
+                                <option value="{{ $localeValue }}" selected>{{ __('site.cabinet.profile.locale_invalid', ['value' => $localeValue]) }}</option>
                             @endif
                             @foreach (\App\Enums\Locale::cases() as $locale)
                                 <option value="{{ $locale->value }}" @selected($localeValue === $locale->value)>
@@ -164,23 +163,23 @@
                             @endforeach
                         </select>
                         <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
-                            Пустое значение — «авто»: язык будет определяться по браузеру.
+                            {{ __('site.cabinet.profile.locale_auto_hint') }}
                         </div>
                         @error('locale') <div class="form-error">{{ $message }}</div> @enderror
                     </div>
 
-                    <button type="submit" class="btn">Сохранить язык</button>
+                    <button type="submit" class="btn">{{ __('site.cabinet.profile.locale_save') }}</button>
                 </form>
 
                 <form method="POST" action="{{ route('cabinet.preferences.timezone') }}" style="flex: 1; min-width: 280px;">
                     @csrf
 
                     <div class="form-group">
-                        <label for="timezone">Часовой пояс</label>
+                        <label for="timezone">{{ __('site.cabinet.profile.timezone') }}</label>
                         <select id="timezone" name="timezone" class="form-control">
-                            <option value="" @selected($timezoneValue === '')>Авто — по часовому поясу браузера</option>
+                            <option value="" @selected($timezoneValue === '')>{{ __('site.cabinet.profile.timezone_auto') }}</option>
                             @if (! $timezoneIsKnown)
-                                <option value="{{ $timezoneValue }}" selected>{{ $timezoneValue }} (недопустимый IANA)</option>
+                                <option value="{{ $timezoneValue }}" selected>{{ __('site.cabinet.profile.timezone_invalid', ['value' => $timezoneValue]) }}</option>
                             @endif
                             @foreach ($timezoneOptions as $region => $zones)
                                 <optgroup label="{{ $region }}">
@@ -193,12 +192,12 @@
                             @endforeach
                         </select>
                         <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
-                            Смещение в подписи указано на текущий момент и учитывает переход на летнее время.
+                            {{ __('site.cabinet.profile.timezone_hint') }}
                         </div>
                         @error('timezone') <div class="form-error">{{ $message }}</div> @enderror
                     </div>
 
-                    <button type="submit" class="btn">Сохранить часовой пояс</button>
+                    <button type="submit" class="btn">{{ __('site.cabinet.profile.timezone_save') }}</button>
                 </form>
             </div>
         </div>

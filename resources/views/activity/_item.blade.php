@@ -22,7 +22,7 @@
             <x-activity-actor :actor="$actor" :viewer="$viewer" />
             {{ $activity->type->label() }}
             @if (count($items) > 1)
-                <span class="news-meta">({{ count($items) }} раза)</span>
+                <span class="news-meta">{{ trans_choice('site.activity.repeat', count($items)) }}</span>
             @endif
             @if ($snapshot && $subjectAccessible)
                 @if ($subjectUrl)
@@ -31,7 +31,7 @@
                     <span>{{ $snapshot }}</span>
                 @endif
             @elseif (! $snapshot && $subjectAccessible && $subjectUrl)
-                <a href="{{ $subjectUrl }}">перейти</a>
+                <a href="{{ $subjectUrl }}">{{ __('site.activity.go') }}</a>
             @endif
         </p>
         <time class="news-meta" datetime="{{ $activity->created_at->toIso8601String() }}">

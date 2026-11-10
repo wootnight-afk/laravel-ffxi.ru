@@ -40,12 +40,12 @@ class ChangeEmailRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'current_password.required' => 'Введите текущий пароль.',
-            'current_password.current_password' => 'Неверный текущий пароль.',
-            'email.required' => 'Введите email.',
-            'email.email' => 'Некорректный email.',
-            'email.max' => 'Email слишком длинный.',
-            'email.unique' => 'Этот email уже используется.',
+            'current_password.required' => __('site.cabinet.validation.current_password_required'),
+            'current_password.current_password' => __('site.cabinet.validation.current_password_invalid'),
+            'email.required' => __('site.cabinet.validation.email_required'),
+            'email.email' => __('site.cabinet.validation.email_invalid'),
+            'email.max' => __('site.cabinet.validation.email_max'),
+            'email.unique' => __('site.cabinet.validation.email_taken'),
         ];
     }
 }

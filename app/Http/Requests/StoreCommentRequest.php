@@ -32,10 +32,10 @@ class StoreCommentRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'body.required' => 'Введите текст комментария.',
-            'body.min' => 'Комментарий должен содержать минимум 20 символов.',
-            'body.max' => 'Комментарий не должен превышать 2000 символов.',
-            'parent_id.exists' => 'Ответ на несуществующий комментарий.',
+            'body.required' => __('site.comments.body_required'),
+            'body.min' => __('site.comments.body_min'),
+            'body.max' => __('site.comments.body_max'),
+            'parent_id.exists' => __('site.comments.parent_missing'),
         ];
     }
 }

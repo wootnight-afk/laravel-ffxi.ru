@@ -17,9 +17,9 @@
         <div class="news-meta" style="margin-bottom: 24px;">
             <span>
                 @if ($news->isSite())
-                    Редакция FFXI.ru
+                    {{ __('site.news.editorial') }}
                 @else
-                    {{ $news->user?->name ?? 'Автор' }}
+                    {{ $news->user?->name ?? __('site.news.author') }}
                 @endif
             </span>
             <span>{{ $news->displayPublishedAt() }}</span>
@@ -30,13 +30,13 @@
         </div>
 
         <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--border-color);">
-            <a href="{{ route('news.index') }}">← Ко всем новостям</a>
+            <a href="{{ route('news.index') }}">{{ __('site.news.back') }}</a>
         </div>
     </article>
 
     @if ($news->comments_enabled)
         <section style="margin-top: 48px;">
-            <h2 class="section-title">Комментарии</h2>
+            <h2 class="section-title">{{ __('site.comments.title') }}</h2>
 
             <x-comment-thread :comments="$news->comments" :news="$news" />
             <x-comment-form :news="$news" />

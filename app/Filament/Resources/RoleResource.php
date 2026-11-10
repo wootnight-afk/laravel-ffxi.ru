@@ -38,7 +38,7 @@ class RoleResource extends Resource
 
     public static function getNavigationGroup(): string|UnitEnum|null
     {
-        return __('filament.navigation.system');
+        return 'system';
     }
 
     public static function table(Table $table): Table

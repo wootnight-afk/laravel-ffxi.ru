@@ -42,6 +42,18 @@ final class TimezoneResolver
     }
 
     /**
+     * The browser timezone from the `tz` cookie only (ADR-011 §2.25).
+     *
+     * Does not consult `users.timezone` — used exclusively for the device clock
+     * server-side render fallback. The browser overrides it with Intl on the
+     * client. Returns null when no valid cookie is present.
+     */
+    public function browserTimezone(): ?string
+    {
+        return $this->valid($this->cookieValue());
+    }
+
+    /**
      * Whether the last resolve() call fell back to UTC instead of using a
      * stored preference or the browser cookie.
      */

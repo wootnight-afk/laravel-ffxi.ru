@@ -47,6 +47,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'cookie_banner_ack',
             'locale',
             'tz',
+            'clock_format',
         ]);
 
         // SetLocale runs after IdentifyGuest: the session is already started and

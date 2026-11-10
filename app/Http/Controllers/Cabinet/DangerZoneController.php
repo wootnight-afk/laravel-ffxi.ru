@@ -33,7 +33,7 @@ class DangerZoneController extends Controller
         if ($user->isDeletionRequested()) {
             return redirect()
                 ->route('home')
-                ->with('status', 'Запрос на удаление уже отправлен.');
+                ->with('status', __('site.cabinet.flash.deletion_already_requested'));
         }
 
         $this->service->request($user, (string) $request->validated('reason'));
@@ -44,7 +44,7 @@ class DangerZoneController extends Controller
 
         return redirect()
             ->route('home')
-            ->with('status', 'Запрос на удаление отправлен.');
+            ->with('status', __('site.cabinet.flash.deletion_requested'));
     }
 
     public function suspend(RequestAccountSuspensionRequest $request): RedirectResponse
@@ -52,7 +52,7 @@ class DangerZoneController extends Controller
         $user = $request->user();
 
         if ($user->isSuspended()) {
-            return redirect()->route('home')->with('status', 'Аккаунт уже приостановлен.');
+            return redirect()->route('home')->with('status', __('site.cabinet.flash.already_suspended'));
         }
 
         $this->suspensionService->suspend($user, (string) $request->validated('reason'));
@@ -61,6 +61,6 @@ class DangerZoneController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('home')->with('status', 'Аккаунт приостановлен.');
+        return redirect()->route('home')->with('status', __('site.cabinet.flash.suspended'));
     }
 }

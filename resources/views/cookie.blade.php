@@ -1,44 +1,38 @@
 @extends('layouts.app')
 
-@section('title', 'Использование cookie')
+@section('title', __('site.cookie.title'))
 
 @section('content')
-    <h1 class="page-title">Использование cookie</h1>
+    <h1 class="page-title">{{ __('site.cookie.heading') }}</h1>
 
     <div class="content-text">
-        <p>Сайт использует <strong>только технические cookie</strong>, необходимые для его работы. Мы не используем сторонние системы аналитики, рекламные трекеры и не передаём данные третьим лицам.</p>
+        <p>{!! __('site.cookie.intro') !!}</p>
 
-        <h2 class="section-title">Список cookie</h2>
+        <h2 class="section-title">{{ __('site.cookie.table_caption') }}</h2>
         <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
             <thead>
                 <tr style="border-bottom: 2px solid var(--border-color); text-align: left;">
-                    <th style="padding: 8px;">Cookie</th>
-                    <th style="padding: 8px;">Назначение</th>
-                    <th style="padding: 8px;">Срок</th>
+                    <th style="padding: 8px;">{{ __('site.cookie.columns.name') }}</th>
+                    <th style="padding: 8px;">{{ __('site.cookie.columns.purpose') }}</th>
+                    <th style="padding: 8px;">{{ __('site.cookie.columns.lifetime') }}</th>
                 </tr>
             </thead>
             <tbody>
-                <tr style="border-bottom: 1px solid var(--border-color);">
-                    <td style="padding: 8px;"><code>ffxi-session</code></td>
-                    <td style="padding: 8px;">Сессия пользователя</td>
-                    <td style="padding: 8px;">2 часа</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--border-color);">
-                    <td style="padding: 8px;"><code>XSRF-TOKEN</code></td>
-                    <td style="padding: 8px;">Защита от CSRF-атак</td>
-                    <td style="padding: 8px;">2 часа</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--border-color);">
-                    <td style="padding: 8px;"><code>guest_uid</code></td>
-                    <td style="padding: 8px;">Анонимный идентификатор гостя (для внутренней статистики)</td>
-                    <td style="padding: 8px;">30 дней</td>
-                </tr>
+                @foreach (__('site.cookie.items') as $item)
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 8px;"><code>{{ $item['name'] }}</code></td>
+                        <td style="padding: 8px;">{{ $item['purpose'] }}</td>
+                        <td style="padding: 8px;">{{ $item['lifetime'] }}</td>
+                    </tr>
+                @endforeach
             </tbody>
         </table>
 
-        <h2 class="section-title">Локальное хранилище</h2>
-        <p>В <code>localStorage</code> браузера сохраняется только выбранная тема оформления (<code>ffxi-theme</code>). Эти данные не передаются на сервер.</p>
+        <h2 class="section-title">{{ __('site.cookie.storage_title') }}</h2>
+        <p>{!! __('site.cookie.storage_text') !!}</p>
 
-        <p>Подробнее об обработке персональных данных — в <a href="{{ route('privacy') }}">Политике обработки персональных данных</a>.</p>
+        <p>{!! __('site.cookie.privacy_link', [
+            'link' => '<a href="'.route('privacy').'">'.e(__('site.cookie.privacy_link_text')).'</a>',
+        ]) !!}</p>
     </div>
 @endsection

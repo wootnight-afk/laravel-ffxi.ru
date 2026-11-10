@@ -38,7 +38,7 @@ class GuestResource extends Resource
 
     public static function getNavigationGroup(): string|UnitEnum|null
     {
-        return __('filament.navigation.community');
+        return 'community';
     }
 
     public static function table(Table $table): Table

@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
-@section('title', 'Изменить событие')
+@section('title', __('site.events.edit_title'))
 
 @section('content')
-    <h1 class="page-title">Изменить событие</h1>
+    <h1 class="page-title">{{ __('site.events.edit_title') }}</h1>
     @include('events._form', [
         'event' => $event,
         'types' => $types,

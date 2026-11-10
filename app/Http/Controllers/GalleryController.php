@@ -5,11 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Album;
 use App\Models\Comment;
 use App\Models\Photo;
+use App\Services\GalleryPageContent;
 use Illuminate\Contracts\View\View;
 
 class GalleryController extends Controller
 {
-    public function index(): View
+    public function index(GalleryPageContent $page): View
     {
         $albums = Album::query()
             ->site()
@@ -21,6 +22,7 @@ class GalleryController extends Controller
 
         return view('gallery.index', [
             'albums' => $albums,
+            'galleryPage' => $page->view(),
         ]);
     }
 

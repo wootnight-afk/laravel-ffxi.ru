@@ -98,6 +98,54 @@ it('saves each supported locale for the authenticated user', function (string $l
     expect($user->refresh()->locale)->toBe($locale);
 })->with(['ru', 'en']);
 
+it('flashes locale success in the newly selected language', function (string $previous, string $locale) {
+    $user = makePreferencesUser(['locale' => $previous]);
+    $message = trans('site.cabinet.flash.locale_saved', [], $locale);
+    $oldMessage = trans('site.cabinet.flash.locale_saved', [], $previous);
+
+    $this->actingAs($user)
+        ->withSession([LocalePreference::SESSION_KEY => $previous])
+        ->withUnencryptedCookie('locale', $previous)
+        ->post(route('cabinet.preferences.locale'), ['locale' => $locale])
+        ->assertRedirect(route('cabinet.tab', ['tab' => 'profile']))
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(LocalePreference::SESSION_KEY, $locale)
+        ->assertSessionHas('status', $message)
+        ->assertPlainCookie('locale', $locale);
+
+    expect($user->refresh()->locale)->toBe($locale)
+        ->and(app()->getLocale())->toBe($locale);
+
+    $this->get(route('cabinet.tab', ['tab' => 'profile']))
+        ->assertOk()
+        ->assertSee($message)
+        ->assertDontSee($oldMessage);
+})->with([
+    'RU to EN' => ['ru', 'en'],
+    'EN to RU' => ['en', 'ru'],
+]);
+
+it('flashes automatic locale success in the browser language without the expired cookie', function (string $previous, string $browser) {
+    $user = makePreferencesUser(['locale' => $previous]);
+    $message = trans('site.cabinet.flash.locale_auto_saved', [], $browser);
+
+    $this->actingAs($user)
+        ->withSession([LocalePreference::SESSION_KEY => $previous])
+        ->withUnencryptedCookie('locale', $previous)
+        ->withHeader('Accept-Language', $browser)
+        ->post(route('cabinet.preferences.locale'), ['locale' => ''])
+        ->assertSessionHasNoErrors()
+        ->assertSessionMissing(LocalePreference::SESSION_KEY)
+        ->assertSessionHas('status', $message)
+        ->assertCookieExpired('locale');
+
+    expect($user->refresh()->locale)->toBeNull()
+        ->and(app()->getLocale())->toBe($browser);
+})->with([
+    'EN to automatic RU' => ['en', 'ru'],
+    'RU to automatic EN' => ['ru', 'en'],
+]);
+
 it('rejects an unsupported locale and keeps the stored value', function () {
     $user = makePreferencesUser(['locale' => 'ru']);
 
@@ -309,8 +357,8 @@ it('renders two independent preference forms and the L1 scope notice', function 
     $response = $this->actingAs($user)->get(route('cabinet.tab', ['tab' => 'profile']));
 
     $response->assertOk()
-        ->assertSee('Язык и часовой пояс')
-        ->assertSee('будут включены на следующих этапах')
+        ->assertSee('Language and timezone')
+        ->assertSee('applied immediately after saving')
         ->assertSee(route('cabinet.preferences.locale'), false)
         ->assertSee(route('cabinet.preferences.timezone'), false)
         ->assertSee('value="en" selected', false)

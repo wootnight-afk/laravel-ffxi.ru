@@ -62,7 +62,7 @@ class AvatarUploader
             $disk->put($thumbPath, (string) $thumb->encodeUsingFileExtension('webp', quality: 80));
         } catch (Throwable $e) {
             $disk->delete([$fullPath, $thumbPath]);
-            throw new ImageProcessingException('Ошибка обработки аватара: '.$e->getMessage(), 0, $e);
+            throw new ImageProcessingException(__('site.images.errors.processing_avatar', ['error' => $e->getMessage()]), 0, $e);
         }
 
         // Удаляем старый аватар
@@ -89,7 +89,7 @@ class AvatarUploader
     private function validate(UploadedFile $file): void
     {
         if (! $file->isValid()) {
-            throw new ImageProcessingException('Файл не загружен.');
+            throw new ImageProcessingException(__('site.images.errors.no_file'));
         }
 
         $size = (int) $file->getSize();

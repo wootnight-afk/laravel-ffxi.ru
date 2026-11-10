@@ -408,11 +408,7 @@ it('limits the sidebar to the four agreed navigation groups', function () {
         ->values()
         ->all();
 
-    $expected = collect(['main', 'community', 'content', 'system'])
-        ->map(fn (string $key): string => __("filament.navigation.{$key}"))
-        ->sort()
-        ->values()
-        ->all();
+    $expected = ['community', 'content', 'main', 'system'];
 
     expect($groups)->toBe($expected);
 });

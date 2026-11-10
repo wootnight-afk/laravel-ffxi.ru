@@ -7,7 +7,7 @@
 <div class="comment-thread">
     @if ($comments->isEmpty())
         <p style="color: var(--text-muted); font-size: 14px;">
-            Пока комментариев нет. Будьте первым!
+            {{ __('site.comments.empty') }}
         </p>
     @else
         @foreach ($comments as $comment)
@@ -19,17 +19,17 @@
                 <header style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 6px;">
                     <div style="font-size: 13px;">
                         <strong style="color: var(--primary-color);">
-                            {{ $comment->user?->name ?? '[аккаунт удалён]' }}
+                            {{ $comment->user?->name ?? __('site.common.deleted_account') }}
                         </strong>
                         <span style="color: var(--text-muted);">
                             · <x-datetime :value="$comment->created_at" />
                             @if ($comment->edited_at)
-                                · <em>(изменён)</em>
+                                · <em>{{ __('site.comments.edited') }}</em>
                             @endif
                         </span>
                         @if ($comment->status === \App\Models\Comment::STATUS_PENDING)
                             <span style="color: #b45309; font-size: 12px; margin-left: 6px;">
-                                (на модерации)
+                                {{ __('site.comments.pending') }}
                             </span>
                         @endif
                     </div>
@@ -39,7 +39,8 @@
                             <form
                                 method="POST"
                                 action="{{ route('comments.destroy', $comment) }}"
-                                x-data="{ confirmSubmit(event) { if (! confirm('Удалить комментарий?')) event.preventDefault(); } }"
+                                data-confirm="{{ __('site.comments.delete_confirm') }}"
+                                x-data="{ confirmSubmit(event) { if (! confirm(this.$el.dataset.confirm)) event.preventDefault(); } }"
                                 x-on:submit="confirmSubmit"
                             >
                                 @csrf
@@ -48,13 +49,14 @@
                                     type="submit"
                                     style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; text-decoration: underline;"
                                 >
-                                    Удалить
+                                    {{ __('site.comments.delete') }}
                                 </button>
                             </form>
                         @else
                             <form
                                 method="POST"
                                 action="{{ route('comments.report', $comment) }}"
+                                data-reported-label="{{ __('site.comments.reported') }}"
                                 x-data="{ submitted: false }"
                                 x-on:submit.prevent="
                                     if (submitted) return;
@@ -65,7 +67,7 @@
                                             'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
                                             'Accept': 'application/json',
                                         },
-                                    }).then(() => { $el.querySelector('button').textContent = 'Жалоба отправлена'; });
+                                    }).then(() => { $el.querySelector('button').textContent = $el.dataset.reportedLabel; });
                                 "
                             >
                                 @csrf
@@ -73,7 +75,7 @@
                                     type="submit"
                                     style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; text-decoration: underline;"
                                 >
-                                    Пожаловаться
+                                    {{ __('site.comments.report') }}
                                 </button>
                             </form>
                         @endif
@@ -87,7 +89,7 @@
                         @foreach ($comment->replies as $reply)
                             <div style="padding: 8px 0;">
                                 <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">
-                                    <strong>{{ $reply->user?->name ?? '[аккаунт удалён]' }}</strong>
+                                    <strong>{{ $reply->user?->name ?? __('site.common.deleted_account') }}</strong>
                                     · <x-datetime :value="$reply->created_at" />
                                 </div>
                                 <div style="font-size: 14px; line-height: 1.6; white-space: pre-wrap;">{{ $reply->body }}</div>

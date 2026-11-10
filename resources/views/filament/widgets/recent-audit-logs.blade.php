@@ -14,7 +14,7 @@
                     @forelse ($entries as $entry)
                         <tr class="border-b border-gray-100 dark:border-gray-800">
                             <td class="px-3 py-2"><x-utc-datetime :value="$entry->created_at" /></td>
-                            <td class="px-3 py-2">{{ $entry->user?->name ?? 'Система' }}</td>
+                            <td class="px-3 py-2">{{ $entry->user?->name ?? __('filament.dashboard.audit.system') }}</td>
                             <td class="px-3 py-2">{{ $entry->action }}</td>
                             <td class="px-3 py-2">{{ $entry->subject_type ? class_basename($entry->subject_type) : '—' }}</td>
                         </tr>

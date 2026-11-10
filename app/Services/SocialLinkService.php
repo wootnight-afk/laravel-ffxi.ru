@@ -46,7 +46,7 @@ class SocialLinkService
             $url = $rawUrl;
         } else {
             throw ValidationException::withMessages([
-                'url' => 'Укажите URL или username.',
+                'url' => __('site.cabinet.validation.social_url_or_username'),
             ]);
         }
 
@@ -62,7 +62,7 @@ class SocialLinkService
     {
         if (mb_strlen($url) > 500) {
             throw ValidationException::withMessages([
-                'url' => 'Ссылка слишком длинная (макс. 500).',
+                'url' => __('site.cabinet.validation.social_url_limit', ['max' => 500]),
             ]);
         }
 
@@ -70,7 +70,7 @@ class SocialLinkService
 
         if (! in_array(strtolower((string) $scheme), ['https'], true)) {
             throw ValidationException::withMessages([
-                'url' => 'Разрешены только ссылки с https://',
+                'url' => __('site.cabinet.validation.social_url_https'),
             ]);
         }
 
@@ -78,7 +78,7 @@ class SocialLinkService
 
         if (! is_string($host) || $host === '') {
             throw ValidationException::withMessages([
-                'url' => 'Некорректный URL.',
+                'url' => __('site.cabinet.validation.social_url_invalid'),
             ]);
         }
 
@@ -87,7 +87,7 @@ class SocialLinkService
         foreach (['javascript:', 'data:', 'file:', 'vbscript:'] as $bad) {
             if (str_contains($lower, $bad)) {
                 throw ValidationException::withMessages([
-                    'url' => 'Недопустимая схема ссылки.',
+                    'url' => __('site.cabinet.validation.social_url_scheme'),
                 ]);
             }
         }
@@ -107,7 +107,7 @@ class SocialLinkService
 
         if ($count >= $limit) {
             throw ValidationException::withMessages([
-                'url' => "Достигнут лимит: {$limit} ссылок.",
+                'url' => __('site.cabinet.validation.social_limit_reached', ['limit' => $limit]),
             ]);
         }
     }

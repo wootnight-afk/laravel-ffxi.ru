@@ -32,10 +32,10 @@ class UpdateProfileRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'race.in' => 'Недопустимая раса.',
-            'main_job.max' => 'Название профессии слишком длинное.',
-            'legend.max' => 'Легенда не должна превышать 4000 символов.',
-            'phone.max' => 'Телефон слишком длинный.',
+            'race.in' => __('site.cabinet.validation.race_invalid'),
+            'main_job.max' => __('site.cabinet.validation.main_job_max'),
+            'legend.max' => __('site.cabinet.validation.legend_max'),
+            'phone.max' => __('site.cabinet.validation.phone_max'),
         ];
     }
 }

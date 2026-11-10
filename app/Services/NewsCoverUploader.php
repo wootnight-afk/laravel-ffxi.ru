@@ -79,7 +79,7 @@ class NewsCoverUploader
         } catch (Throwable $e) {
             $disk->delete($path);
 
-            throw new ImageProcessingException('Ошибка обработки обложки: '.$e->getMessage(), 0, $e);
+            throw new ImageProcessingException(__('site.images.errors.processing_cover', ['error' => $e->getMessage()]), 0, $e);
         }
 
         // Remove the previous cover if any.
@@ -109,7 +109,7 @@ class NewsCoverUploader
     private function validate(UploadedFile $file): void
     {
         if (! $file->isValid()) {
-            throw new ImageProcessingException('Файл не загружен.');
+            throw new ImageProcessingException(__('site.images.errors.no_file'));
         }
 
         $size = (int) $file->getSize();

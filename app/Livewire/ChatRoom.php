@@ -141,7 +141,7 @@ class ChatRoom extends Component
         if (! $sent || ! $message instanceof ChatMessage) {
             $seconds = RateLimiter::availableIn($key);
             throw ValidationException::withMessages([
-                'body' => "Слишком часто. Повторите через {$seconds} сек.",
+                'body' => __('site.chat.rate_limited', ['seconds' => $seconds]),
             ]);
         }
 

@@ -177,7 +177,7 @@ Route::middleware('auth')->prefix('cabinet')->name('cabinet.')->group(function (
 // Stubs
 // ------------------------------------------------------------------
 
-Route::get('/contacts', fn () => view('stubs.coming-soon'))->name('contacts');
+Route::get('/contacts', [PageController::class, 'contacts'])->name('contacts');
 
 // ------------------------------------------------------------------
 // Auth

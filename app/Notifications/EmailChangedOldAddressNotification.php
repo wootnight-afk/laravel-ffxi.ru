@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Models\User;
+use App\Notifications\Concerns\LocalizesMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class EmailChangedOldAddressNotification extends Notification
 {
+    use LocalizesMail;
     use Queueable;
 
     public function __construct(
@@ -34,19 +36,20 @@ class EmailChangedOldAddressNotification extends Notification
     {
         $when = $this->occurredAt ?? now()->toDateTimeString();
         $maskedNew = $this->mask($this->newEmail);
+        $locale = $this->mailLocale($notifiable);
 
         return (new MailMessage)
-            ->subject('Email аккаунта изменён')
-            ->greeting("Здравствуйте, {$this->user->name}!")
-            ->line('Email, привязанный к вашему аккаунту FFXI Phoenix, был изменён.')
-            ->line("Было: {$this->oldEmail}")
-            ->line("Стало: {$maskedNew}")
-            ->line("Когда: {$when}")
-            ->line("IP: {$this->ip}")
-            ->line("User-Agent: {$this->userAgent}")
-            ->line('Если это были не вы — немедленно сбросьте пароль и свяжитесь с администрацией.')
-            ->action('Сбросить пароль', route('password.request'))
-            ->salutation('— FFXI Phoenix');
+            ->subject($this->mailLine('email_changed_old_address.subject', [], $locale))
+            ->greeting($this->mailLine('email_changed_old_address.greeting', ['name' => $this->user->name], $locale))
+            ->line($this->mailLine('email_changed_old_address.intro', [], $locale))
+            ->line($this->mailLine('fields.old', ['value' => $this->oldEmail], $locale))
+            ->line($this->mailLine('fields.new', ['value' => $maskedNew], $locale))
+            ->line($this->mailLine('fields.when', ['value' => $when], $locale))
+            ->line($this->mailLine('fields.ip', ['value' => $this->ip], $locale))
+            ->line($this->mailLine('fields.user_agent', ['value' => $this->userAgent], $locale))
+            ->line($this->mailLine('email_changed_old_address.warning', [], $locale))
+            ->action($this->mailLine('email_changed_old_address.action', [], $locale), route('password.request'))
+            ->salutation($this->mailLine('salutation', [], $locale));
     }
 
     /**

@@ -8,10 +8,10 @@
     <div class="form-status" style="margin-bottom: 16px;">{{ session('status') }}</div>
 @endif
 
-<h2 class="section-title" style="margin-top: 0;">Социальные сети</h2>
+<h2 class="section-title" style="margin-top: 0;">{{ __('site.cabinet.social.title') }}</h2>
 
 @if ($links->isEmpty())
-    <p style="color: var(--text-muted); font-size: 14px;">У вас пока нет добавленных ссылок.</p>
+    <p style="color: var(--text-muted); font-size: 14px;">{{ __('site.cabinet.social.empty') }}</p>
 @else
     <div style="margin-bottom: 24px;">
         @foreach ($links as $link)
@@ -33,15 +33,15 @@
                     <form method="POST" action="{{ route('cabinet.social.toggle', $link) }}">
                         @csrf
                         <button type="submit" class="btn" style="padding: 4px 10px; font-size: 12px;">
-                            {{ $link->is_visible ? 'Скрыть' : 'Показать' }}
+                            {{ $link->is_visible ? __('site.cabinet.social.hide') : __('site.cabinet.social.show') }}
                         </button>
                     </form>
 
-                    <form method="POST" action="{{ route('cabinet.social.destroy', $link) }}" onsubmit="return confirm('Удалить ссылку?');">
+                    <form method="POST" action="{{ route('cabinet.social.destroy', $link) }}" onsubmit="return confirm('{{ __('site.cabinet.social.delete_confirm') }}');">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn" style="padding: 4px 10px; font-size: 12px; color: #dc2626;">
-                            Удалить
+                            {{ __('site.cabinet.social.delete') }}
                         </button>
                     </form>
                 </div>
@@ -51,13 +51,13 @@
 @endif
 
 <div style="padding: 16px; border: 1px dashed var(--border-color); border-radius: 8px;">
-    <h3 style="font-size: 14px; margin-bottom: 12px;">Добавить ссылку</h3>
+    <h3 style="font-size: 14px; margin-bottom: 12px;">{{ __('site.cabinet.social.add') }}</h3>
 
     <form method="POST" action="{{ route('cabinet.social.store') }}">
         @csrf
 
         <div class="form-group">
-            <label for="type">Платформа</label>
+            <label for="type">{{ __('site.cabinet.social.platform') }}</label>
             <select id="type" name="type" class="form-control" required>
                 @foreach ($platforms as $key => $platform)
                     <option value="{{ $key }}" {{ old('type') === $key ? 'selected' : '' }}>
@@ -69,7 +69,7 @@
         </div>
 
         <div class="form-group">
-            <label for="username">Username (если платформа поддерживает)</label>
+            <label for="username">{{ __('site.cabinet.social.username') }}</label>
             <input
                 type="text"
                 id="username"
@@ -82,7 +82,7 @@
         </div>
 
         <div class="form-group">
-            <label for="url">Полный URL (если у платформы нет шаблона)</label>
+            <label for="url">{{ __('site.cabinet.social.url') }}</label>
             <input
                 type="url"
                 id="url"
@@ -93,13 +93,13 @@
                 placeholder="https://…"
             >
             <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
-                Только https://. Проверяется сервером.
+                {{ __('site.cabinet.social.url_hint') }}
             </div>
             @error('url') <div class="form-error">{{ $message }}</div> @enderror
         </div>
 
         <div class="form-group">
-            <label for="label">Подпись (необязательно)</label>
+            <label for="label">{{ __('site.cabinet.social.label') }}</label>
             <input
                 type="text"
                 id="label"
@@ -110,6 +110,6 @@
             >
         </div>
 
-        <button type="submit" class="btn btn-primary">Добавить</button>
+        <button type="submit" class="btn btn-primary">{{ __('site.cabinet.social.submit') }}</button>
     </form>
 </div>

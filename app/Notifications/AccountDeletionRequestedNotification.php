@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Notifications;
 
+use App\Notifications\Concerns\LocalizesMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class AccountDeletionRequestedNotification extends Notification
 {
+    use LocalizesMail;
     use Queueable;
 
     public function __construct(
@@ -28,19 +30,20 @@ class AccountDeletionRequestedNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $when = $this->occurredAt ?? now()->toDateTimeString();
+        $locale = $this->mailLocale($notifiable);
 
         return (new MailMessage)
-            ->subject('Запрос на удаление аккаунта получен')
-            ->greeting('Здравствуйте!')
-            ->line('Мы получили ваш запрос на удаление аккаунта FFXI Phoenix.')
-            ->line("Когда: {$when}")
-            ->line("Указанная причина: {$this->reason}")
-            ->line('Ваш аккаунт закрыт для входа, публичный профиль недоступен.')
-            ->line('Пока это только запрос: автоматического удаления данных не произошло.')
-            ->line('Окончательное удаление выполняет администрация. Исторические материалы сообщества могут быть сохранены по её решению.')
-            ->line('Если вы передумали — свяжитесь с администрацией.')
-            ->action('Связаться с администрацией', route('contacts'))
-            ->salutation('— FFXI Phoenix');
+            ->subject($this->mailLine('account_deletion_requested.subject', [], $locale))
+            ->greeting($this->mailLine('account_deletion_requested.greeting', [], $locale))
+            ->line($this->mailLine('account_deletion_requested.intro', [], $locale))
+            ->line($this->mailLine('fields.when', ['value' => $when], $locale))
+            ->line($this->mailLine('account_deletion_requested.reason', ['reason' => $this->reason], $locale))
+            ->line($this->mailLine('account_deletion_requested.closed', [], $locale))
+            ->line($this->mailLine('account_deletion_requested.request_only', [], $locale))
+            ->line($this->mailLine('account_deletion_requested.final', [], $locale))
+            ->line($this->mailLine('account_deletion_requested.changed_mind', [], $locale))
+            ->action($this->mailLine('account_deletion_requested.action', [], $locale), route('contacts'))
+            ->salutation($this->mailLine('salutation', [], $locale));
     }
 
     /**

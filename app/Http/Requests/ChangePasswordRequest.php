@@ -31,10 +31,10 @@ class ChangePasswordRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'current_password.required' => 'Введите текущий пароль.',
-            'current_password.current_password' => 'Неверный текущий пароль.',
-            'password.required' => 'Введите новый пароль.',
-            'password.confirmed' => 'Пароли не совпадают.',
+            'current_password.required' => __('site.cabinet.validation.current_password_required'),
+            'current_password.current_password' => __('site.cabinet.validation.current_password_invalid'),
+            'password.required' => __('site.cabinet.validation.new_password_required'),
+            'password.confirmed' => __('site.cabinet.validation.password_confirmed'),
         ];
     }
 }

@@ -99,9 +99,9 @@ final class EventDateInput
     public static function message(string $error): string
     {
         return match ($error) {
-            self::ERROR_NON_EXISTENT => 'Указанное время не существует в выбранном часовом поясе (переход на летнее время). Выберите другое время или другой пояс',
-            self::ERROR_AMBIGUOUS => 'Указанное время неоднозначно в выбранном часовом поясе (переход на зимнее время). Укажите время после 03:00 или другой часовой пояс',
-            default => 'Некорректное время события.',
+            self::ERROR_NON_EXISTENT => __('site.events.validation.time_non_existent'),
+            self::ERROR_AMBIGUOUS => __('site.events.validation.time_ambiguous'),
+            default => __('site.events.validation.time_invalid'),
         };
     }
 

@@ -68,7 +68,7 @@ class SettingsPage extends Page implements HasTable
 
     public static function getNavigationGroup(): string|UnitEnum|null
     {
-        return __('filament.navigation.system');
+        return 'system';
     }
 
     public function getTitle(): string

@@ -7,7 +7,7 @@ use UnitEnum;
 
 class AdminDashboard extends Dashboard
 {
-    protected static string|UnitEnum|null $navigationGroup = 'Основное';
+    protected static string|UnitEnum|null $navigationGroup = null;
 
     protected static ?int $navigationSort = 0;
 
@@ -27,7 +27,7 @@ class AdminDashboard extends Dashboard
 
     public static function getNavigationGroup(): string|UnitEnum|null
     {
-        return __('filament.navigation.main');
+        return 'main';
     }
 
     public function getColumns(): int|array

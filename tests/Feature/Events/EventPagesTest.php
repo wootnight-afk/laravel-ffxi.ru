@@ -91,7 +91,7 @@ it('serves the public events index and upcoming event detail', function () {
 it('respects guest access configuration for public event pages', function () {
     app(SettingsRepository::class)->set('guest_sections', ['events' => false]);
 
-    $this->get(route('events.index'))->assertNotFound();
+    $this->get(route('events.index'))->assertRedirect(route('login'));
 });
 
 it('filters the event index by active type and lists only planned upcoming events', function () {
@@ -116,7 +116,7 @@ it('does not expose participant names to guests', function () {
 
     $this->get(route('events.show', $event))
         ->assertOk()
-        ->assertSee('2 участников')
+        ->assertSee('2 участника')
         ->assertDontSee($attendee->name);
 });
 

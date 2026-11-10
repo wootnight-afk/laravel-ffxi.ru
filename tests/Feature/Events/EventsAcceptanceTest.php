@@ -76,7 +76,7 @@ it('rejects joining a full event and renders the unavailable state', function ()
 
     Livewire::actingAs($attendee)
         ->test(EventSignup::class, ['event' => $event])
-        ->assertSee('Мест нет')
+        ->assertSee('No seats left')
         ->assertSeeHtml('disabled');
 });
 

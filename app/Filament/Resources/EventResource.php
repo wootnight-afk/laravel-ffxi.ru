@@ -41,7 +41,7 @@ class EventResource extends Resource
 
     protected static ?string $model = Event::class;
 
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 6;
 
     public static function getNavigationLabel(): string
     {
@@ -50,7 +50,7 @@ class EventResource extends Resource
 
     public static function getNavigationGroup(): string|UnitEnum|null
     {
-        return __('filament.navigation.content');
+        return 'content';
     }
 
     public static function getModelLabel(): string

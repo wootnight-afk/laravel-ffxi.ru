@@ -5,12 +5,11 @@
 @if (! $hideBanner)
     <div class="cookie-banner" data-cookie-banner>
         <div>
-            Мы используем технические cookie для работы сайта
-            (сессия, тема оформления, идентификатор гостя — 30 дней).
-            Данные не передаются третьим лицам.
-            Подробнее — <a href="{{ route('cookie') }}">Cookie</a>
-            и <a href="{{ route('privacy') }}">Политика ПД</a>.
+            {!! __('site.cookie_banner.message', [
+                'cookie' => '<a href="'.route('cookie').'">'.e(__('site.cookie_banner.cookie_link')).'</a>',
+                'privacy' => '<a href="'.route('privacy').'">'.e(__('site.cookie_banner.privacy_link')).'</a>',
+            ]) !!}
         </div>
-        <button type="button" class="btn btn-primary" data-cookie-banner-dismiss>Понятно</button>
+        <button type="button" class="btn btn-primary" data-cookie-banner-dismiss>{{ __('site.cookie_banner.dismiss') }}</button>
     </div>
 @endif

@@ -19,7 +19,7 @@ class EventParticipantController extends Controller
         Gate::authorize('join', $event);
         $this->events->join($request->user(), $event);
 
-        return back()->with('status', 'Вы записаны на событие.');
+        return back()->with('status', __('site.events.flash.joined'));
     }
 
     public function leave(Request $request, Event $event): RedirectResponse
@@ -27,6 +27,6 @@ class EventParticipantController extends Controller
         Gate::authorize('leave', $event);
         $this->events->leave($request->user(), $event);
 
-        return back()->with('status', 'Вы вышли из события.');
+        return back()->with('status', __('site.events.flash.left'));
     }
 }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\Locale;
+
 /**
  * Single source of truth for the static header of the public news page
  * (`/news`).
@@ -18,19 +20,31 @@ namespace App\Services;
  * bundled default", which keeps a fresh installation identical to the previous
  * hard-coded page.
  */
-class NewsPageContent
+class NewsPageContent implements PageContentProvider
 {
     public const KEY_META_TITLE = 'news_page.meta_title';
 
+    public const KEY_META_TITLE_EN = 'news_page.meta_title_en';
+
+    public const KEY_META_DESCRIPTION = 'news_page.meta_description';
+
+    public const KEY_META_DESCRIPTION_EN = 'news_page.meta_description_en';
+
     public const KEY_H1 = 'news_page.h1';
 
+    public const KEY_H1_EN = 'news_page.h1_en';
+
     public const KEY_BODY = 'news_page.body';
+
+    public const KEY_BODY_EN = 'news_page.body_en';
 
     public const KEY_MAIN_IMAGE = 'news_page.main_image';
 
     public const KEY_MAIN_IMAGE_WIDTH = 'news_page.main_image_width';
 
     public const KEY_MAIN_IMAGE_HEIGHT = 'news_page.main_image_height';
+
+    public const KEY_IS_NEWS_COMPONENT_ENABLED = 'news_page.is_news_component_enabled';
 
     public const DEFAULT_MAIN_IMAGE = 'img/ogp_eu.webp';
 
@@ -77,6 +91,7 @@ class NewsPageContent
             self::KEY_MAIN_IMAGE => null,
             self::KEY_MAIN_IMAGE_WIDTH => self::DEFAULT_MAIN_IMAGE_WIDTH,
             self::KEY_MAIN_IMAGE_HEIGHT => self::DEFAULT_MAIN_IMAGE_HEIGHT,
+            self::KEY_IS_NEWS_COMPONENT_ENABLED => true,
         ];
     }
 
@@ -94,10 +109,16 @@ class NewsPageContent
 
         return [
             'meta_title' => $this->text(self::KEY_META_TITLE, $defaults[self::KEY_META_TITLE]),
+            'meta_title_en' => $this->text(self::KEY_META_TITLE_EN, ''),
+            'meta_description' => $this->text(self::KEY_META_DESCRIPTION, ''),
+            'meta_description_en' => $this->text(self::KEY_META_DESCRIPTION_EN, ''),
             'h1' => $this->text(self::KEY_H1, $defaults[self::KEY_H1]),
+            'h1_en' => $this->text(self::KEY_H1_EN, ''),
             'body' => $this->body($defaults[self::KEY_BODY]),
+            'body_en' => $this->body('', self::KEY_BODY_EN),
             'main_image' => $this->customPath(self::KEY_MAIN_IMAGE),
             'reset_main_image' => false,
+            'is_news_component_enabled' => $this->componentEnabled(),
         ];
     }
 
@@ -109,11 +130,13 @@ class NewsPageContent
      *
      * @return array{
      *     metaTitle: string,
+     *     metaDescription: string,
      *     h1: string,
      *     mainImageUrl: string,
      *     mainImageAlt: string,
      *     mainImageWidth: int,
      *     mainImageHeight: int,
+     *     newsComponentEnabled: bool,
      *     bodyHtml: string
      * }
      */
@@ -124,15 +147,32 @@ class NewsPageContent
         $mainImage = $this->customPath(self::KEY_MAIN_IMAGE);
 
         return [
-            'metaTitle' => $this->text(self::KEY_META_TITLE, $defaults[self::KEY_META_TITLE]),
-            'h1' => $this->text(self::KEY_H1, $defaults[self::KEY_H1]),
+            'metaTitle' => $this->localizedText(
+                self::KEY_META_TITLE,
+                $defaults[self::KEY_META_TITLE],
+                self::KEY_META_TITLE_EN,
+            ),
+            'metaDescription' => $this->localizedText(
+                self::KEY_META_DESCRIPTION,
+                '',
+                self::KEY_META_DESCRIPTION_EN,
+            ),
+            'h1' => $this->localizedText(
+                self::KEY_H1,
+                $defaults[self::KEY_H1],
+                self::KEY_H1_EN,
+            ),
             'mainImageUrl' => $mainImage !== null
                 ? asset('storage/'.$mainImage)
                 : asset(self::DEFAULT_MAIN_IMAGE),
             'mainImageAlt' => self::MAIN_IMAGE_ALT,
             'mainImageWidth' => $this->dimension(self::KEY_MAIN_IMAGE_WIDTH, self::DEFAULT_MAIN_IMAGE_WIDTH),
             'mainImageHeight' => $this->dimension(self::KEY_MAIN_IMAGE_HEIGHT, self::DEFAULT_MAIN_IMAGE_HEIGHT),
-            'bodyHtml' => $this->renderer->render($this->body($defaults[self::KEY_BODY])),
+            'newsComponentEnabled' => $this->componentEnabled(),
+            'bodyHtml' => $this->renderer->render($this->localizedBody(
+                $defaults[self::KEY_BODY],
+                self::KEY_BODY_EN,
+            )),
         ];
     }
 
@@ -150,11 +190,53 @@ class NewsPageContent
      * Page body is allowed to be empty: an empty string hides the block on the
      * front end, while a missing key keeps the default text.
      */
-    private function body(string $default): string
+    private function body(string $default, string $key = self::KEY_BODY): string
     {
-        $value = $this->settings->get(self::KEY_BODY, $default);
+        $value = $this->settings->get($key, $default);
 
         return is_string($value) ? $value : $default;
+    }
+
+    /**
+     * Per-field fallback for the English locale (ADR-011 §2.20–2.21):
+     * a non-empty EN value wins, otherwise the RU value (or its default).
+     */
+    private function localizedText(string $key, string $default, string $englishKey): string
+    {
+        if (app()->getLocale() === Locale::En->value) {
+            $value = $this->settings->get($englishKey);
+
+            if (is_string($value) && trim($value) !== '') {
+                return $value;
+            }
+        }
+
+        return $this->text($key, $default);
+    }
+
+    private function localizedBody(string $default, string $englishKey): string
+    {
+        if (app()->getLocale() === Locale::En->value) {
+            $value = $this->settings->get($englishKey);
+
+            if (is_string($value) && trim($value) !== '') {
+                return $value;
+            }
+        }
+
+        return $this->body($default);
+    }
+
+    /**
+     * Whether the news list is rendered on `/news`.
+     *
+     * A missing key means enabled, so existing installations keep the list.
+     */
+    public function componentEnabled(): bool
+    {
+        $value = $this->settings->get(self::KEY_IS_NEWS_COMPONENT_ENABLED, true);
+
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true;
     }
 
     /**

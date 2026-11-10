@@ -75,7 +75,7 @@ class ImageProcessor
             $disk->put($paths['thumb'], (string) $image->encodeUsingFileExtension('webp', quality: 75));
         } catch (Throwable $e) {
             $disk->delete(array_values($paths));
-            throw new ImageProcessingException('Ошибка обработки изображения: '.$e->getMessage(), 0, $e);
+            throw new ImageProcessingException(__('site.images.errors.processing_image', ['error' => $e->getMessage()]), 0, $e);
         }
 
         $sortOrder = (int) Photo::query()->where('album_id', $album->id)->max('sort_order') + 1;
@@ -100,7 +100,7 @@ class ImageProcessor
     private function validate(UploadedFile $file): void
     {
         if (! $file->isValid()) {
-            throw new ImageProcessingException('Файл не загружен.');
+            throw new ImageProcessingException(__('site.images.errors.no_file'));
         }
 
         $size = (int) $file->getSize();

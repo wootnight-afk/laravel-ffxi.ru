@@ -1,3 +1,4 @@
+@inject('siteNavigation', \App\Services\SiteNavigation::class)
 <!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}">
 <head>
@@ -18,30 +19,54 @@
     </script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    {{-- @yield('title') and @yield('metaDescription') are safe with the shorthand
+         @section('name', $value) used by every view here: Blade escapes such a value
+         with e() when the section is stored (Illuminate View startSection), so the
+         attribute below receives data, never markup. Wrapping @yield in {{ }} would
+         escape it a second time. A block-form @section or an HtmlString value would
+         bypass that escape — keep these two slots shorthand and escape inside the
+         block. --}}
     <title>@yield('title', 'FFXI Phoenix Server')</title>
+    @hasSection('metaDescription')
+        <meta name="description" content="@yield('metaDescription')">
+    @elseif (! empty($metaDescription))
+        <meta name="description" content="{{ $metaDescription }}">
+    @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
 
 <header>
     <div class="nav-container">
-        <a href="{{ route('home') }}" class="logo-link">
-            <span class="logo-wrap">
-                <img src="{{ asset('img/bx_default_logo.webp') }}" alt="Final Fantasy XI">
+        @if ($siteNavigation->homeLinkVisible())
+            <a href="{{ route('home') }}" class="logo-link">
+        @else
+            <span class="logo-link">
+        @endif
+                <span class="logo-wrap">
+                    <img src="{{ asset('img/bx_default_logo.webp') }}" alt="Final Fantasy XI">
+                </span>
+        @if ($siteNavigation->homeLinkVisible())
+            </a>
+        @else
             </span>
-        </a>
+        @endif
 
         <nav class="nav-links">
-            <a href="{{ route('news.index') }}" class="{{ request()->routeIs('news.*') ? 'active' : '' }}">Новости игры</a>
-            <a href="{{ route('gallery.index') }}" class="{{ request()->routeIs('gallery.*') ? 'active' : '' }}">Галерея</a>
-            <a href="{{ route('players.dashboard') }}" class="{{ request()->routeIs('players.*') ? 'active' : '' }}">Игроки</a>
-            <a href="{{ route('contacts') }}" class="{{ request()->routeIs('contacts') ? 'active' : '' }}">Контакты</a>
+            @foreach ($siteNavigation->headerItems() as $item)
+                <a href="{{ $item['url'] }}" class="{{ $item['active'] ? 'active' : '' }}">
+                    @if ($item['imageUrl'])
+                        <img src="{{ $item['imageUrl'] }}" alt="" class="nav-link__icon">
+                    @endif
+                    {{ $item['label'] }}
+                </a>
+            @endforeach
         </nav>
 
         <div class="header-right">
             <x-language-switcher />
 
-            <button type="button" class="theme-toggle" data-theme-toggle aria-label="Переключить тему">
+            <button type="button" class="theme-toggle" data-theme-toggle aria-label="{{ __('site.nav.theme_toggle') }}">
                 <span class="theme-toggle__icon" data-theme-icon="light">☀</span>
                 <span class="theme-toggle__icon" data-theme-icon="dark">🌙</span>
             </button>
@@ -51,10 +76,10 @@
                 <a href="{{ route('cabinet.show') }}" class="login-link">{{ auth()->user()->name }}</a>
                 <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                     @csrf
-                    <button type="submit" class="login-link" style="background: none; border: none; cursor: pointer; font: inherit;">Выход</button>
+                    <button type="submit" class="login-link" style="background: none; border: none; cursor: pointer; font: inherit;">{{ __('site.nav.logout') }}</button>
                 </form>
             @else
-                <a href="{{ route('login') }}" class="login-link {{ request()->routeIs('login') ? 'active' : '' }}">Авторизация</a>
+                <a href="{{ route('login') }}" class="login-link {{ request()->routeIs('login') ? 'active' : '' }}">{{ __('site.nav.login') }}</a>
             @endauth
         </div>
     </div>
@@ -67,11 +92,17 @@
 <footer>
     <div class="footer-content">
         <div class="footer-left">
-            Community of Players Final Fantasy XI - Phoenix Server
+            {{ $siteNavigation->footerText() }}
         </div>
         <div class="footer-links">
-            <a href="{{ route('contacts') }}">Контакты</a>
-            <a href="{{ route('login') }}">Авторизация</a>
+            @foreach ($siteNavigation->footerItems() as $item)
+                <a href="{{ $item['url'] }}">
+                    @if ($item['imageUrl'])
+                        <img src="{{ $item['imageUrl'] }}" alt="" class="nav-link__icon">
+                    @endif
+                    {{ $item['label'] }}
+                </a>
+            @endforeach
         </div>
     </div>
 </footer>

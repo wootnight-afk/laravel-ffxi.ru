@@ -3,7 +3,7 @@
 @endphp
 
 {{-- Plain POST form: switching works without JavaScript (ADR-011 §2.2). --}}
-<form method="POST" action="{{ route('locale.update') }}" class="locale-switcher" aria-label="Язык интерфейса">
+<form method="POST" action="{{ route('locale.update') }}" class="locale-switcher" aria-label="{{ __('site.locale.switch_label') }}">
     @csrf
     @foreach (\App\Enums\Locale::cases() as $locale)
         <button

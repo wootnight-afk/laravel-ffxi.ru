@@ -59,7 +59,7 @@ class CabinetController extends Controller
 
         return redirect()
             ->route('cabinet.tab', ['tab' => 'profile'])
-            ->with('status', 'Профиль сохранён.');
+            ->with('status', __('site.cabinet.flash.profile_saved'));
     }
 
     public function uploadAvatar(Request $request): RedirectResponse
@@ -76,7 +76,7 @@ class CabinetController extends Controller
 
         return redirect()
             ->route('cabinet.tab', ['tab' => 'profile'])
-            ->with('status', 'Аватар обновлён.');
+            ->with('status', __('site.cabinet.flash.avatar_updated'));
     }
 
     public function deleteAvatar(): RedirectResponse
@@ -85,6 +85,6 @@ class CabinetController extends Controller
 
         return redirect()
             ->route('cabinet.tab', ['tab' => 'profile'])
-            ->with('status', 'Аватар удалён.');
+            ->with('status', __('site.cabinet.flash.avatar_deleted'));
     }
 }

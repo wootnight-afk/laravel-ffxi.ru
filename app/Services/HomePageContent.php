@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\Locale;
+
 /**
  * Single source of truth for the public home page (`/`).
  *
@@ -12,13 +14,23 @@ namespace App\Services;
  * (or a key holding `null`) means "use the bundled default", so a fresh
  * installation renders exactly the same markup as before the editor existed.
  */
-class HomePageContent
+class HomePageContent implements PageContentProvider
 {
     public const KEY_META_TITLE = 'home.meta_title';
 
+    public const KEY_META_TITLE_EN = 'home.meta_title_en';
+
+    public const KEY_META_DESCRIPTION = 'home.meta_description';
+
+    public const KEY_META_DESCRIPTION_EN = 'home.meta_description_en';
+
     public const KEY_H1 = 'home.h1';
 
+    public const KEY_H1_EN = 'home.h1_en';
+
     public const KEY_BODY = 'home.body';
+
+    public const KEY_BODY_EN = 'home.body_en';
 
     public const KEY_HERO_LOGO = 'home.hero_logo';
 
@@ -27,6 +39,10 @@ class HomePageContent
     public const KEY_MAIN_IMAGE_WIDTH = 'home.main_image_width';
 
     public const KEY_MAIN_IMAGE_HEIGHT = 'home.main_image_height';
+
+    public const KEY_IS_MAIN_IMAGE_COMPONENT_ENABLED = 'home.is_main_image_component_enabled';
+
+    public const KEY_IS_BODY_COMPONENT_ENABLED = 'home.is_body_component_enabled';
 
     /**
      * Bundled assets shipped with the repository. The hero crop in app.css is
@@ -74,6 +90,8 @@ class HomePageContent
             self::KEY_MAIN_IMAGE => null,
             self::KEY_MAIN_IMAGE_WIDTH => self::DEFAULT_MAIN_IMAGE_WIDTH,
             self::KEY_MAIN_IMAGE_HEIGHT => self::DEFAULT_MAIN_IMAGE_HEIGHT,
+            self::KEY_IS_MAIN_IMAGE_COMPONENT_ENABLED => true,
+            self::KEY_IS_BODY_COMPONENT_ENABLED => true,
         ];
     }
 
@@ -91,12 +109,19 @@ class HomePageContent
 
         return [
             'meta_title' => $this->text(self::KEY_META_TITLE, $defaults[self::KEY_META_TITLE]),
+            'meta_title_en' => $this->text(self::KEY_META_TITLE_EN, ''),
+            'meta_description' => $this->text(self::KEY_META_DESCRIPTION, ''),
+            'meta_description_en' => $this->text(self::KEY_META_DESCRIPTION_EN, ''),
             'h1' => $this->text(self::KEY_H1, $defaults[self::KEY_H1]),
+            'h1_en' => $this->text(self::KEY_H1_EN, ''),
             'body' => $this->body($defaults[self::KEY_BODY]),
+            'body_en' => $this->body('', self::KEY_BODY_EN),
             'hero_logo' => $this->customPath(self::KEY_HERO_LOGO),
             'main_image' => $this->customPath(self::KEY_MAIN_IMAGE),
             'reset_hero_logo' => false,
             'reset_main_image' => false,
+            'is_main_image_component_enabled' => $this->componentEnabled(self::KEY_IS_MAIN_IMAGE_COMPONENT_ENABLED),
+            'is_body_component_enabled' => $this->componentEnabled(self::KEY_IS_BODY_COMPONENT_ENABLED),
         ];
     }
 
@@ -108,12 +133,15 @@ class HomePageContent
      *
      * @return array{
      *     metaTitle: string,
+     *     metaDescription: string,
      *     h1: string,
      *     heroLogoUrl: string,
      *     heroLogoIsCustom: bool,
      *     mainImageUrl: string,
      *     mainImageWidth: int,
      *     mainImageHeight: int,
+     *     mainImageComponentEnabled: bool,
+     *     bodyComponentEnabled: bool,
      *     bodyHtml: string
      * }
      */
@@ -125,8 +153,21 @@ class HomePageContent
         $mainImage = $this->customPath(self::KEY_MAIN_IMAGE);
 
         return [
-            'metaTitle' => $this->text(self::KEY_META_TITLE, $defaults[self::KEY_META_TITLE]),
-            'h1' => $this->text(self::KEY_H1, $defaults[self::KEY_H1]),
+            'metaTitle' => $this->localizedText(
+                self::KEY_META_TITLE,
+                $defaults[self::KEY_META_TITLE],
+                self::KEY_META_TITLE_EN,
+            ),
+            'metaDescription' => $this->localizedText(
+                self::KEY_META_DESCRIPTION,
+                '',
+                self::KEY_META_DESCRIPTION_EN,
+            ),
+            'h1' => $this->localizedText(
+                self::KEY_H1,
+                $defaults[self::KEY_H1],
+                self::KEY_H1_EN,
+            ),
             'heroLogoUrl' => $heroLogo !== null
                 ? asset('storage/'.$heroLogo)
                 : asset(self::DEFAULT_HERO_LOGO),
@@ -136,7 +177,12 @@ class HomePageContent
                 : asset(self::DEFAULT_MAIN_IMAGE),
             'mainImageWidth' => $this->dimension(self::KEY_MAIN_IMAGE_WIDTH, self::DEFAULT_MAIN_IMAGE_WIDTH),
             'mainImageHeight' => $this->dimension(self::KEY_MAIN_IMAGE_HEIGHT, self::DEFAULT_MAIN_IMAGE_HEIGHT),
-            'bodyHtml' => $this->renderer->render($this->body($defaults[self::KEY_BODY])),
+            'mainImageComponentEnabled' => $this->componentEnabled(self::KEY_IS_MAIN_IMAGE_COMPONENT_ENABLED),
+            'bodyComponentEnabled' => $this->componentEnabled(self::KEY_IS_BODY_COMPONENT_ENABLED),
+            'bodyHtml' => $this->renderer->render($this->localizedBody(
+                $defaults[self::KEY_BODY],
+                self::KEY_BODY_EN,
+            )),
         ];
     }
 
@@ -154,11 +200,54 @@ class HomePageContent
      * Page body is allowed to be empty: an empty string hides the block on the
      * front end, while a missing key keeps the default text.
      */
-    private function body(string $default): string
+    private function body(string $default, string $key = self::KEY_BODY): string
     {
-        $value = $this->settings->get(self::KEY_BODY, $default);
+        $value = $this->settings->get($key, $default);
 
         return is_string($value) ? $value : $default;
+    }
+
+    /**
+     * Per-field fallback for the English locale (ADR-011 §2.20–2.21):
+     * a non-empty EN value wins, otherwise the RU value (or its default).
+     */
+    private function localizedText(string $key, string $default, string $englishKey): string
+    {
+        if (app()->getLocale() === Locale::En->value) {
+            $value = $this->settings->get($englishKey);
+
+            if (is_string($value) && trim($value) !== '') {
+                return $value;
+            }
+        }
+
+        return $this->text($key, $default);
+    }
+
+    private function localizedBody(string $default, string $englishKey): string
+    {
+        if (app()->getLocale() === Locale::En->value) {
+            $value = $this->settings->get($englishKey);
+
+            if (is_string($value) && trim($value) !== '') {
+                return $value;
+            }
+        }
+
+        return $this->body($default);
+    }
+
+    /**
+     * Component switch stored in the settings store.
+     *
+     * A missing key means enabled, so existing installations keep rendering
+     * the block until an administrator explicitly turns it off.
+     */
+    public function componentEnabled(string $key): bool
+    {
+        $value = $this->settings->get($key, true);
+
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true;
     }
 
     /**

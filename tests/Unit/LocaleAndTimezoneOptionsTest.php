@@ -59,7 +59,7 @@ it('renders the current UTC offset in labels', function () {
     expect(TimezoneOptions::offset('Europe/Berlin'))->toBe('+02:00')
         ->and(TimezoneOptions::offset('Europe/Moscow'))->toBe('+03:00')
         ->and(TimezoneOptions::offset('UTC'))->toBe('+00:00')
-        ->and(TimezoneOptions::label('Europe/Berlin'))->toBe('Europe/Berlin (UTC +02:00)');
+        ->and(TimezoneOptions::label('Europe/Berlin'))->toBe('Europe/Berlin — UTC+02:00');
 
     Carbon::setTestNow(Carbon::parse('2026-12-01 12:00:00', 'UTC'));
 
@@ -76,3 +76,28 @@ it('validates IANA identifiers and rejects fixed offsets', function () {
         ->and(TimezoneOptions::isValid('+03:00'))->toBeFalse()
         ->and(TimezoneOptions::isValid('Mars/Olympus'))->toBeFalse();
 });
+
+it('exposes the whole IANA catalogue to the selector', function () {
+    expect(TimezoneOptions::count())->toBeGreaterThan(400)
+        ->and(TimezoneOptions::count())->toBe(count(DateTimeZone::listIdentifiers()))
+        ->and(array_sum(array_map('count', TimezoneOptions::grouped())))->toBe(TimezoneOptions::count());
+});
+
+it('searches the catalogue by identifier and by city name', function (string $query, string $expected) {
+    $results = TimezoneOptions::search($query);
+    $identifiers = [];
+
+    foreach ($results as $zones) {
+        $identifiers = [...$identifiers, ...array_keys($zones)];
+    }
+
+    expect($identifiers)->toContain($expected);
+})->with([
+    'city only' => ['Helsinki', 'Europe/Helsinki'],
+    'full identifier' => ['Europe/Helsinki', 'Europe/Helsinki'],
+    'nested identifier' => ['America/Indiana/Indianapolis', 'America/Indiana/Indianapolis'],
+    'city with space' => ['Buenos Aires', 'America/Argentina/Buenos_Aires'],
+    'city with underscore' => ['Buenos_Aires', 'America/Argentina/Buenos_Aires'],
+    'remote island zone' => ['Pacific/Chatham', 'Pacific/Chatham'],
+    'case insensitive' => ['hElSiNkI', 'Europe/Helsinki'],
+]);

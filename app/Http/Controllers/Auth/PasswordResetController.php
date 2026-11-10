@@ -27,7 +27,7 @@ class PasswordResetController extends Controller
         // Anti-enumeration: всегда возвращаем один и тот же нейтральный ответ.
         Password::sendResetLink($request->only('email'));
 
-        return back()->with('status', 'Если такой аккаунт существует, письмо со ссылкой отправлено.');
+        return back()->with('status', __('site.auth.status.reset_link_sent'));
     }
 
     public function showResetForm(Request $request, string $token): View
@@ -59,11 +59,11 @@ class PasswordResetController extends Controller
         );
 
         if ($status === Password::PASSWORD_RESET) {
-            return redirect()->route('login')->with('status', 'Пароль изменён. Войдите с новым паролем.');
+            return redirect()->route('login')->with('status', __('site.auth.status.password_reset'));
         }
 
         return back()->withInput($request->only('email'))->withErrors([
-            'email' => 'Не удалось сбросить пароль. Ссылка могла устареть.',
+            'email' => __('site.auth.errors.reset_failed'),
         ]);
     }
 }

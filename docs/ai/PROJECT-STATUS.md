@@ -1,12 +1,64 @@
 # Project Status — laravel-ffxi.ru
 
 ## HEAD
-`e6099e9` на ветке `main` (ADR-011 L1 — locale and timezone storage),
-опубликован в `origin/main`. E10.1 (`68f5eae`), E10.2 (`c65e1f7`), E10.3
-(`b0c68d9`), E10.4 (`5274ed5`), E10.5 (`15f084a`), E10.5b (`bf6a551`) —
-закоммичены. Stage 9 закрыт `bb3bbf7`.
-ADR-011 L2 — в рабочем дереве, без commit (реализация завершена, ожидает
-проверки владельца).
+`298f5bc` на ветке `main` (ADR-011 L4 — Filament timezone handling);
+`origin/main` — `e6099e9` (L2–L4 локально, не запушены). ADR-011:
+L2 — `60b6d82`, L3 — `d01b8d2`, L4 — `298f5bc` — реализованы и
+закоммичены. E10.1 (`68f5eae`), E10.2 (`c65e1f7`), E10.3 (`b0c68d9`),
+E10.4 (`5274ed5`), E10.5 (`15f084a`), E10.5b (`bf6a551`) — закоммичены.
+Stage 9 закрыт `bb3bbf7`.
+
+## Последние изменения (интеграционный коммит A: ADR-011 L5/L6 + SitePageEditor)
+
+Аудит единого редактора страниц — исправления:
+
+- `SitePageEditor`: публикация и `menu_order` доступны CMS и в режиме
+  создания; slug-валидация (формат, `RESERVED_SLUGS`, уникальность только
+  среди активных); `key()` бросает исключение при отсутствии константы
+  провайдера; `saveSystem()` атомарен (файл → транзакция настроек/аудита/
+  меню → удаление заменённого файла после commit; новый файл удаляется при
+  ошибке); RU/EN подписи системных пунктов меню из `site.nav.*`.
+- `PageMenuManager`: синхронизация `label_ru`/`label_en`/`target`,
+  схлопывание дублей привязок, `menu_order` — только стартовый `order`
+  новой привязки (порядок существующих принадлежит Header/Footer), аудит
+  `page.created`/`page.updated`, осмысленный тумблер home (логотип-ссылка).
+- `PageResource`: аудит `page.published`/`page.unpublished`.
+- `SitePageRegistry`: отсутствующий классифицированный маршрут больше не
+  даёт 500 (пропуск + `Log::warning` + категория `missing` на
+  `/admin/routes`); `auth`-страницы классифицируются как `auth`.
+- `PageEditorProfile`: `menuLabelKey`, кэш профилей по локали, удалены
+  неиспользуемые `slugField`/`seoFields`/`hasBody`.
+- Провайдеры системных страниц: `KEY_META_DESCRIPTION(_EN)`, вывод
+  `<meta name="description">` с per-field fallback.
+- `PageController`: `RESERVED_SLUGS` дополнен (`contacts`, `mfa`,
+  `filament`, `storage`), защита от `livewire-` префикса
+  (`hasReservedPrefix()` — `public static`, общий с редактором и генератором).
+- Миграция `2026_11_10_000000_add_active_slug_key_to_pages_table`:
+  generated `slug_key` + `UNIQUE`, soft-deleted страница освобождает slug.
+- Новые тесты: `tests/Feature/Filament/PageEditorHardeningTest.php`.
+
+Второй READ-ONLY аудит — устранение замечаний:
+
+- Slug CMS: замыкающее правило `Page::isReservedSlug()` в
+  `SitePageEditor::slugSection()` отклоняет префикс `livewire-`
+  (`Rule::notIn` его не видит).
+- Автогенерация: `Page::generateUniqueSlug()` вместо `Str::slug()` —
+  учитывает `RESERVED_SLUGS` и префиксы (база получает `page-`), занятость
+  активных slug (`-2`, `-3` … до 50), ограничение длины
+  (`SLUG_MAX_LENGTH`). Исчерпание вариантов (`SlugGenerationException`) и
+  нарушение `pages_slug_key_unique` переводятся в ошибку поля `data.slug`,
+  а не в HTTP 500.
+- `saveSystem()`: единый `try` от загрузки файлов до транзакции; новые файлы
+  удаляются на любом пути выхода (разрешение констант, `$previous`,
+  транзакция); `resolveImages()` чистит сохранённое на любой `Throwable`.
+  Заменённые файлы по-прежнему удаляются только после commit.
+- `<title>`/`meta description`: проверено, что XSS-вектора нет — Blade
+  экранирует значение сокращённого `@section('name', $value)` при
+  сохранении секции; добавлен regression-тест на 6 системных и CMS-страницу
+  (escaped ровно один раз) и комментарий в layout.
+- Lang: `filament.page_editor.validation.slug_taken|slug_auto`, уточнён
+  `fields.slug_help`.
+- Тесты: +15 сценариев в `PageEditorHardeningTest` (всего 1099 passed).
 
 ## Прогресс по этапам (§30 context.md)
 
@@ -154,6 +206,10 @@ ADR-011 L2 — в рабочем дереве, без commit (реализаци
 
 ## News — редактор шапки страницы `/news`
 
+> **Устарело:** `App\Filament\Pages\NewsPage` и маршрут `/admin/news-page`
+> удалены. Шапка новостей редактируется единым `SitePageEditor`
+> (`/admin/pages/sys.news.index/edit`). Раздел сохранён как история этапа.
+
 - Админка: `App\Filament\Pages\NewsPage` (`/admin/news-page`), в сайдбаре
   скрыта. Точка входа — header action «Редактор страницы» в `ListNews`
   (рядом с «Создать»), виден только admin.
@@ -180,6 +236,10 @@ ADR-011 L2 — в рабочем дереве, без commit (реализаци
   аудита после проверки удалены.
 
 ## Home — редактор Главной страницы (singleton)
+
+> **Устарело:** `App\Filament\Pages\HomePage` и маршрут `/admin/home`
+> удалены. Главная редактируется единым `SitePageEditor`
+> (`/admin/pages/sys.home/edit`). Раздел сохранён как история этапа.
 
 - Админка: `App\Filament\Pages\HomePage` (`/admin/home`, группа «Контент»,
   `navigationSort = 0` — выше «Новости»). Filament 5 не умеет
@@ -314,11 +374,19 @@ ADR-011 L2 — в рабочем дереве, без commit (реализаци
   В production effective policy форсирует оба инварианта независимо от БД.
 - Порядок: E10.1 → E10.2 → E10.3 → E10.4 → E10.5 → E10.5b → E10.6 → E10.7 → E10.8.
 
-## Локализация и часовые пояса — ADR-011 (L1 DONE / ACCEPTED; L2 DONE, ожидает проверки; L3–L6 NOT STARTED)
+## Локализация и часовые пояса — ADR-011 (L1 DONE / ACCEPTED; L2–L4 DONE; L5/L6 DONE — ACCEPT WITH REMARKS, pending owner review; L7 отложено)
+
+> **Приёмка L5/L6:** `docs/acceptance/adr-011-l5-l6.md` —
+> **ACCEPT WITH REMARKS — pending owner review**. Документ подтверждает
+> техническую готовность; 22 критерия §10 ADR-011 проверяет владелец
+> проекта. Полный статус `Accepted` не присвоен.
 
 - `docs/adr/ADR-011-localization-and-timezones.md` — **Partially accepted**:
-  L0 — DONE; **L1 — DONE / ACCEPTED (2026-11-05)**;
-  **L2 — реализовано, ожидает проверки владельца**; L3–L6 — NOT STARTED.
+  L0 — DONE; **L1 — DONE / ACCEPTED (2026-11-05)**; **L2 — DONE
+  (`60b6d82`)**; **L3 — DONE (`d01b8d2`)**; **L4 — DONE (`298f5bc`)** —
+  реализованы и закоммичены, без формальной приёмки; L5 — IN PROGRESS
+  (L5.0–L5.1 DONE в рабочем дереве); L6 — NOT STARTED (после L5);
+  L7 — отложено.
   Архитектура: независимость языка интерфейса и часового пояса; три
   семантики времени (календарная дата / локальный момент / международное
   UTC); пояс: `users.timezone` → cookie `tz` (IANA браузера) → `UTC`;
@@ -346,7 +414,7 @@ ADR-011 L2 — в рабочем дереве, без commit (реализаци
   при невалидных сохранённых значениях; `Locale::from()` вне `try`;
   расхождение перечня файлов L1; неполное покрытие ветки `forget`;
   `old()` после ошибки БД; стоимость построения списка поясов.
-- **L2 — реализовано (в рабочем дереве, без commit):**
+- **L2 — DONE (`60b6d82`), реализовано и закоммичено:**
   - `App\Services\LocaleResolver` — auth: `users.locale` → session → cookie
     `locale` → `Accept-Language` → `ru`; гость: session → cookie →
     `Accept-Language` → `ru`; невалидные значения игнорируются; вне HTTP
@@ -409,12 +477,207 @@ ADR-011 L2 — в рабочем дереве, без commit (реализаци
   по локали. `timezone_display` — legacy, не удаляется до проверки всех
   читателей.
 - **Этапы:** L0 документация — DONE → **L1 миграции и профиль — DONE /
-  ACCEPTED** → **L2 резолверы и cookie — DONE, ожидает проверки** →
-  L3 компоненты и разделы — NOT STARTED → L4 Filament (`FilamentTimezone` +
-  UTC-pin) — NOT STARTED → L5 полная локализация RU/EN — NOT STARTED →
-  L6 тесты и приёмка — NOT STARTED. L7 (URL-префиксы) — отложено.
+  ACCEPTED** → **L2 резолверы и cookie — DONE (`60b6d82`)** →
+  **L3 компоненты и разделы — DONE (`d01b8d2`)** → **L4 Filament
+  (`FilamentTimezone` + UTC-pin) — DONE (`298f5bc`)** → **L5 полная
+  локализация RU/EN — DONE (L5.0–L5.9)** → **L6 CMS и админ-инструменты —
+  DONE (L6.1–L6.5)**. L7 (URL-префиксы) — отложено.
+  L2–L4 реализованы и закоммичены, но не имеют формальной приёмки:
+  критерии §10 ADR-011 проверяются в L6.
 - **Открытые вопросы:** нет — вопросы ADR-011 §8 закрыты владельцем
   2026-11-04.
+
+### L5/L6 — документальное закрепление требований (2026-11-06)
+
+Результаты READ-ONLY аудита и согласованные решения зафиксированы
+в ADR-011 (новые §2.16–2.25, обновлённые §5, §6, §7, §9, §10).
+L5 — DONE (L5.0–L5.9); L6 — DONE (L6.1–L6.5).
+
+**L5 — RU/EN локализация интерфейса (подэтапы):**
+
+| Подэтап | Цель | Зависимости |
+|---|---|---|
+| L5.0 | Инфраструктура переводов: `lang/{ru,en}/site.php`, `validation.php`, `auth.php`, `passwords.php`, `pagination.php`; `fallback_locale=ru`; проверка полноты EN-ключей | L2 |
+| L5.1 | Layout, Header, Footer, cookie-banner, пагинация | L5.0 |
+| L5.2 | Auth, регистрация, сброс пароля, валидация | L5.0 |
+| L5.3 | News и Gallery | L5.0 |
+| L5.4 | Cabinet и пользовательские настройки (устаревшие тексты PreferencesController исправляются здесь) | L5.0 |
+| L5.5 | Events, Chat, Activity Feed, trans_choice | L5.0 |
+| L5.6 | Privacy/Cookie (добавить locale/tz в /cookie), страницы ошибок 403/404/419/429/500 | L5.0 |
+| L5.7 | Filament: навигационные группы (ленивый резолв), lang/{ru,en}/filament.php | L5.0 |
+| L5.8 | Carbon::setLocale(), DateFormat::localDayLabel(), относительное время, ActivityType | L5.0–L5.7 |
+| L5.9 | Уведомления (16 файлов), сервисные исключения, оставшиеся PHP-строки | L5.0–L5.8 |
+
+**Прогресс L5 (интеграционный коммит A; ранее — рабочее дерево):**
+
+- L5.0 — DONE: `lang/{ru,en}/{auth,pagination,passwords,validation,site}.php`;
+  `config/app.php` fallback `ru`; `.env.example` и `phpunit.xml`
+  `APP_FALLBACK_LOCALE=ru`; `Locale::label()` и сообщение
+  `LocaleController` через `__()`; `app:translations:check`
+  (`TranslationCompleteness`) + тесты.
+- L5.1 — DONE: Header, Footer, cookie-banner, language-switcher,
+  пагинация через `lang/{ru,en}/site.php`; тесты
+  `tests/Feature/Localization/PublicLayoutTranslationTest.php`.
+- L5.2 — DONE: auth-страницы (login, register, forgot/reset password,
+  verify email, registration closed), flash/ошибки `LoginController`,
+  `PasswordResetController`, `EmailVerificationController`,
+  `RegistrationOpen`, `RegisterRequest`; тесты
+  `tests/Feature/Localization/AuthTranslationTest.php`.
+- L5.3 — DONE: News (index/show) и Gallery (index/album/photo),
+  компоненты `x-datetime`, `x-naive-date`, пустые состояния; тесты
+  `tests/Feature/Localization/ContentPagesTranslationTest.php`.
+- L5.4 — DONE: Cabinet (все вкладки), MFA challenge, FormRequest'ы
+  кабинета, `PreferencesController`, `SocialLinkController`,
+  `SectionAccess`; тесты
+  `tests/Feature/Localization/CabinetTranslationTest.php`.
+- L5.5 — DONE: Events, Chat, Activity Feed, `trans_choice` для счётчиков
+  (участники, онлайн, повторения, фото), `EventDateInput`, `EventService`,
+  `ChatRoom`; тесты
+  `tests/Feature/Localization/EventsChatActivityTranslationTest.php`.
+- L5.6 — DONE: `/privacy` и `/cookie` переведены, в таблицу cookie
+  добавлены `locale` и `tz` (1 год) и `cookie_banner_ack`; созданы
+  `resources/views/errors/{layout,403,404,419,422,429,500}.blade.php`
+  (419 — перезагрузка, 429 — таймер по `Retry-After`), стили
+  `.error-page`; тесты
+  `tests/Feature/Localization/PrivacyCookieErrorTranslationTest.php`.
+- L5.7 — DONE: `lang/{ru,en}/filament.php` (навигация, дашборд, настройки,
+  ресурсы, backup, matrix, MFA, reauth); навигационные группы переведены
+  на стабильные ключи (`main/community/content/system`) с ленивым
+  резолвом подписей в `AdminPanelProvider`; убраны последние русские
+  строки из `NewsResource` и виджета аудита; тесты
+  `tests/Feature/Localization/FilamentTranslationTest.php`
+  (+ обновлён `Stage8AcceptanceTest` под ключи групп).
+- L5.8 — DONE: `Carbon::setLocale()` в `SetLocale`,
+  `SetAdminPanelLocale` и `LocaleController`; `DateFormat::localDayLabel()`
+  через `site.common.today/yesterday` (с учётом переданной локали);
+  `ActivityType::label()` через `site.activity.types.*`; проверены
+  plural-формы RU/EN; тесты
+  `tests/Feature/Localization/DateTimeActivityTranslationTest.php`
+  и обновлён `tests/Unit/DateFormatTest.php`.
+- L5.9 — DONE: 5 mail-уведомлений переведены через трейт
+  `Notifications\Concerns\LocalizesMail` (язык получателя, fallback — `ru`);
+  `ImageProcessingException` и префиксы ошибок
+  `Avatar/HomeImage/NewsCover/ImageProcessor` переведены через
+  `site.images.errors.*`; `app:create-admin` использует
+  `site.console.create_admin.*`; тесты
+  `tests/Feature/Localization/NotificationsImagesTranslationTest.php`.
+- L6.1 — DONE: CMS-навигация Header/Footer. `SiteNavigation` хранит
+  `header.items` / `footer.items` (JSON) и `footer.text_ru` / `footer.text_en`
+  в `settings`; типы целей `route|page|url` с allowlist маршрутов и
+  проверкой схемы внешних URL; fallback подписей и текста футера EN→RU.
+  Страницы админки `HeaderPage` (`/admin/header`, sort 5) и `FooterPage`
+  (`/admin/footer`, sort 6) в группе «Контент» с Repeater (порядок,
+  видимость, RU/EN подписи, иконка); доступ — `pages.manage` (admin+editor).
+  Иконки — слот `nav` в `HomeImageUploader` (≤400×400, min 16 px, WebP q85).
+  CSS: `flex-wrap` для `.footer-content`/`.footer-links`, sticky-футер
+  динамической высоты вместо `position: fixed` и фиксированного
+  `--footer-height`, стили `.nav-link__icon`. Тесты
+  `tests/Feature/Localization/SiteNavigationTest.php` (15).
+- L6.2 — DONE: RU/EN CMS для Pages. Миграция
+  `0001_01_01_000027_add_localized_columns_to_pages_table` добавляет
+  nullable `title_en`, `body_en`, `body_html_en`, `meta_title_en`,
+  `meta_description_en` (без backfill); `Page::booted()` рендерит
+  `body_html_en` через `ContentRenderer` при изменении `body_en`.
+  `PageController::show` применяет per-field fallback EN→RU (заголовок,
+  HTML-тело, meta title/description); layout выводит
+  `<meta name="description">`. В `PageResource` — вкладки RU/EN для
+  контента и SEO. `SiteNavigation::headerItems()` добавляет опубликованные
+  страницы с   `show_in_menu` (по `menu_order`, без дублей с явными
+  пунктами и без зарезервированных slug'ов). Тесты
+  `tests/Feature/Localization/PagesContentTranslationTest.php` (6).
+- L6.3 — DONE: переключатель языка в админке через
+  `PanelsRenderHook::USER_MENU_BEFORE` (`AdminPanelProvider::renderHook()`),
+  Blade-вью `filament/components/language-switcher` — обычная POST-форма на
+  существующий `locale.update` (`LocaleController` → `LocalePreference`),
+  без второго источника истины; `users.locale` пишется, панель
+  перерисовывается на выбранном языке. Тесты
+  `tests/Feature/Localization/FilamentLanguageSwitcherTest.php` (4).
+- L6.4 — DONE: три циферблата Dashboard ClockWidget (UTC / устройство / регион).
+  `users.secondary_timezone` (nullable, varchar 64, без default/backfill) —
+  третьи часы; миграция `0001_01_01_000028` была **Pending** (столбец отсутствовал),
+  применена изолированно (`--path`); `TimezoneResolver::browserTimezone()` — cookie
+  `tz` для начального серверного рендера часов устройства; Alpine `setInterval(1000)`
+  с `Intl.DateTimeFormat` для тика и смещения; DST учитывается динамически;
+  inline-селект региона в виджете (`InteractsWithForms`), валидация IANA-зоны,
+  сохранение текущему пользователю, сброс; `secondary_timezone` убран из
+  `EditProfile` — единственный интерфейс — виджет. `TimezoneOptions::grouped()` и
+  `options()` кэшируются на 1 час (Cache::remember, ключ включает PHP_VERSION +
+  hash идентификаторов); ADR-011 R15 «419 подписей на рендер» устранено (8x
+  ускорение); `ClockWidget` Select использует `grouped()` (optgroup, 11 регионов,
+  419 IANA-зон). Виджет выводится **один раз** — через `discoverWidgets()` панели
+  в основной сетке; `AdminDashboard::getHeaderWidgets()` удалён, поскольку давал
+  второй независимый экземпляр (header + сетка). Обнаружено и устранено
+  усечение селектора: дефолтный `optionsLimit` Filament (50) показывал только
+  первые африканские зоны — поднят до `TimezoneOptions::count()`; поиск переведён
+  на серверный (`getSearchResultsUsing` → `TimezoneOptions::search()`), где `_`
+  и пробел эквивалентны, поэтому находятся и `America/Argentina/Buenos_Aires`,
+  и «Buenos Aires»; подпись — `Europe/Helsinki — UTC+02:00`. Тесты
+  `tests/Feature/Localization/ClockWidgetTest.php` (16) и
+  `tests/Unit/LocaleAndTimezoneOptionsTest.php` (13, включая 7 контрольных
+  примеров поиска).
+- L6.4b — DONE: переключатель формата времени **12/24 ч** в заголовке
+  секции «World time» (`ClockWidget`). Хранение — plain-cookie
+  `clock_format` (`'12'` / `'24'`, 1 год, `path=/`, `SameSite=Lax`), по
+  образцу `tz`; колонка в `users` и миграция не создавались (переключение
+  происходит на клиенте без Livewire-запроса). `bootstrap/app.php` —
+  `clock_format` добавлен в `encryptCookies(except:)`. Серверный рендер:
+  `ClockWidget::timeFormat()` (неизвестное значение → `24`), `phpTimeFormat()`
+  (`H:i:s` / `h:i:s A`), формат передаётся в view как `timeFormat`. Alpine:
+  корневой `x-data` виджета хранит `format`, `setFormat()` пишет cookie и
+  рассылает событие `clock-format`, которое принимают все три циферблата —
+  формат меняется одновременно без перезагрузки; `Intl.DateTimeFormat` для
+  времени использует фиксированную локаль `en-US` и `hourCycle: h12|h23`,
+  чтобы AM/PM не зависел от локали браузера. Переключатель — слот
+  `afterHeader` секции (`role="group"` + `aria-pressed`), подписи
+  `dashboard.clock.format_label/format_24/format_12` (`lang/{ru,en}/filament.php`);
+  стили кнопок inline, потому что часть generic-утилит Tailwind отсутствует
+  в CSS-бандле Filament. `localStorage` не используется (ADR-011). Тесты —
+  `ClockWidgetTest` (16): 12-часовой рендер UTC и не-UTC (AM/PM), fallback
+  при невалидном cookie, наличие переключателя и RU/EN подписей.
+- L6.5 — DONE: интеграционная проверка. Полный Pest —
+  **996 passed / 3472 assertions, 5 failed** (все 5 — предсуществующий
+  класс «закрытая для гостя секция отдаёт 302 на login вместо 404»:
+  `SectionAccessTest` ×2, `PermissionsMatrixPageTest` ×2,
+  `EventPagesTest` ×1; поведение задано `SectionAccess` по
+  frontend-spec §3.6/§9.17 и ADR-010, тесты не обновлялись в L5/L6).
+  `app:translations:check` — 0 missing; `pint --test` — 443 files PASS;
+  `phpstan` (Larastan) — No errors. Миграции L6: `pages` EN-колонки,
+  `users.secondary_timezone` (expand-only, без backfill). Сборка
+  ассетов локально не выполнялась: `node_modules` принадлежит другому
+  пользователю (EACCES), `public/build` не изменялся.
+
+**L6 — CMS и административные инструменты:**
+
+| Подэтап | Цель | Зависимости | Миграции |
+|---|---|---|---|
+| L6.1 | Редакторы Header/Footer (CMS-навигация, RU/EN подписи, flex-wrap для Footer) | L5.0–L5.1 | settings или новая таблица |
+| L6.2 | RU/EN CMS для Home/News/Pages: `title_en`, `body_en`, `meta_title_en`, `meta_description_en` в `pages`; fallback по полям; табы в редакторах | L5.0–L5.9 | да (`pages`) |
+| L6.3 | Переключатель языка в Filament (`USER_MENU_BEFORE`); ленивый резолв navigation groups | L5.7 | нет |
+| L6.4 | Dashboard часы: 3 циферблата (UTC / устройство / регион), `TimezoneResolver::browserTimezone()`, Alpine `setInterval`, inline-селект региона (optgroup, 11 регионов, 419 IANA-зон, кэш 1ч), динамическое смещение (DST) | L5.0–L5.9, L6.3 | да (`users`) |
+| L6.4b | ClockWidget: переключатель формата 12/24 ч (cookie `clock_format`, Alpine-событие `clock-format`, слот `afterHeader`) | L6.4 | нет |
+| L6.5 | Интеграционная проверка, приёмка, финальная документация | L3–L6.4 | нет |
+
+**Players — исключение из L5/L6:**
+Файлы `players/*.blade.php` и маршруты/логика Players не изменяются.
+Общие компоненты (Header, Footer, пагинация, ActivityBell) могут
+естественно затронуть страницы Players — это не считается редизайном.
+Полная переработка Players — отдельный будущий проект.
+
+**Инвентаризация (результаты аудита):**
+- 49 из 66 blade-файлов содержат кириллицу (464 строки);
+- 108 PHP-файлов содержат кириллицу (736 строк);
+- 16 из 18 FormRequest имеют `messages()` на русском;
+- 16 файлов в `app/Notifications` — русские тексты;
+- `resources/views/errors/` — отсутствует (страницы ошибок не локализованы);
+- `lang/` — только `ru/filament.php` и `en/filament.php`;
+  `validation.php`, `auth.php`, `passwords.php`, `pagination.php` — отсутствуют;
+- `fallback_locale = en` (должен быть `ru`);
+- `Carbon::setLocale()` — нигде не вызывается;
+- `trans_choice('игрок|игрока|игроков')` — `livewire/online-users.blade.php:4`;
+- `DateFormat::localDayLabel()` — хардкод «Сегодня/Вчера»;
+- `ActivityType` — русские глаголы;
+- `Page::scopeInMenu` — не используется; CMS-страницы в меню не выводятся;
+- `resources/views/cookie.blade.php` — не перечисляет `locale` и `tz`.
 
 ## Порядок дальнейшей работы
 
@@ -426,9 +689,13 @@ ADR-011 L2 — в рабочем дереве, без commit (реализаци
    следующий шаг — E10.6 (Filament MFA integration / removal of competing
    enforcement).
 3. ADR-011 — локализация и часовые пояса — **L1 DONE / ACCEPTED**
-   (2026-11-05), L1 опубликован (`e6099e9`); **L2 реализован в рабочем
-   дереве и ожидает проверки владельца**; L3–L6 NOT STARTED. Следующий
-   шаг — приёмка L2, затем L3.
+   (2026-11-05), L1 опубликован (`e6099e9`); **L2 (`60b6d82`), L3
+   (`d01b8d2`), L4 (`298f5bc`) — DONE, реализованы и закоммичены**;
+   L5 (L5.0–L5.9) и L6 (L6.1–L6.5) — DONE, зафиксированы интеграционным
+   коммитом вместе с `SitePageEditor`; техническая приёмка —
+   `docs/acceptance/adr-011-l5-l6.md` (**ACCEPT WITH REMARKS — pending
+   owner review**); следующий шаг — проверка владельцем критериев §10
+   ADR-011 (пп. 1–22); L7 — отложено.
 4. Stage 10 — Tests (§9) — NOT STARTED, ожидает отдельного решения после
    локальной проверки проекта владельцем.
 5. Stages 11–15 — по §30 context.md (CI, staging, deployment, production,

@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', $page->meta_title ?: $page->title)
+@section('title', $metaTitle ?: $title)
 
 @section('content')
-    <h1 class="page-title">{{ $page->title }}</h1>
+    <h1 class="page-title">{{ $title }}</h1>
 
     <div class="content-text">
-        {!! $page->body_html !!}
+        {!! $bodyHtml !!}
     </div>
 @endsection

@@ -9,8 +9,11 @@ use App\Http\Requests\UpdateLocalePreferenceRequest;
 use App\Http\Requests\UpdateTimezonePreferenceRequest;
 use App\Models\User;
 use App\Services\LocalePreference;
+use App\Services\LocaleResolver;
 use App\Support\LocaleCookie;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Throwable;
 
 class PreferencesController extends Controller
@@ -34,13 +37,22 @@ class PreferencesController extends Controller
             report($exception);
 
             return $this->profileRedirect()
-                ->withErrors(['locale' => 'Не удалось сохранить язык интерфейса. Попробуйте ещё раз.'])
+                ->withErrors(['locale' => __('site.cabinet.flash.locale_failed')])
                 ->withInput();
         }
 
+        if ($locale === null) {
+            // The response expires this cookie; ignore its stale request value too.
+            app(Request::class)->cookies->remove(LocaleResolver::COOKIE);
+        }
+
+        $resolvedLocale = app(LocaleResolver::class)->resolve($user);
+        app()->setLocale($resolvedLocale);
+        Carbon::setLocale($resolvedLocale);
+
         $message = $locale === null
-            ? 'Выбран автоматический язык интерфейса: применяется язык браузера.'
-            : 'Язык интерфейса сохранён и применён.';
+            ? __('site.cabinet.flash.locale_auto_saved')
+            : __('site.cabinet.flash.locale_saved');
 
         // Keep the plain `locale` cookie in sync with the stored preference;
         // "auto" removes it so a stale guest value cannot override
@@ -69,13 +81,13 @@ class PreferencesController extends Controller
             report($exception);
 
             return $this->profileRedirect()
-                ->withErrors(['timezone' => 'Не удалось сохранить часовой пояс. Попробуйте ещё раз.'])
+                ->withErrors(['timezone' => __('site.cabinet.flash.timezone_failed')])
                 ->withInput();
         }
 
         $message = $user->timezone === null
-            ? 'Выбран автоматический часовой пояс. Настройка сохранена; применение будет включено на следующем этапе.'
-            : 'Часовой пояс сохранён. Применение пояса к датам будет включено на следующем этапе.';
+            ? __('site.cabinet.flash.timezone_auto_saved')
+            : __('site.cabinet.flash.timezone_saved');
 
         return $this->profileRedirect()->with('status', $message);
     }

@@ -17,16 +17,16 @@
     @endphp
 
     <header class="community-chat__header">
-        <h2 class="section-title">Общий чат</h2>
+        <h2 class="section-title">{{ __('site.chat.title') }}</h2>
     </header>
 
     @if ($isMuted)
         <p class="community-chat__notice" role="status">
-            Вы заглушены
+            {{ __('site.chat.muted') }}
             @if (auth()->user()->chat_banned_permanently)
-                навсегда.
+                {{ __('site.chat.muted_forever') }}
             @else
-                до <x-datetime :value="auth()->user()->chat_banned_until" />.
+                {{ __('site.chat.muted_until') }} <x-datetime :value="auth()->user()->chat_banned_until" />.
             @endif
         </p>
     @endif
@@ -41,7 +41,7 @@
         x-on:scroll.passive="if (($refs.messages.scrollHeight - $refs.messages.scrollTop - $refs.messages.clientHeight) > 80) { rememberPosition() }"
     >
         @if ($messages->isEmpty())
-            <p class="news-meta">В чате пока нет сообщений.</p>
+            <p class="news-meta">{{ __('site.chat.empty') }}</p>
         @else
             @php
                 $previousDate = null;
@@ -68,11 +68,11 @@
                         @if ($message->user)
                             <x-user-identity :user="$message->user" context="chat" />
                         @else
-                            <span class="user-identity user-deleted">[аккаунт удалён]</span>
+                            <span class="user-identity user-deleted">{{ __('site.common.deleted_account') }}</span>
                         @endif
 
                         @if ($message->is_deleted)
-                            <span class="community-chat__deleted">сообщение удалено</span>
+                            <span class="community-chat__deleted">{{ __('site.chat.deleted') }}</span>
                         @else
                             <span class="community-chat__body">
                                 @foreach (app(\App\Services\ChatMentionParser::class)->segments($message->body, $mentionUsers, $message->user) as $segment)
@@ -106,28 +106,28 @@
                                         type="text"
                                         maxlength="100"
                                         wire:model="deleteReason"
-                                        aria-label="Причина удаления"
-                                        placeholder="Причина (необязательно)"
+                                        aria-label="{{ __('site.chat.delete_reason_aria') }}"
+                                        placeholder="{{ __('site.chat.delete_reason_placeholder') }}"
                                     >
-                                    <button class="btn" type="submit" wire:loading.attr="disabled">Удалить</button>
+                                    <button class="btn" type="submit" wire:loading.attr="disabled">{{ __('site.chat.delete') }}</button>
                                 </form>
                             @endif
 
                             @if ($message->user)
                                 @if ($message->user->isChatBanned())
                                     <button class="btn" type="button" wire:click="unbanUser({{ $message->user->id }})" wire:loading.attr="disabled">
-                                        Снять мут
+                                        {{ __('site.chat.unban') }}
                                     </button>
                                 @else
                                     <form wire:submit="banUser({{ $message->user->id }})">
-                                        <label class="sr-only" for="chat-ban-duration-{{ $message->id }}">Срок мута</label>
+                                        <label class="sr-only" for="chat-ban-duration-{{ $message->id }}">{{ __('site.chat.ban_duration') }}</label>
                                         <select id="chat-ban-duration-{{ $message->id }}" class="form-control" wire:model="banDuration">
-                                            <option value="1h">1 час</option>
-                                            <option value="1d">1 день</option>
-                                            <option value="7d">7 дней</option>
-                                            <option value="permanent">Навсегда</option>
+                                            <option value="1h">{{ __('site.chat.ban_1h') }}</option>
+                                            <option value="1d">{{ __('site.chat.ban_1d') }}</option>
+                                            <option value="7d">{{ __('site.chat.ban_7d') }}</option>
+                                            <option value="permanent">{{ __('site.chat.ban_permanent') }}</option>
                                         </select>
-                                        <button class="btn" type="submit" wire:loading.attr="disabled">Заглушить</button>
+                                        <button class="btn" type="submit" wire:loading.attr="disabled">{{ __('site.chat.ban') }}</button>
                                     </form>
                                 @endif
                             @endif
@@ -140,7 +140,7 @@
 
     @if (count($messageIds) >= 50)
         <button class="btn community-chat__load-more" type="button" wire:click="loadMore" wire:loading.attr="disabled" x-on:click="rememberPosition()">
-            Загрузить предыдущие
+            {{ __('site.chat.load_more') }}
         </button>
     @endif
 
@@ -151,18 +151,18 @@
         x-on:click="$wire.scrollToBottom()"
         x-cloak
     >
-        ↓ Новые ({{ $newMessageCount }})
+        {{ __('site.chat.new_messages', ['count' => $newMessageCount]) }}
     </button>
 
     <form class="community-chat__composer" wire:submit="postMessage">
-        <label class="sr-only" for="community-chat-body">Сообщение</label>
+        <label class="sr-only" for="community-chat-body">{{ __('site.chat.body') }}</label>
         <textarea
             id="community-chat-body"
             class="form-control"
             rows="3"
             maxlength="500"
             wire:model="body"
-            placeholder="{{ $isMuted ? 'Отправка сообщений недоступна' : 'Напишите сообщение…' }}"
+            placeholder="{{ $isMuted ? __('site.chat.placeholder_muted') : __('site.chat.placeholder') }}"
             @disabled($isMuted)
             x-on:keydown.enter="if (!$event.shiftKey) { $event.preventDefault(); $wire.set('body', $event.target.value).then(() => $wire.postMessage()) }"
         ></textarea>
@@ -170,8 +170,8 @@
             <p role="alert" class="community-chat__error">{{ $message }}</p>
         @enderror
         <button class="btn btn-primary" type="submit" wire:loading.attr="disabled" @disabled($isMuted)>
-            <span wire:loading.remove wire:target="postMessage">Отправить</span>
-            <span wire:loading wire:target="postMessage">Отправка…</span>
+            <span wire:loading.remove wire:target="postMessage">{{ __('site.chat.send') }}</span>
+            <span wire:loading wire:target="postMessage">{{ __('site.chat.sending') }}</span>
         </button>
     </form>
 </section>

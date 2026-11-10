@@ -28,7 +28,7 @@ class MyGalleryPhotoController extends Controller
 
         return redirect()
             ->route('cabinet.tab', ['tab' => 'gallery'])
-            ->with('status', 'Фото обновлено.')
+            ->with('status', __('site.cabinet.flash.photo_updated'))
             ->with('open_album_id', $photo->album_id);
     }
 
@@ -50,7 +50,7 @@ class MyGalleryPhotoController extends Controller
 
         return redirect()
             ->route('cabinet.tab', ['tab' => 'gallery'])
-            ->with('status', 'Фото удалено.')
+            ->with('status', __('site.cabinet.flash.photo_deleted'))
             ->with('open_album_id', $albumId);
     }
 }

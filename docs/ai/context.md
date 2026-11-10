@@ -1,6 +1,6 @@
 # ТЗ: FFXI Phoenix community portal — Laravel + Filament
 
-**Версия:** 4.1.1 (FINAL)
+**Версия:** 4.1.7 (FINAL)
 **Назначение:** основной технический контекст проекта.
 **Файл:** docs/ai/context.md
 **Статус:** рабочий документ, сопровождается вместе с кодом.
@@ -183,9 +183,17 @@ SQLite запрещён.
 Пользовательские предпочтения (ADR-011 §2.11) — **реализовано в L1
 (DONE / ACCEPTED)**:
 
-    users.locale    varchar(16) null   -- ru|en, NULL = авто
-    users.timezone  varchar(64) null   -- IANA, NULL = авто
-    events.timezone varchar(64) null   -- IANA, пояс объявления события
+    users.locale             varchar(16) null   -- ru|en, NULL = авто
+    users.timezone           varchar(64) null   -- IANA, NULL = авто
+    events.timezone          varchar(64) null   -- IANA, пояс объявления события
+    users.secondary_timezone varchar(64) null   -- IANA, NULL = третьи часы: регион не выбран (L6.4)
+
+`users.secondary_timezone` — **реализовано в L6.4**, миграция
+`0001_01_01_000028_add_secondary_timezone_to_users_table`. Предназначен для
+третьих часов (выбранный регион) на Dashboard (ADR-011 §2.25). Валидация
+`timezone` (IANA) через `TimezoneOptions::isValid()`; `NULL` = «регион не
+выбран» (placeholder третьего циферблата). Выбор — inline в `ClockWidget`
+(единый интерфейс); существующее назначение `users.timezone` не меняется.
 
 Колонки созданы миграциями `0001_01_01_000025_add_locale_timezone_to_users_table`
 и `0001_01_01_000026_add_timezone_to_events_table`: `nullable`, без default
@@ -318,6 +326,12 @@ credentials.
 
 Все входные данные. FormRequest где оправдано. Blade-escaping по
 умолчанию. `{!! !!}` — только после санитизации.
+Секции layout'а: сокращённая форма `@section('name', $value)` сохраняет
+значение через `e()` (`Illuminate\View\Concerns\ManagesLayouts::startSection`),
+поэтому `@yield('name')` выводит уже экранированные данные; оборачивать
+такой `@yield` в `{{ }}` нельзя — получится двойное экранирование.
+Блочная форма `@section('name') … @endsection` escaping не выполняет:
+внутри блока пользовательские значения выводятся только через `{{ }}`.
 
 ## CSRF, rate limiting
 
@@ -358,12 +372,18 @@ Spatie permissions и Policies; явные запреты Policies сохран�
 Архитектурное решение — **ADR-011** (`docs/adr/ADR-011-localization-and-timezones.md`).
 Функциональные требования — `frontend-spec.md` §6.16.
 
-**Статус реализации (2026-11-05):** L0 — DONE; **L1 — DONE / ACCEPTED**
+**Статус реализации (2026-11-06):** L0 — DONE; **L1 — DONE / ACCEPTED**
 (поля `users.locale`, `users.timezone`, `events.timezone`;
 `App\Enums\Locale`, `App\Services\TimezoneOptions`,
 `App\Services\LocalePreference`, FormRequest'ы, `PreferencesController`,
-два POST-маршрута в кабинете, поля в `UserResource`); L2–L6 — NOT STARTED.
-Принятые ограничения L1 (P1–P8) — ADR-011 §9, L1.1.
+два POST-маршрута в кабинете, поля в `UserResource`); L2–L4 — DONE
+(`60b6d82`, `d01b8d2`, `298f5bc`); L5 — NOT STARTED (следующий этап);
+L6 — NOT STARTED (после L5); L7 — отложено. Принятые ограничения L1
+(P1–P8) — ADR-011 §9, L1.1.
+
+**L5/L6 — документальное закрепление требований (2026-11-06):** ADR-011
+обновлён (§2.16–2.25, §5, §6, §7, §9, §10), PROJECT-STATUS зафиксирован
+(подэтапы, инвентаризация). L5 и L6 — NOT STARTED.
 
 **Инварианты:**
 
@@ -427,8 +447,50 @@ pin вводятся одним коммитом.
 **Охват локализации RU/EN.** Переводится: публичные страницы, кабинет,
 auth, системные сообщения, ошибки, уведомления, админ-панель Filament.
 Не переводится: пользовательский контент, названия игровых сущностей,
-админ-данные, SEO-метаданные, slug'и. Полный перечень —
+админ-данные, slug'и. Полный перечень —
 `frontend-spec.md` §6.16.10.
+
+**CMS-контент (ADR-011 §2.20–2.25).** CMS-страницы (`Page`), главная
+(`sys.home`), страница новостей (`sys.news.index`) и остальные системные
+страницы редактируются единым `SitePageEditor`
+(`/admin/pages/{record}/edit`) и поддерживают RU/EN контент.
+Fallback по отдельным полям: страница без EN-версии остаётся в английском
+меню (не скрывается); EN-заголовок с RU-текстом, если `body_en` не задан.
+Данные другого языка не теряются при переключении в редакторе.
+SEO-поля — по локалям для CMS-страниц и Home/News (в отличие от общего
+правила §2.15 для статических страниц).
+Header/Footer — CMS-навигация (редактор в группе «Контент»); системные
+элементы Header (язык, тема, activity bell, профиль, вход/выход) не
+управляются CMS.
+
+**Важно:** правило «экран не должен содержать смесь языков» (§2.15)
+относится к **системному интерфейсу** (кнопки, подписи, сообщения).
+Для CMS-контента применяется per-field fallback: страница без EN-версии
+остаётся в меню, EN-заголовок с RU-текстом — допустим. Перевод каждого
+CMS-поля выполняется отдельно.
+
+**Переключатель языка в Filament (ADR-011 §2.24).** `PanelsRenderHook::USER_MENU_BEFORE` —
+непосредственно слева от профиля; использует `LocaleResolver` и `users.locale`;
+навигационные группы резолвятся лениво (на рендере), чтобы смена локали
+не нарушала сопоставление групп.
+
+**Дополнительные часы Dashboard (ADR-011 §2.25).** `users.secondary_timezone`
+(`varchar(64) null`, IANA, миграция L6.4) — регион третьих часов; `NULL` =
+placeholder «регион не выбран»; выбор и сброс — inline в `ClockWidget`
+(единый интерфейс, без дубля в профиле); хранение в БД, `localStorage` не
+является основным хранилищем; существующее назначение `users.timezone`
+не меняется.
+
+**Players — исключение из L5/L6 (ADR-011 §2.17).** Файлы
+`players/*.blade.php` и маршруты/логика Players не изменяются.
+Общие компоненты (Header, Footer, пагинация, ActivityBell) могут
+естественно затронуть страницы Players — это не считается редизайном.
+Полная переработка Players — отдельный будущий проект.
+
+**Privacy и Cookie (ADR-011 §2.18).** `docs/legal/privacy-policy-draft.md` —
+черновик, не публикуется как окончательная политика ПД без юридического
+согласования. Страница `/cookie` должна перечислять cookie `locale` и `tz`.
+Новые аналитические или сторонние сервисы не вводятся без отдельного решения.
 
 **URL-префиксы `/ru`, `/en`** не вводятся (отдельное решение).
 **Внутриигровое время Vana'diel** — отдельная семантика, вне объёма.
@@ -558,6 +620,35 @@ Policy + re-auth (пароль) + audit. ActivityLog read-only для редак
 закрепляются на UTC через `->timezone('UTC')`; иначе они сдвигаются
 вместе с пользовательскими колонками. Подробности — §13
 «Локализация и часовые пояса».
+
+**Навигационные группы (ADR-011 §2.24).** Подписи `NavigationGroup::make(__('filament.navigation.*'))`
+в `AdminPanelProvider` должны резолвиться **лениво** (на рендере), чтобы
+смена локали администратора не нарушала сопоставление групп с ресурсами.
+Регистрация через `Panel::renderHook()` выполняется до HTTP-запроса
+(на `boot`), поэтому замыкание хука должно читать локаль лениво.
+
+**Переключатель языка в Filament (ADR-011 §2.24).** Точка вставки —
+`PanelsRenderHook::USER_MENU_BEFORE` (непосредственно слева от профиля
+пользователя в панели Filament). Использует `LocaleResolver` и
+`users.locale`. Язык публичной части и админ-панели согласованно
+определяется предпочтением пользователя.
+
+**Мировое время Dashboard (ADR-011 §2.25).** Виджет `ClockWidget` выводится на
+Dashboard **один раз** — через `discoverWidgets()` панели в основной сетке
+(`getHeaderWidgets()` не используется: header + сетка давали два независимых
+экземпляра). Виджет показывает три независимых циферблата
+в одной группе: **UTC** (всегда `UTC+00:00`), **устройство** (браузерный
+`Intl.DateTimeFormat().resolvedOptions().timeZone`; серверный fallback —
+`TimezoneResolver::browserTimezone()` по cookie `tz`, затем `UTC`;
+`users.timezone` не участвует) и **регион** (`users.secondary_timezone`,
+`NULL` = placeholder). Выбор региона — inline `Select` в виджете: весь каталог
+IANA (419 зон, 11 групп, `optionsLimit` = полный каталог вместо дефолтных 50),
+серверный поиск `TimezoneOptions::search()` (`_` ≡ пробел), сброс, валидация
+`timezone`, сохранение в БД текущему пользователю. Подпись —
+`Europe/Helsinki — UTC+02:00`. Смещения
+пересчитываются динамически (DST) на каждом тике Alpine. Хранение в БД;
+`localStorage` не является основным хранилищем настройки. Миграция
+`users.secondary_timezone` — L6.4.
 
 ---
 
@@ -1191,12 +1282,88 @@ Settings (key-value), Хранение аватаров (storage/app/public/avat
 Объём backup (full), Формат backup (БД + файлы + manifest),
 Механизм обновлений (CLI + UpdatePage-информация).
 
+**Закрыто в v4.1.2 (ADR-011 L5/L6, 2026-11-06):** Мультиязычность
+в админке (ADR-011).
+
 До закрытия вопроса AI не выбирает архитектурное решение молча.
 Низкорисковые визуальные детали — по макету с записью в CHANGELOG/ADR.
+
+## Из ADR-011 (L5/L6)
+
+10. ~~`docs/frontend-spec.md` не существует — фактический файл~~ — **подтверждено**:
+    канонический путь `docs/ai/frontend-spec.md`. Ссылки в документах без
+    префикса `docs/ai/` (например `frontend-spec.md`) работают как относительные
+    в рамках каталога `docs/`. Не требует изменения.
+11. ~~Схема хранения двуязычного CMS-контента~~ — **закрыто** (ADR-011 §8.2):
+    Home/News — плоские ключи `settings` с суффиксом `_en`; `pages` —
+    nullable-колонки `title_en`, `body_en`, `body_html_en`, `meta_title_en`,
+    `meta_description_en`. Изображения общие для RU/EN.
+12. ~~Инструмент проверки полноты EN-переводов~~ — **закрыто** (ADR-011 §8.2):
+    Artisan-команда `app:translations:check`.
+13. ~~`resources/views/errors/`~~ — **закрыто** (ADR-011 §8.2): создаются в L5.6.
+14. ~~Хранение Header/Footer~~ — **закрыто** (ADR-011 §8.2): `settings`,
+    JSON-массив `header.items` / `footer.items` + `footer.text_ru` / `footer.text_en`.
+    Legacy-пункты переносятся в канонический формат
+    (`{id, label_ru, label_en, type, target, order, image}`) командой
+    `app:navigation:convert` (`App\Services\NavigationSettingsConverter`:
+    `preview()` → конфликты и snapshot, `apply()` → идемпотентная запись).
+15. ~~Обновление ClockWidget~~ — **закрыто** (ADR-011 §8.2): Alpine.js
+    `setInterval`, серверный первый рендер.
+16. ~~Header/Footer images~~ — **закрыто** (ADR-011 §8.2): слот `nav` в
+    существующем `HomeImageUploader`.
 
 ---
 
 # ИСТОРИЯ ВЕРСИЙ
+
+**4.1.7 (экранирование секций layout'а)** — §Валидация: зафиксировано, что
+сокращённый `@section('name', $value)` экранирует значение при сохранении
+секции, поэтому `@yield` в layout безопасен и не требует `{{ }}` (иначе —
+двойное экранирование); блочная форма секции escaping не выполняет.
+Стек, схема и маршруты не изменялись.
+
+**4.1.6 (единый редактор страниц: аудит)** — §13: CMS-контент главной и
+новостей редактируется `SitePageEditor` (`sys.home`, `sys.news.index`);
+добавлены `*.meta_description` / `*.meta_description_en`; §8.2 п.14:
+задокументированы `NavigationSettingsConverter` и `app:navigation:convert`.
+Схема `pages` и slug-ограничение — `frontend-spec.md` §5.12.
+
+**4.1.5 (ClockWidget: единственный экземпляр + полный каталог в селекторе)** —
+Dashboard: удалён `AdminDashboard::getHeaderWidgets()` — виджет выводится один раз
+через `discoverWidgets()` (header + сетка давали два независимых экземпляра).
+`TimezoneOptions`: добавлены `count()` и `search()` (нормализация `_` ≡ пробел),
+подпись `Europe/Helsinki — UTC+02:00`; `ClockWidget` поднимает `optionsLimit` до
+полного каталога (дефолтные 50 обрезали список) и использует серверный поиск.
+§14 обновлён.
+
+**4.1.4 (ClockWidget: полный список IANA + кэширование)** — §5: `secondary_timezone`
+применена (была Pending, столбец отсутствовал); §13: `TimezoneOptions::grouped()`
+и `options()` кэшируются на 1 час (Cache::remember, ключ включает PHP_VERSION +
+hash идентификаторов); ADR-011 R15 — «419 подписей на рендер» устранено (8x
+ускорение); `ClockWidget` использует `grouped()` (optgroup в Filament Select),
+419 IANA-зон сгруппированы по 11 регионам; `isValid()` возвращает false для
+`UTC` (это ожидаемо, UTC — глобальное время, не регион); Alpine пересчитывает
+смещение на каждом тике (DST) независимо от кэшированной подписи.
+
+**4.1.3 (ClockWidget: три независимых циферблата)** — §5: `secondary_timezone`
+— реализовано L6.4, миграция создана; §13/§14: «Мировое время Dashboard» —
+три циферблата (UTC, устройство, регион); `browserTimezone()` добавлен в
+`TimezoneResolver`; `EditProfile` больше не управляет `secondary_timezone`
+(единственный интерфейс — inline-селект в `ClockWidget`); Alpine пересчитывает
+смещения на каждом тике (DST).
+
+**4.1.2 (ADR-011 L5/L6: документальное закрепление требований)** — §5:
+добавлено описание `users.secondary_timezone` (план L6.4, ADR-011 §2.25).
+§13 «Локализация и часовые пояса»: статус реализации обновлён (L2–L4 DONE,
+L5/L6 NOT STARTED); добавлены подразделы — CMS-контент RU/EN (ADR-011
+§2.20–2.21), Header/Footer CMS-навигация (§2.22–2.23), переключатель
+языка в Filament (§2.24), дополнительные часы Dashboard (§2.25),
+Players exclusion (§2.17), Privacy/Cookie (§2.18). §14 Filament:
+добавлены требования — ленивый резолв navigation groups, переключатель
+языка (`USER_MENU_BEFORE`), `ClockWidget` на Dashboard. §38: открытые
+вопросы 10–13 (путь frontend-spec, схема CMS-хранения, инструмент
+проверки полноты EN-ключей, errors/). Версия документа — 4.1.2; стек не
+изменён.
 
 **4.1.1 (ADR-011 L1: DONE / ACCEPTED)** — §5: зафиксировано, что колонки
 `users.locale` (`varchar(16)`), `users.timezone`, `events.timezone` созданы

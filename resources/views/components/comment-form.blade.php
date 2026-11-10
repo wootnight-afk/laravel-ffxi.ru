@@ -11,11 +11,11 @@
     @if (! $canPost)
         <div style="margin-top: 16px; padding: 12px; background: #fff3cd; border-radius: 4px; font-size: 13px; color: #856404;">
             @if (! $user->hasVerifiedEmail())
-                Подтвердите email, чтобы оставлять комментарии.
+                {{ __('site.comments.verify_email') }}
             @elseif ($user->isBanned())
-                Ваш аккаунт заблокирован.
+                {{ __('site.comments.banned') }}
             @else
-                У вас нет права оставлять комментарии.
+                {{ __('site.comments.no_permission') }}
             @endif
         </div>
     @else
@@ -25,7 +25,7 @@
         >
             <form x-on:submit.prevent="submit" x-ref="form">
                 <div class="form-group" style="max-width: 100%;">
-                    <label for="comment-body">Ваш комментарий</label>
+                    <label for="comment-body">{{ __('site.comments.your_comment') }}</label>
                     <textarea
                         id="comment-body"
                         class="form-control"
@@ -35,7 +35,7 @@
                         maxlength="2000"
                         minlength="20"
                         required
-                        placeholder="Минимум 20 символов…"
+                        placeholder="{{ __('site.comments.placeholder') }}"
                         style="resize: vertical;"
                     ></textarea>
                     <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
@@ -47,8 +47,8 @@
                 <div x-show="success" style="color: #15803d; font-size: 13px; margin-bottom: 8px;" x-text="success"></div>
 
                 <button type="submit" class="btn btn-primary" x-bind:disabled="loading">
-                    <span x-show="! loading">Отправить</span>
-                    <span x-show="loading">Отправка…</span>
+                    <span x-show="! loading">{{ __('site.comments.send') }}</span>
+                    <span x-show="loading">{{ __('site.comments.sending') }}</span>
                 </button>
             </form>
         </div>
@@ -63,7 +63,7 @@
                         success: null,
                         async submit() {
                             if (this.body.length < 20) {
-                                this.error = 'Минимум 20 символов.';
+                                this.error = {{ Illuminate\Support\Js::from(__('site.comments.min_length')) }};
                                 return;
                             }
 
@@ -85,7 +85,7 @@
                                 const data = await response.json().catch(() => ({}));
 
                                 if (! response.ok) {
-                                    this.error = data.message || 'Не удалось отправить комментарий.';
+                                    this.error = data.message || {{ Illuminate\Support\Js::from(__('site.comments.send_failed')) }};
                                     return;
                                 }
 
@@ -94,7 +94,7 @@
 
                                 setTimeout(() => window.location.reload(), 1200);
                             } catch (e) {
-                                this.error = 'Ошибка соединения.';
+                                this.error = {{ Illuminate\Support\Js::from(__('site.comments.connection_error')) }};
                             } finally {
                                 this.loading = false;
                             }
@@ -106,6 +106,8 @@
     @endif
 @else
     <div style="margin-top: 16px; padding: 12px; background: var(--bg-light); border-radius: 4px; font-size: 13px; color: var(--text-muted);">
-        <a href="{{ route('login') }}">Войдите</a>, чтобы оставить комментарий.
+        {!! __('site.comments.login_required', [
+            'login' => '<a href="'.route('login').'">'.e(__('site.common.login')).'</a>',
+        ]) !!}
     </div>
 @endauth

@@ -6,30 +6,30 @@
     <div class="form-status" style="margin-bottom: 16px;">{{ session('status') }}</div>
 @endif
 
-<h2 class="section-title" style="margin-top: 0;">Опасная зона</h2>
+<h2 class="section-title" style="margin-top: 0;">{{ __('site.cabinet.danger.title') }}</h2>
 
 @if ($user->isDeletionRequested())
     <div style="padding: 16px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-light);">
         <p style="margin: 0; font-size: 14px;">
-            Ваш аккаунт ожидает удаления. Свяжитесь с администрацией для отмены или уточнения статуса.
+            {{ __('site.cabinet.danger.deletion_pending') }}
         </p>
     </div>
 @else
     @if (! $user->isSuspended())
         <div style="padding: 20px; border: 2px solid #d97706; border-radius: 8px; background: rgba(217, 119, 6, 0.05); margin-bottom: 20px;">
             <h3 style="font-size: 16px; color: #b45309; margin-top: 0; margin-bottom: 12px;">
-                Приостановить аккаунт
+                {{ __('site.cabinet.danger.suspend_title') }}
             </h3>
 
             <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
-                Временная блокировка. Войти не сможете, но данные и контент сохранятся.
+                {{ __('site.cabinet.danger.suspend_hint') }}
             </p>
 
             <form method="POST" action="{{ route('cabinet.danger.suspend') }}">
                 @csrf
 
                 <div class="form-group">
-                    <label for="suspension_reason">Причина</label>
+                    <label for="suspension_reason">{{ __('site.cabinet.danger.reason') }}</label>
                     <textarea
                         id="suspension_reason"
                         name="reason"
@@ -44,7 +44,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="suspension_password">Текущий пароль</label>
+                    <label for="suspension_password">{{ __('site.cabinet.danger.current_password') }}</label>
                     <input
                         type="password"
                         id="suspension_password"
@@ -66,7 +66,7 @@
                             style="margin-top: 3px;"
                             {{ old('confirm') ? 'checked' : '' }}
                         >
-                        <span>Понимаю, что мой аккаунт будет заблокирован.</span>
+                        <span>{{ __('site.cabinet.danger.suspend_confirm') }}</span>
                     </label>
                     @error('confirm') <div class="form-error">{{ $message }}</div> @enderror
                 </div>
@@ -75,9 +75,9 @@
                     type="submit"
                     class="btn"
                     style="background: #d97706; color: #fff; border-color: #d97706;"
-                    onclick="return confirm('Вы уверены, что хотите приостановить аккаунт?');"
+                    onclick="return confirm('{{ __('site.cabinet.danger.suspend_confirm_dialog') }}');"
                 >
-                    Приостановить аккаунт
+                    {{ __('site.cabinet.danger.suspend_action') }}
                 </button>
             </form>
         </div>
@@ -85,27 +85,27 @@
 
     <div style="padding: 20px; border: 2px solid #dc2626; border-radius: 8px; background: rgba(220, 38, 38, 0.05);">
         <h3 style="font-size: 16px; color: #dc2626; margin-top: 0; margin-bottom: 12px;">
-            Удаление аккаунта
+            {{ __('site.cabinet.danger.delete_title') }}
         </h3>
 
         <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
-            Это <strong>запрос на удаление</strong>, а не мгновенное действие. Что произойдёт:
+            {!! __('site.cabinet.danger.delete_intro') !!}
         </p>
 
         <ul style="font-size: 13px; line-height: 1.7; margin: 0 0 16px 20px; padding: 0;">
-            <li>Ваш аккаунт будет закрыт — вход в систему станет невозможен.</li>
-            <li>Публичный профиль и страница игрока станут недоступны.</li>
-            <li>Вы будете разлогинены со всех устройств.</li>
-            <li>Ваши существующие материалы остаются и будут отображаться как «[аккаунт удалён]».</li>
-            <li>Окончательное удаление данных выполняет администрация.</li>
-            <li>Восстановление возможно только через администрацию.</li>
+            <li>{{ __('site.cabinet.danger.delete_item_1') }}</li>
+            <li>{{ __('site.cabinet.danger.delete_item_2') }}</li>
+            <li>{{ __('site.cabinet.danger.delete_item_3') }}</li>
+            <li>{{ __('site.cabinet.danger.delete_item_4') }}</li>
+            <li>{{ __('site.cabinet.danger.delete_item_5') }}</li>
+            <li>{{ __('site.cabinet.danger.delete_item_6') }}</li>
         </ul>
 
         <form method="POST" action="{{ route('cabinet.danger.request') }}">
             @csrf
 
             <div class="form-group">
-                <label for="danger_reason">Причина (обязательно)</label>
+                <label for="danger_reason">{{ __('site.cabinet.danger.delete_reason') }}</label>
                 <textarea
                     id="danger_reason"
                     name="reason"
@@ -114,14 +114,14 @@
                     minlength="3"
                     maxlength="500"
                     required
-                    placeholder="Коротко объясните причину…"
+                    placeholder="{{ __('site.cabinet.danger.delete_reason_placeholder') }}"
                     style="resize: vertical;"
                 >{{ old('reason') }}</textarea>
                 @error('reason') <div class="form-error">{{ $message }}</div> @enderror
             </div>
 
             <div class="form-group">
-                <label for="danger_password">Текущий пароль</label>
+                <label for="danger_password">{{ __('site.cabinet.danger.current_password') }}</label>
                 <input
                     type="password"
                     id="danger_password"
@@ -144,7 +144,7 @@
                         {{ old('confirm') ? 'checked' : '' }}
                     >
                     <span>
-                        Я понимаю последствия запроса на удаление аккаунта.
+                        {{ __('site.cabinet.danger.delete_confirm') }}
                     </span>
                 </label>
                 @error('confirm') <div class="form-error">{{ $message }}</div> @enderror
@@ -154,9 +154,9 @@
                 type="submit"
                 class="btn"
                 style="background: #dc2626; color: #fff; border-color: #dc2626;"
-                onclick="return confirm('Вы уверены, что хотите отправить запрос на удаление аккаунта?');"
+                onclick="return confirm('{{ __('site.cabinet.danger.delete_confirm_dialog') }}');"
             >
-                Запросить удаление аккаунта
+                {{ __('site.cabinet.danger.delete_action') }}
             </button>
         </form>
     </div>

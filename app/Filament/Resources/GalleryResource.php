@@ -34,7 +34,7 @@ class GalleryResource extends Resource
 
     protected static ?string $model = Album::class;
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 4;
 
     public static function getNavigationLabel(): string
     {
@@ -43,7 +43,7 @@ class GalleryResource extends Resource
 
     public static function getNavigationGroup(): string|UnitEnum|null
     {
-        return __('filament.navigation.content');
+        return 'content';
     }
 
     public static function getModelLabel(): string

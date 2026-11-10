@@ -45,7 +45,7 @@ class UserResource extends Resource
 
     public static function getNavigationGroup(): string|UnitEnum|null
     {
-        return __('filament.navigation.community');
+        return 'community';
     }
 
     public static function getModelLabel(): string

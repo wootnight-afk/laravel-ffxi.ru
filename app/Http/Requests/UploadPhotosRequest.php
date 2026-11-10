@@ -46,13 +46,13 @@ class UploadPhotosRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'photos.required' => 'Выберите файлы для загрузки.',
-            'photos.array' => 'Некорректный формат загрузки.',
-            'photos.min' => 'Выберите хотя бы один файл.',
-            'photos.max' => 'За один раз можно загрузить не более '.self::MAX_BATCH.' файлов.',
-            'photos.*.file' => 'Файл не загружен.',
-            'photos.*.mimes' => 'Поддерживаются только JPEG, PNG, WebP и GIF.',
-            'photos.*.max' => 'Файл слишком большой (максимум 8 МБ).',
+            'photos.required' => __('site.cabinet.validation.photos_required'),
+            'photos.array' => __('site.cabinet.validation.photos_array'),
+            'photos.min' => __('site.cabinet.validation.photos_min'),
+            'photos.max' => __('site.cabinet.validation.photos_max', ['max' => self::MAX_BATCH]),
+            'photos.*.file' => __('site.cabinet.validation.photo_file'),
+            'photos.*.mimes' => __('site.cabinet.validation.photo_mimes'),
+            'photos.*.max' => __('site.cabinet.validation.photo_max'),
         ];
     }
 }

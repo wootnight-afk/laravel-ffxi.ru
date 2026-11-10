@@ -33,10 +33,10 @@ class StoreAlbumRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'title.required' => 'Введите название альбома.',
-            'title.min' => 'Название слишком короткое.',
-            'title.max' => 'Название не должно превышать 120 символов.',
-            'description.max' => 'Описание не должно превышать 2000 символов.',
+            'title.required' => __('site.cabinet.validation.album_title_required'),
+            'title.min' => __('site.cabinet.validation.album_title_min'),
+            'title.max' => __('site.cabinet.validation.album_title_max'),
+            'description.max' => __('site.cabinet.validation.album_description_max'),
         ];
     }
 }

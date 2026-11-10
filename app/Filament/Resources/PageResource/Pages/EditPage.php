@@ -1,22 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\PageResource\Pages;
 
-use App\Filament\Resources\PageResource;
-use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
-
-class EditPage extends EditRecord
+/**
+ * Edit entry point of the unified page editor (`/admin/pages/{record}/edit`).
+ *
+ * The `record` segment is a page key:
+ *
+ *  - `cms-{id}` — a CMS page stored in the `pages` table;
+ *  - `sys.{route}` — a system page of the registry (e.g. `sys.news.index`).
+ *
+ * All form building and saving lives in {@see SitePageEditor}.
+ */
+class EditPage extends SitePageEditor
 {
-    protected static string $resource = PageResource::class;
-
-    /**
-     * @return array<int, DeleteAction>
-     */
-    protected function getHeaderActions(): array
+    protected function isCreateMode(): bool
     {
-        return [
-            DeleteAction::make(),
-        ];
+        return false;
     }
 }

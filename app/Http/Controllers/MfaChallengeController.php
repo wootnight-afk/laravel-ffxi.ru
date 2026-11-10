@@ -55,7 +55,7 @@ class MfaChallengeController extends Controller
             $validated = $request->validate([
                 'recovery_code' => ['required', 'string'],
             ], [
-                'recovery_code.required' => 'Введите резервный код.',
+                'recovery_code.required' => __('site.mfa.recovery_required'),
             ]);
 
             $valid = AppAuthentication::make()->verifyRecoveryCode(
@@ -66,8 +66,8 @@ class MfaChallengeController extends Controller
             $validated = $request->validate([
                 'code' => ['required', 'string', 'regex:/^\d{6}$/'],
             ], [
-                'code.required' => 'Введите код из приложения.',
-                'code.regex' => 'Код должен содержать 6 цифр.',
+                'code.required' => __('site.mfa.code_required'),
+                'code.regex' => __('site.mfa.code_regex'),
             ]);
 
             $valid = AppAuthentication::make()->verifyCode(
@@ -89,7 +89,7 @@ class MfaChallengeController extends Controller
             $field = $usesRecoveryCode ? 'recovery_code' : 'code';
 
             throw ValidationException::withMessages([
-                $field => 'Неверный код.',
+                $field => __('site.mfa.invalid'),
             ]);
         }
 

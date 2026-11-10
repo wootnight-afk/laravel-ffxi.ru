@@ -39,6 +39,9 @@ class HomeImageUploader
     /** Header image of the news page. */
     public const SLOT_NEWS_PAGE = 'news_page';
 
+    /** Optional icon of a header/footer navigation item. */
+    public const SLOT_NAV = 'nav';
+
     /** @var array<int, string> */
     public const ALLOWED_MIMES = [
         'image/jpeg',
@@ -53,7 +56,7 @@ class HomeImageUploader
      * its natural size. The hero box matches the bundled asset, so replacing
      * the logo never makes the page heavier than the original.
      *
-     * @var array<string, array{dir: string, suffix: string, max: array{int, int}}>
+     * @var array<string, array{dir: string, suffix: string, max: array{int, int}, min?: int}>
      */
     private const SLOTS = [
         self::SLOT_HERO => [
@@ -71,6 +74,14 @@ class HomeImageUploader
             'suffix' => 'header',
             'max' => [1920, 1080],
         ],
+        // Navigation icons are rendered at 16×16 px; a lower bound of 100 px
+        // would reject every usable icon.
+        self::SLOT_NAV => [
+            'dir' => 'nav',
+            'suffix' => 'icon',
+            'max' => [400, 400],
+            'min' => 16,
+        ],
     ];
 
     public function __construct(
@@ -81,8 +92,8 @@ class HomeImageUploader
      * Store an uploaded image for the given slot.
      *
      * @return array{path: string, width: int, height: int} Real dimensions of
-     *                                                       the stored file (needed for the `width`/`height`
-     *                                                       attributes on the front end).
+     *                                                      the stored file (needed for the `width`/`height`
+     *                                                      attributes on the front end).
      *
      * @throws ImageProcessingException
      */
@@ -92,9 +103,8 @@ class HomeImageUploader
             throw new InvalidArgumentException("Unknown page image slot: {$slot}.");
         }
 
-        $this->validate($file);
-
         $config = self::SLOTS[$slot];
+        $this->validate($file, $config['min'] ?? self::MIN_SIDE);
         [$maxWidth, $maxHeight] = $config['max'];
 
         $hash = Str::random(12).'-'.substr(sha1_file($file->getRealPath()) ?: '', 0, 8);
@@ -117,7 +127,7 @@ class HomeImageUploader
         } catch (Throwable $e) {
             $disk->delete($path);
 
-            throw new ImageProcessingException('Ошибка обработки изображения: '.$e->getMessage(), 0, $e);
+            throw new ImageProcessingException(__('site.images.errors.processing_image', ['error' => $e->getMessage()]), 0, $e);
         }
 
         return ['path' => $path, 'width' => $width, 'height' => $height];
@@ -143,10 +153,10 @@ class HomeImageUploader
     /**
      * @throws ImageProcessingException
      */
-    private function validate(UploadedFile $file): void
+    private function validate(UploadedFile $file, int $minSide): void
     {
         if (! $file->isValid()) {
-            throw new ImageProcessingException('Файл не загружен.');
+            throw new ImageProcessingException(__('site.images.errors.no_file'));
         }
 
         $size = (int) $file->getSize();
@@ -168,8 +178,8 @@ class HomeImageUploader
 
         [$width, $height] = $info;
 
-        if ($width < self::MIN_SIDE || $height < self::MIN_SIDE) {
-            throw ImageProcessingException::tooSmall($width, $height, self::MIN_SIDE);
+        if ($width < $minSide || $height < $minSide) {
+            throw ImageProcessingException::tooSmall($width, $height, $minSide);
         }
 
         if ($width * $height > self::MAX_PIXELS) {

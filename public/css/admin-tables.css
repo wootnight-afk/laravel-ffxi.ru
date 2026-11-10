@@ -1,0 +1,40 @@
+/*
+ * Admin table layout fixes.
+ *
+ * The pages registry (/admin/pages) merges CMS rows with the system page
+ * registry, so the table is wider than the panel content column. Filament
+ * already gives the table body `overflow-x: auto`, but the record-action
+ * cell (publish / edit / delete) scrolled out of sight together with the
+ * rest of the row. Pinning that cell to the right edge keeps the controls
+ * reachable without hiding the horizontal scroll for the remaining columns.
+ */
+
+/* Explicit horizontal scrolling for the table body. */
+.fi-resource-pages .fi-ta-content-ctn {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+}
+
+/* Sticky action cell (last cell of every header/body row). */
+.fi-resource-pages .fi-ta-actions-header-cell,
+.fi-resource-pages .fi-ta-row > .fi-ta-cell:last-child {
+    position: sticky;
+    right: 0;
+    z-index: 1;
+    background-color: var(--color-white);
+    box-shadow: -1px 0 0 0 var(--gray-200);
+    padding-inline-start: calc(var(--spacing) * 3);
+}
+
+.fi-resource-pages .fi-ta-actions-header-cell:where(.dark, .dark *),
+.fi-resource-pages .fi-ta-row > .fi-ta-cell:last-child:where(.dark, .dark *) {
+    background-color: var(--gray-900);
+    box-shadow: -1px 0 0 0 color-mix(in oklab, var(--color-white) 10%, transparent);
+}
+
+/* The pinned cell must not cover the focus ring of its own buttons. */
+.fi-resource-pages .fi-ta-row > .fi-ta-cell:last-child .fi-link,
+.fi-resource-pages .fi-ta-row > .fi-ta-cell:last-child .fi-btn {
+    position: relative;
+    z-index: 2;
+}

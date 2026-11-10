@@ -37,9 +37,6 @@ enum Locale: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::Ru => 'Русский',
-            self::En => 'English',
-        };
+        return (string) __('site.locale.'.$this->value);
     }
 }

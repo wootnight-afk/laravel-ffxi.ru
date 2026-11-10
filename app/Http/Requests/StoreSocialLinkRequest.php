@@ -35,11 +35,11 @@ class StoreSocialLinkRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'type.required' => 'Выберите платформу.',
-            'type.in' => 'Неизвестная платформа.',
-            'username.max' => 'Username слишком длинный.',
-            'url.max' => 'Ссылка слишком длинная.',
-            'label.max' => 'Название слишком длинное.',
+            'type.required' => __('site.cabinet.validation.social_type_required'),
+            'type.in' => __('site.cabinet.validation.social_type_invalid'),
+            'username.max' => __('site.cabinet.validation.social_username_max'),
+            'url.max' => __('site.cabinet.validation.social_url_max'),
+            'label.max' => __('site.cabinet.validation.social_label_max'),
         ];
     }
 }

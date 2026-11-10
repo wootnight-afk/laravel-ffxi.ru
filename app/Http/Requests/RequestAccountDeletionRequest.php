@@ -31,13 +31,13 @@ class RequestAccountDeletionRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'password.required' => 'Введите текущий пароль.',
-            'password.current_password' => 'Неверный пароль.',
-            'reason.required' => 'Укажите причину.',
-            'reason.min' => 'Причина слишком короткая (минимум 3 символа).',
-            'reason.max' => 'Причина не должна превышать 500 символов.',
-            'confirm.required' => 'Подтвердите, что понимаете последствия.',
-            'confirm.accepted' => 'Подтвердите, что понимаете последствия.',
+            'password.required' => __('site.cabinet.validation.current_password_required'),
+            'password.current_password' => __('site.cabinet.validation.current_password_invalid'),
+            'reason.required' => __('site.cabinet.validation.reason_required'),
+            'reason.min' => __('site.cabinet.validation.reason_min'),
+            'reason.max' => __('site.cabinet.validation.reason_max'),
+            'confirm.required' => __('site.cabinet.validation.confirm_required'),
+            'confirm.accepted' => __('site.cabinet.validation.confirm_required'),
         ];
     }
 }

@@ -1,9 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Создать событие')
+@section('title', $page['metaTitle'])
+@section('metaDescription', $page['metaDescription'] ?? '')
 
 @section('content')
-    <h1 class="page-title">Создать событие</h1>
+    <h1 class="page-title">{{ $page['h1'] }}</h1>
+    @if ($page['bodyHtml'] !== '')
+        <div class="content-text">{!! $page['bodyHtml'] !!}</div>
+    @endif
     @include('events._form', [
         'event' => $event,
         'types' => $types,

@@ -54,7 +54,7 @@ class SecurityController extends Controller
 
         return redirect()
             ->route('cabinet.tab', ['tab' => 'security'])
-            ->with('status', 'Пароль успешно изменён.');
+            ->with('status', __('site.cabinet.flash.password_changed'));
     }
 
     public function updateEmail(ChangeEmailRequest $request): RedirectResponse
@@ -111,6 +111,6 @@ class SecurityController extends Controller
 
         return redirect()
             ->route('verification.notice')
-            ->with('status', 'Email изменён. Подтвердите новый адрес.');
+            ->with('status', __('site.cabinet.flash.email_changed'));
     }
 }

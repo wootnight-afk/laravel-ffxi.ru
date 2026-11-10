@@ -1,11 +1,11 @@
 <section class="online-users" wire:poll.60s="refreshOnlineUsers">
-    <h2 class="section-title">Игроки онлайн</h2>
+    <h2 class="section-title">{{ __('site.online.title') }}</h2>
     <a class="online-users__count" href="{{ route('players.directory') }}">
-        {{ $onlineCount }} {{ trans_choice('игрок|игрока|игроков', $onlineCount) }} онлайн
+        {{ trans_choice('site.online.count', $onlineCount) }}
     </a>
 
     @if ($onlineUsers->isNotEmpty())
-        <ul class="online-users__list" aria-label="Игроки онлайн">
+        <ul class="online-users__list" aria-label="{{ __('site.online.title') }}">
             @foreach ($onlineUsers as $onlineUser)
                 @php
                     $profileUrl = app(\App\Services\ActivitySubjectResolver::class)->actorLinkable($onlineUser, $viewer)
@@ -25,6 +25,6 @@
             @endforeach
         </ul>
     @else
-        <p class="news-meta">Сейчас игроков нет онлайн.</p>
+        <p class="news-meta">{{ __('site.online.empty') }}</p>
     @endif
 </section>

@@ -35,14 +35,14 @@ class UpdatePlayerNewsRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'title.required' => 'Введите заголовок.',
-            'title.min' => 'Заголовок слишком короткий.',
-            'title.max' => 'Заголовок не должен превышать 150 символов.',
-            'body.required' => 'Введите текст новости.',
-            'body.min' => 'Текст новости слишком короткий (минимум 20 символов).',
-            'body.max' => 'Текст новости не должен превышать 50000 символов.',
-            'excerpt.max' => 'Анонс не должен превышать 300 символов.',
-            'status.in' => 'Недопустимый статус.',
+            'title.required' => __('site.cabinet.validation.news_title_required'),
+            'title.min' => __('site.cabinet.validation.news_title_min'),
+            'title.max' => __('site.cabinet.validation.news_title_max'),
+            'body.required' => __('site.cabinet.validation.news_body_required'),
+            'body.min' => __('site.cabinet.validation.news_body_min'),
+            'body.max' => __('site.cabinet.validation.news_body_max'),
+            'excerpt.max' => __('site.cabinet.validation.news_excerpt_max'),
+            'status.in' => __('site.cabinet.validation.news_status_invalid'),
         ];
     }
 }

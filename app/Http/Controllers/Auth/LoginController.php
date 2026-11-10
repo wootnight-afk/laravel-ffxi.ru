@@ -28,7 +28,7 @@ class LoginController extends Controller
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             // Anti-enumeration: одинаковое сообщение для «не найден email» и «неверный пароль».
             throw ValidationException::withMessages([
-                'email' => 'Неверный email или пароль.',
+                'email' => __('site.auth.errors.invalid_credentials'),
             ]);
         }
 
@@ -37,25 +37,27 @@ class LoginController extends Controller
         if ($user->isBanned()) {
             Auth::logout();
             throw ValidationException::withMessages([
-                'email' => 'Аккаунт заблокирован до '.DateFormat::moment(
-                    $user->banned_until,
-                    app(TimezoneResolver::class)->resolve($user),
-                    app()->getLocale(),
-                ).'.',
+                'email' => __('site.auth.errors.banned', [
+                    'date' => DateFormat::moment(
+                        $user->banned_until,
+                        app(TimezoneResolver::class)->resolve($user),
+                        app()->getLocale(),
+                    ),
+                ]),
             ]);
         }
 
         if ($user->isDeletionRequested()) {
             Auth::logout();
             throw ValidationException::withMessages([
-                'email' => 'Аккаунт ожидает удаления. Обратитесь к администрации.',
+                'email' => __('site.auth.errors.deletion_requested'),
             ]);
         }
 
         if ($user->isSuspended()) {
             Auth::logout();
             throw ValidationException::withMessages([
-                'email' => 'Аккаунт приостановлен. Обратитесь к администрации.',
+                'email' => __('site.auth.errors.suspended'),
             ]);
         }
 

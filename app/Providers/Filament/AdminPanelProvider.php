@@ -2,12 +2,14 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Auth\EditProfile;
 use App\Filament\Pages\AdminDashboard;
 use App\Filament\Pages\BackupPage;
-use App\Filament\Pages\HomePage;
-use App\Filament\Pages\NewsPage;
 use App\Filament\Pages\PermissionsMatrixPage;
+use App\Filament\Pages\RoutesPage;
 use App\Filament\Pages\SettingsPage;
+use App\Filament\Resources\NewsResource;
+use App\Filament\Resources\PageResource\Pages\EditPage;
 use App\Filament\Widgets\AdminDashboardStats;
 use App\Filament\Widgets\RecentAuditLogs;
 use App\Filament\Widgets\RegistrationsChart;
@@ -22,11 +24,15 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Support\Assets\Css;
 use Filament\Support\Colors\Color;
 use Filament\Support\Facades\FilamentTimezone;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
+use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -50,7 +56,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->profile()
+            ->profile(EditProfile::class)
             ->multiFactorAuthentication(
                 providers: [
                     AppAuthentication::make()
@@ -68,18 +74,39 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Teal,
             ])
             ->navigationGroups([
-                NavigationGroup::make(__('filament.navigation.main')),
-                NavigationGroup::make(__('filament.navigation.community')),
-                NavigationGroup::make(__('filament.navigation.content')),
-                NavigationGroup::make(__('filament.navigation.system')),
+                // Stable keys keep navigation items independent from the locale
+                // at panel boot; labels are resolved lazily at render time.
+                'main' => NavigationGroup::make(fn (): string => __('filament.navigation.main')),
+                'community' => NavigationGroup::make(fn (): string => __('filament.navigation.community')),
+                'content' => NavigationGroup::make(fn (): string => __('filament.navigation.content')),
+                'system' => NavigationGroup::make(fn (): string => __('filament.navigation.system')),
             ])
+            ->navigationItems([
+                NavigationItem::make(fn (): string => __('filament.home.label'))
+                    ->key('content-home')->group('content')->sort(0)
+                    ->icon('heroicon-o-home')
+                    ->url(fn (): string => EditPage::getUrl(['record' => 'sys.home']))
+                    ->visible(fn (): bool => (auth()->user()?->isAdmin() ?? false)),
+                NavigationItem::make(fn (): string => __('filament.navigation.menus'))
+                    ->key('content-menus')->group('content')->sort(1)
+                    ->icon('heroicon-o-bars-3')
+                    ->visible(fn (): bool => auth()->user()?->can('pages.manage') ?? false),
+                NavigationItem::make(fn (): string => __('filament.navigation.components'))
+                    ->key('content-components')->group('content')->sort(2)
+                    ->icon('heroicon-o-squares-2x2')
+                    ->visible(fn (): bool => NewsResource::canViewAny()),
+            ])
+            // Language switch right before the user menu (ADR-011 §2.24).
+            ->renderHook(
+                PanelsRenderHook::USER_MENU_BEFORE,
+                fn (): View => view('filament.components.language-switcher'),
+            )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
                 AdminDashboard::class,
-                HomePage::class,
-                NewsPage::class,
                 PermissionsMatrixPage::class,
+                RoutesPage::class,
                 SettingsPage::class,
                 BackupPage::class,
             ])
@@ -122,6 +149,11 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+            ])
+            // Pinned record-action column in the pages registry, which is
+            // wider than the panel content column (see the stylesheet header).
+            ->assets([
+                Css::make('admin-tables')->relativePublicPath('css/admin-tables.css'),
             ]);
     }
 }

@@ -39,7 +39,7 @@ class RankResource extends Resource
 
     public static function getNavigationGroup(): string|UnitEnum|null
     {
-        return __('filament.navigation.system');
+        return 'system';
     }
 
     public static function getModelLabel(): string

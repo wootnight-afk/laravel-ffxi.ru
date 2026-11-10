@@ -114,13 +114,14 @@ final class DateFormat
         }
 
         $local = $value->copy()->setTimezone($timezone ?? 'UTC');
+        $locale ??= app()->getLocale();
 
         if ($local->isToday()) {
-            return 'Сегодня';
+            return trans('site.common.today', [], $locale);
         }
 
         if ($local->isYesterday()) {
-            return 'Вчера';
+            return trans('site.common.yesterday', [], $locale);
         }
 
         return self::date($local, $locale);

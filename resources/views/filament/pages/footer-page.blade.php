@@ -3,7 +3,7 @@
         {{ $this->form }}
 
         <x-filament::button type="submit">
-            {{ __('filament.home.save') }}
+            {{ __('filament.footer.save') }}
         </x-filament::button>
     </form>
 </x-filament-panels::page>

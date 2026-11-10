@@ -7,16 +7,13 @@ use App\Filament\Resources\PageResource\Pages\CreatePage;
 use App\Filament\Resources\PageResource\Pages\EditPage;
 use App\Filament\Resources\PageResource\Pages\ListPages;
 use App\Models\Page;
+use App\Services\AuditLogger;
+use App\Services\PageEditorProfile;
+use App\Services\PageMenuManager;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\EditAction;
-use Filament\Forms\Components\MarkdownEditor;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
@@ -30,7 +27,7 @@ class PageResource extends Resource
 
     protected static ?string $model = Page::class;
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 5;
 
     public static function getNavigationLabel(): string
     {
@@ -39,7 +36,7 @@ class PageResource extends Resource
 
     public static function getNavigationGroup(): string|UnitEnum|null
     {
-        return __('filament.navigation.content');
+        return 'content';
     }
 
     public static function getModelLabel(): string
@@ -52,60 +49,22 @@ class PageResource extends Resource
         return __('filament.resources.pages.plural');
     }
 
-    public static function form(Schema $schema): Schema
-    {
-        return $schema->components([
-            Section::make(__('filament.resources.pages.sections.main'))
-                ->schema([
-                    TextInput::make('title')
-                        ->label(__('filament.resources.pages.fields.title'))
-                        ->required()
-                        ->maxLength(150),
-                    TextInput::make('slug')
-                        ->label(__('filament.resources.pages.fields.slug'))
-                        ->maxLength(120)
-                        ->unique(ignoreRecord: true)
-                        ->helperText(__('filament.resources.pages.fields.slug_help')),
-                    MarkdownEditor::make('body')
-                        ->label(__('filament.resources.pages.fields.body'))
-                        ->required()
-                        ->columnSpanFull(),
-                ])
-                ->columns(2),
-            Section::make(__('filament.resources.pages.sections.menu'))
-                ->schema([
-                    Toggle::make('is_published')
-                        ->label(__('filament.resources.pages.fields.is_published')),
-                    Toggle::make('show_in_menu')
-                        ->label(__('filament.resources.pages.fields.show_in_menu')),
-                    TextInput::make('menu_order')
-                        ->label(__('filament.resources.pages.fields.menu_order'))
-                        ->numeric()
-                        ->default(0),
-                ])
-                ->columns(3),
-            Section::make(__('filament.resources.pages.sections.meta'))
-                ->schema([
-                    TextInput::make('meta_title')
-                        ->label(__('filament.resources.pages.fields.meta_title'))
-                        ->maxLength(180),
-                    TextInput::make('meta_description')
-                        ->label(__('filament.resources.pages.fields.meta_description'))
-                        ->maxLength(255),
-                ])
-                ->columns(2),
-        ]);
-    }
-
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
+                TextColumn::make('kind')
+                    ->label(__('filament.page_registry.kind'))
+                    ->state(fn (array|Page $record): string => $record instanceof Page ? 'cms' : $record['kind'])
+                    ->formatStateUsing(fn (string $state): string => __('filament.page_registry.kinds.'.$state)),
                 TextColumn::make('title')
                     ->label(__('filament.resources.pages.fields.title'))
                     ->searchable()
                     ->sortable()
                     ->limit(60),
+                TextColumn::make('url')
+                    ->label('URL')
+                    ->state(fn (array|Page $record): string => $record instanceof Page ? '/'.$record->slug : $record['url']),
                 TextColumn::make('slug')
                     ->label(__('filament.resources.pages.fields.slug'))
                     ->searchable()
@@ -116,6 +75,9 @@ class PageResource extends Resource
                 IconColumn::make('show_in_menu')
                     ->label(__('filament.resources.pages.fields.show_in_menu'))
                     ->boolean(),
+                IconColumn::make('show_in_footer')
+                    ->label(__('filament.resources.pages.fields.show_in_footer'))
+                    ->boolean(),
                 TextColumn::make('menu_order')
                     ->label(__('filament.resources.pages.fields.menu_order'))
                     ->sortable(),
@@ -125,6 +87,7 @@ class PageResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->recordUrl(null)
             ->defaultSort('menu_order')
             ->filters([
                 TernaryFilter::make('is_published')
@@ -137,26 +100,47 @@ class PageResource extends Resource
                     ->label(__('filament.resources.pages.actions.publish'))
                     ->color('success')
                     ->requiresConfirmation()
-                    ->visible(fn (Page $record): bool => ! $record->is_published
+                    ->visible(fn (array|Page $record): bool => $record instanceof Page && ! $record->is_published
                         && (auth()->user()?->can('update', $record) ?? false))
                     ->action(function (Page $record): void {
                         abort_unless(auth()->user()?->can('update', $record), 403);
 
                         $record->update(['is_published' => true]);
+
+                        app(AuditLogger::class)->log(
+                            action: 'page.published',
+                            subject: $record,
+                            old: ['is_published' => false],
+                            new: ['is_published' => true],
+                            recordIp: false,
+                        );
                     }),
                 Action::make('unpublish')
                     ->label(__('filament.resources.pages.actions.unpublish'))
                     ->color('gray')
                     ->requiresConfirmation()
-                    ->visible(fn (Page $record): bool => $record->is_published
+                    ->visible(fn (array|Page $record): bool => $record instanceof Page && $record->is_published
                         && (auth()->user()?->can('update', $record) ?? false))
                     ->action(function (Page $record): void {
                         abort_unless(auth()->user()?->can('update', $record), 403);
 
                         $record->update(['is_published' => false]);
+
+                        app(AuditLogger::class)->log(
+                            action: 'page.unpublished',
+                            subject: $record,
+                            old: ['is_published' => true],
+                            new: ['is_published' => false],
+                            recordIp: false,
+                        );
                     }),
-                EditAction::make(),
-                DeleteAction::make(),
+                Action::make('editor')
+                    ->label(__('filament.page_registry.edit'))
+                    ->icon('heroicon-o-pencil-square')
+                    ->visible(fn (array|Page $record): bool => static::editorUrl($record) !== null)
+                    ->url(fn (array|Page $record): ?string => static::editorUrl($record)),
+                static::deleteAction()
+                    ->hidden(fn (array|Page $record): bool => ! $record instanceof Page || ! static::canDelete($record)),
             ]);
     }
 
@@ -170,6 +154,51 @@ class PageResource extends Resource
             'create' => CreatePage::route('/create'),
             'edit' => EditPage::route('/{record}/edit'),
         ];
+    }
+
+    /**
+     * URL of the unified editor for a registry row.
+     *
+     * CMS pages use their model key; a system page uses its route name. Rows
+     * without a profile (templates, auth pages, cabinet tabs) stay read-only.
+     *
+     * @param  array<string, mixed>|Page  $record
+     */
+    public static function editorUrl(array|Page $record): ?string
+    {
+        if ($record instanceof Page) {
+            if (! static::canEdit($record)) {
+                return null;
+            }
+
+            return EditPage::getUrl(['record' => 'cms-'.$record->getKey()]);
+        }
+
+        $route = (string) ($record['route'] ?? '');
+        $profile = PageEditorProfile::forKey($route);
+
+        if ($profile === null || ($profile['kind'] ?? null) !== PageEditorProfile::KIND_SYSTEM) {
+            return null;
+        }
+
+        if (! (auth()->user()?->isAdmin() ?? false)) {
+            return null;
+        }
+
+        return EditPage::getUrl(['record' => 'sys.'.$route]);
+    }
+
+    public static function deleteAction(): DeleteAction
+    {
+        return DeleteAction::make()
+            ->databaseTransaction()
+            ->using(function (Page $record): bool {
+                abort_unless(static::canDelete($record), 403);
+
+                return app(PageMenuManager::class)->delete($record);
+            })
+            // PageMenuManager records deletion inside the same transaction.
+            ->after(fn (): null => null);
     }
 
     public static function canViewAny(): bool

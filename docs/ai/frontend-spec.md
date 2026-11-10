@@ -1,6 +1,6 @@
 # Функциональная спецификация: FFXI Phoenix community portal
 
-**Версия:** 2.0.1 (FINAL)
+**Версия:** 2.0.2 (FINAL)
 **Назначение:** функционал публичной части и взаимодействия.
 **Файл:** docs/ai/frontend-spec.md
 **Статус:** утверждённое ТЗ.
@@ -424,8 +424,12 @@ column_span tinyint (1–3), is_active, settings json, timestamps`.
 - `settings.timezone_display` — **legacy** (ADR-011 §2.12). Не участвует в
   определении пользовательского времени; не удаляется до подтверждённого
   отсутствия читателей; `timezone_display.ru` / `.en` не вводятся;
-- `pages (title, slug, body, body_html, is_published, show_in_menu,
-  menu_order, meta_title, meta_description, timestamps, softDeletes)`;
+- `pages (title, title_en, slug, slug_key, body, body_html, body_en,
+  body_html_en, is_published, show_in_menu, show_in_footer, menu_order,
+  meta_title, meta_title_en, meta_description, meta_description_en,
+  timestamps, softDeletes)`. `slug_key` — STORED GENERATED
+  `if(deleted_at is null, slug, null)` с `UNIQUE`: активный slug уникален,
+  soft-deleted страница освобождает свой slug;
 - `admin_audit_logs (user_id, action, subject_type, subject_id, old json,
   new json, ip, user_agent, created_at)`;
 - стандартные Laravel + spatie.
@@ -635,6 +639,7 @@ archived исключён).
 | Ключ | Тип | По умолчанию |
 |---|---|---|
 | `news_page.meta_title` | string | `Новости игры` |
+| `news_page.meta_description` | string | `''` (тег не выводится) |
 | `news_page.h1` | string | `Новости игры` |
 | `news_page.body` | string (Markdown) | два вводных абзаца |
 | `news_page.main_image` | string\|null | `null` → `img/ogp_eu.webp` |
@@ -651,7 +656,11 @@ archived исключён).
    `{!! !!}`;
 4. `<hr class="divider">` — разделитель, далее неизменный список.
 
-`<title>` — `news_page.meta_title`. `alt` картинки шапки **фиксирован**
+`<title>` — `news_page.meta_title`, `<meta name="description">` —
+`news_page.meta_description` (для `locale=en` — `news_page.meta_description_en`
+с per-field fallback на русское значение; пустое значение тег не выводит;
+экранирование — §6.15).
+`alt` картинки шапки **фиксирован**
 (`Final Fantasy XI — MMORPG Square Enix`): это key art, а не
 странице-специфичная иллюстрация, и константа сохраняет прежнюю разметку
 страницы.
@@ -669,7 +678,8 @@ q85, `scaleDown` без апскейла до 1920×1080). Каталог —
 предусмотрено.
 
 **Доступ и аудит.** Только `admin`; сохранение пишет `admin_audit_logs`
-(`news_page.updated`, old/new, без IP). Точка входа — см. §7.3.
+(`news_page.updated`, old/new, без IP). Точка входа — единый редактор
+страниц, см. §7.3.
 
 ## 6.5 Комментарии
 
@@ -868,6 +878,7 @@ FK-стратегия — явная.
 | Ключ | Тип | По умолчанию |
 |---|---|---|
 | `home.meta_title` | string | `Содружество игроков Final Fantasy XI — Phoenix Server` |
+| `home.meta_description` | string | `''` (тег не выводится) |
 | `home.h1` | string | `Final Fantasy XI — Community of Players` |
 | `home.body` | string (Markdown) | два вводных абзаца |
 | `home.hero_logo` | string\|null | `null` → `img/bx_ffxi_logo.webp` |
@@ -881,7 +892,16 @@ FK-стратегия — явная.
 
 **Вывод (`resources/views/home.blade.php`):**
 
-- `<title>` — `home.meta_title`.
+- `<title>` — `home.meta_title`; `<meta name="description">` —
+  `home.meta_description` (для `locale=en` — `home.meta_description_en`
+  с per-field fallback; пустое значение тег не выводит).
+- Экранирование `<title>` и `content` — на стороне Blade: сокращённая форма
+  `@section('name', $value)`, которой пользуются все страницы, сохраняет
+  значение через `e()`, поэтому `@yield` в `resources/views/layouts/app.blade.php`
+  выводит уже экранированную строку. Оборачивать `@yield` в `{{ }}` нельзя —
+  получится двойное экранирование. Блочная форма
+  `@section('name') … @endsection` это экранирование обходит: внутри блока
+  пользовательские значения выводятся только через `{{ }}`.
 - Hero — `<div class="hero hero--single">` → `.logo-wrap` → `<img>`, `alt`
   равен H1. Для стандартного логотипа разметка **не меняется** (класс
   `logo-wrap--custom` не добавляется), поэтому CSS-кроп
@@ -909,7 +929,8 @@ JPEG/PNG/WebP по фактическому MIME, ≤ 4 МБ, ≤ 25 Мп, ко�
 image — до 1920×1080. Публичный URL — `asset('storage/'.$path)`. При замене и
 при сбросе предыдущий файл удаляется.
 
-**Админка.** `App\Filament\Pages\HomePage` — см. §7.3.
+**Админка.** Единый редактор страниц `SitePageEditor` —
+`/admin/pages/sys.home/edit`, см. §7.3.
 
 ## 6.16 Локализация и часовые пояса
 
@@ -1133,27 +1154,49 @@ Editor видит только «Контент».
 
 ## 7.3 Контент (admin + editor)
 
-- **Главная (Singleton):** `App\Filament\Pages\HomePage` — кастомная страница
-  без списка и без записи: открывается сразу форма. `navigationSort = 0`,
-  поэтому пункт стоит выше «Новости». Поля: Title (`TextInput`), H1
-  (`TextInput`), Hero-логотип (`FileUpload`), Основное изображение
-  (`FileUpload`), Текст (`MarkdownEditor`). Загрузки ограничены
-  JPEG/PNG/WebP и 4 МБ: в UI — `acceptedFileTypes` + `maxSize(4096)`,
-  серверная проверка — `HomeImageUploader`. Тумблеры «вернуть стандартный
-  логотип / стандартное изображение» видны только при загруженном файле:
-  удаляют файл и сбрасывают ключ в `null` (дефолт). Полное скрытие блока
-  изображения не предусмотрено. Доступ — только `admin` (`canAccess()`),
-  editor пункт не видит. Сохранение пишет запись в `admin_audit_logs`
-  (`home.updated`, old/new, без IP). Ключи и семантика — §6.15.
-- **Новости — редактор шапки страницы:** `App\Filament\Pages\NewsPage`
-  (`/admin/news-page`). В сайдбаре **не отображается**
-  (`shouldRegisterNavigation() = false`); точка входа — header action
-  «Редактор страницы» в списке новостей (`ListNews`), рядом с «Создать».
-  Action виден только admin — editor не получает ссылку, ведущую на 403.
-  Поля: Title, H1, Картинка шапки (`FileUpload` + тумблер сброса), Текст
-  (`MarkdownEditor`). Список новостей и пагинация не затрагиваются.
-  Сохранение пишет `admin_audit_logs` (`news_page.updated`). Ключи и
-  семантика — §6.4.2.
+- **Страницы — единый редактор:** `SitePageEditor`
+  (`app/Filament/Resources/PageResource/Pages/SitePageEditor.php`) обслуживает
+  оба входа: `/admin/pages/create` (только CMS) и
+  `/admin/pages/{record}/edit`, где `record` — `cms-{id}` для CMS-страницы
+  или `sys.{route}` для системной (`sys.home`, `sys.news.index`,
+  `sys.gallery.index`, `sys.contacts`, `sys.events.index`,
+  `sys.events.create`). Форма строится один раз из объединения секций
+  `PageEditorProfile`; неприменимые секции отключены (`disabled` +
+  `dehydrated(false)`) и не попадают в сохранённые данные.
+  - Секции: тип страницы (только create), содержание (RU/EN: Title, H1,
+    Markdown-текст), slug, меню, SEO (RU/EN: meta title, meta description),
+    изображения (hero-логотип и основное изображение главной; шапка
+    новостей), компоненты (тумблеры блоков).
+  - CMS: `is_published`, `show_in_menu`, `show_in_footer`, `menu_order`
+    доступны и в режиме создания. `menu_order` — порядок в списке страниц и
+    стартовый порядок новой привязки; порядок пунктов внутри Header/Footer
+    задаётся только в редакторах этих меню.
+  - Системные страницы: `is_published` всегда `true`, `menu_order` не
+    редактируется; slug зафиксирован маршрутом. Доступ — только `admin`;
+    CMS-страницы доступны editor (`pages.manage`).
+  - Slug CMS: только `[a-z0-9-]`, без ведущего/замыкающего дефиса, не из
+    `PageController::RESERVED_SLUGS`, не с префиксом `livewire-`
+    (`Page::isReservedSlug()` — отдельное правило валидации, `notIn` префикс
+    не проверяет), уникален среди активных страниц (soft-deleted страница
+    освобождает slug). Пустой slug генерируется из заголовка
+    (`Page::generateUniqueSlug()`): зарезервированная база получает префикс
+    `page-`, занятая — суффикс `-2`, `-3` …; при исчерпании вариантов или
+    гонке за slug показывается ошибка поля `data.slug`, сохранение не падает
+    с 500.
+  - Сохранение системной страницы: загрузка нового файла → одна транзакция
+    (настройки + аудит + видимость в меню) → удаление заменённого файла
+    после commit; при ошибке новый файл удаляется, настройки не меняются.
+    Очистка новых файлов выполняется на всех путях выхода, включая ошибку
+    до открытия транзакции (разрешение констант провайдера, чтение
+    предыдущих значений).
+  - Аудит: CMS — `page.created`, `page.updated`, `page.published`,
+    `page.unpublished`, `page.deleted`, `page.navigation_updated`;
+    системные — `home.updated`, `news_page.updated`,
+    `gallery_page.updated`, `contacts.updated`, `events.updated`,
+    `events_create.updated`; меню — `header.updated`, `footer.updated`,
+    `navigation.visibility_updated`.
+  - Ключи и семантика системных страниц — §6.15 (главная) и §6.4.2
+    (шапка новостей).
 - **News:** таблица (заголовок, автор, scope, статус, дата, views,
   comments), фильтры (draft/pending/published/rejected/archived,
   Game/Player), поиск; форма (title, slug авто, excerpt, body Markdown,
@@ -1390,11 +1433,13 @@ AlbumManager, EventForm, DangerZone}`, `Widgets\ApiChart`.
     - `draft` без даты → сохраняется;
     - дата в будущем не скрывает новость из ленты;
     - при равных `published_at` порядок детерминирован (`id DESC`).
-29. **Главная — редактор (singleton):**
-    - `/admin` → группа «Контент»: пункт «Главная» выше «Новости»;
-    - форма открывается сразу (без списка записей), значения по умолчанию
-      совпадают с текущей вёрсткой;
-    - сохранение Title/H1/текста сразу видно на `/`;
+29. **Главная — единый редактор страниц:**
+    - `/admin/pages` → строка «Главная» → «Редактор страницы» открывает
+      `/admin/pages/sys.home/edit`;
+    - форма содержит секции содержания, меню, SEO, изображений и
+      компонентов; slug зафиксирован маршрутом `/`;
+    - значения по умолчанию совпадают с текущей вёрсткой;
+    - сохранение Title/H1/текста/meta description сразу видно на `/`;
     - пустой текст → блок `.content-text` не выводится;
     - загрузка JPEG/PNG/WebP → WebP в `storage/app/public/home/{slot}/`,
       `width`/`height` в разметке — реальные размеры файла;
@@ -1402,19 +1447,20 @@ AlbumManager, EventForm, DangerZone}`, `Widgets\ApiChart`.
       (разметка не меняется);
     - «вернуть стандартное» удаляет файл и возвращает дефолт;
     - GIF/SVG и файлы > 4 МБ отклоняются, ничего не сохраняется;
-    - editor пункт не видит (`canAccess()` = false).
-30. **Шапка `/news` — редактор:**
-    - в списке новостей есть кнопка «Редактор страницы», открывает
-      `/admin/news-page`; пункта в сайдбаре нет;
+    - editor системную страницу не видит (`canAccess()` = false).
+30. **Шапка `/news` — единый редактор страниц:**
+    - `/admin/pages` → строка «Новости» → «Редактор страницы» открывает
+      `/admin/pages/sys.news.index/edit`;
     - дефолтные значения совпадают с прежней вёрсткой: Title и H1 «Новости
       игры», картинка `img/ogp_eu.webp`, 1200×630, два абзаца, `divider`;
-    - сохранение Title/H1/текста/картинки сразу видно на `/news`;
+    - сохранение Title/H1/текста/картинки/meta description сразу видно на
+      `/news`;
     - пустой текст → блок `.content-text` не выводится, `divider` остаётся;
     - загрузка JPEG/PNG/WebP → WebP в `storage/app/public/news/header/`,
       `width`/`height` — реальные размеры файла;
     - «вернуть стандартную картинку» удаляет файл и возвращает дефолт;
     - список новостей и пагинация не изменились;
-    - editor кнопку не видит.
+    - editor системную страницу не видит.
 31. **Язык и часовой пояс — независимость (ADR-011):**
     - смена языка интерфейса не меняет отображаемое время;
     - смена часового пояса не меняет язык;
@@ -1487,6 +1533,16 @@ attended/no_show, waitlist, приватные события, preferences ув�
 
 # ИСТОРИЯ ВЕРСИЙ
 
+**2.0.2** — синхронизация §7.3, §6.4.2 и §6.15 с фактической реализацией
+редактора страниц: slug CMS дополнительно отклоняет префикс `livewire-`
+(отдельное правило `Page::isReservedSlug()`), автогенерация учитывает
+зарезервированные адреса и занятость активных slug (префикс `page-`,
+суффикс `-N`, ошибка поля вместо 500); очистка загруженных файлов описана
+для всех путей выхода, включая сбой до открытия транзакции. Зафиксировано,
+что экранирование `<title>`/`meta description` обеспечивает сокращённая
+форма `@section('name', $value)` в Blade, а не `@yield` в layout. Требования
+§5, §9, §10 не изменялись.
+
 **2.0.1** — статусная синхронизация после приёмки L1 ADR-011: в преамбуле
 зафиксировано, что L1 (поля `users.locale`, `users.timezone`,
 `events.timezone`, `App\Enums\Locale`, `TimezoneOptions`,
@@ -1516,6 +1572,17 @@ URL-префиксы и Vana'diel — вне). Зафиксированы: DST-�
 `.en` **не вводятся**. «FINAL» означает утверждённое ТЗ, а не
 реализованную функциональность. Продуктовые решения §1 не менялись.
 
+**1.9** — единый редактор страниц `SitePageEditor` заменил удалённые
+`App\Filament\Pages\HomePage` и `App\Filament\Pages\NewsPage` (их файлов и
+маршрутов `/admin/home`, `/admin/news-page` больше нет). §7.3 описывает
+общий редактор (`/admin/pages/create`, `/admin/pages/{record}/edit`,
+`cms-{id}` и `sys.{route}`), доступ, секции, правила slug, аудит и
+атомарное сохранение системных страниц. §6.15 и §6.4.2 дополнены ключами
+`*.meta_description` / `*.meta_description_en` и выводом
+`<meta name="description">` с per-field fallback; §5.12 обновлён под
+актуальную схему `pages` (EN-колонки, `show_in_footer`, generated
+`slug_key` с `UNIQUE`). Продуктовые решения §1 не менялись.
+
 **1.8** — редактор шапки страницы Новостей: новый §6.4.2 (ключи
 `news_page.*` в `settings`, дефолты, порядок вывода «H1 → картинка → текст →
 divider», фиксированный `alt`, слот `news_page` в `HomeImageUploader`,
@@ -1524,7 +1591,8 @@ divider», фиксированный `alt`, слот `news_page` в `HomeImageU
 header action в `ListNews`, доступ только admin, аудит
 `news_page.updated`), §6.15 (перечень слотов загрузчика), §5.12
 (`news_page.*`), §9 (сценарий 30). Список новостей и пагинация не менялись.
-Продуктовые решения §1 не менялись.
+Продуктовые решения §1 не менялись. *С 1.9 редактор `NewsPage` заменён
+единым `SitePageEditor` (`sys.news.index`).*
 
 **1.7** — редактор Главной страницы: новый §6.15 (синглтон на ключах
 `home.*` в `settings`, дефолты, семантика трёх состояний, порядок вывода
@@ -1533,6 +1601,7 @@ hero → H1 → изображение → текст, `logo-wrap--custom` дл�
 `width`/`height`), §5.12 (ключи `home.*`), §7.3 (подраздел «Главная
 (Singleton)»: поля, лимиты, тумблеры сброса, доступ только admin, аудит
 `home.updated`), §9 (сценарий 29). Продуктовые решения §1 не менялись.
+*С 1.9 редактор `HomePage` заменён единым `SitePageEditor` (`sys.home`).*
 
 **1.6** — обложки новостей: новый §6.4.1 (поле `news.cover_path`, форматы
 JPEG/PNG/WebP, лимиты, обработка в `NewsCoverUploader` без апскейла, хранение

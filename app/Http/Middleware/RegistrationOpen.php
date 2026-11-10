@@ -22,7 +22,7 @@ class RegistrationOpen
         }
 
         if ($request->isMethod('POST')) {
-            abort(403, 'Регистрация временно приостановлена.');
+            abort(403, __('site.auth.errors.registration_closed'));
         }
 
         return response()->view('auth.registration-closed', [], 200);

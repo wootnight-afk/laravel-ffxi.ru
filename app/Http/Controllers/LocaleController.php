@@ -10,6 +10,7 @@ use App\Services\LocalePreference;
 use App\Support\LocaleCookie;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Throwable;
 
@@ -40,7 +41,7 @@ final class LocaleController extends Controller
                 report($exception);
 
                 return $this->back()
-                    ->withErrors(['locale' => 'Не удалось переключить язык интерфейса. Попробуйте ещё раз.'])
+                    ->withErrors(['locale' => __('site.locale.switch_failed')])
                     ->withInput();
             }
         } else {
@@ -48,6 +49,7 @@ final class LocaleController extends Controller
         }
 
         app()->setLocale($locale->value);
+        Carbon::setLocale($locale->value);
 
         return $this->back()->withCookie(
             LocaleCookie::make($locale, $request->isSecure()),

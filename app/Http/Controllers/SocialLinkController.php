@@ -31,7 +31,7 @@ class SocialLinkController extends Controller
 
         return redirect()
             ->route('cabinet.tab', ['tab' => 'social'])
-            ->with('status', 'Ссылка добавлена.');
+            ->with('status', __('site.cabinet.flash.link_added'));
     }
 
     public function update(StoreSocialLinkRequest $request, UserSocialLink $link): RedirectResponse
@@ -55,7 +55,7 @@ class SocialLinkController extends Controller
 
         return redirect()
             ->route('cabinet.tab', ['tab' => 'social'])
-            ->with('status', 'Ссылка обновлена.');
+            ->with('status', __('site.cabinet.flash.link_updated'));
     }
 
     public function toggle(UserSocialLink $link): RedirectResponse
@@ -66,7 +66,9 @@ class SocialLinkController extends Controller
 
         return redirect()
             ->route('cabinet.tab', ['tab' => 'social'])
-            ->with('status', $link->is_visible ? 'Ссылка показана в профиле.' : 'Ссылка скрыта.');
+            ->with('status', $link->is_visible
+                ? __('site.cabinet.flash.link_shown')
+                : __('site.cabinet.flash.link_hidden'));
     }
 
     public function destroy(UserSocialLink $link): RedirectResponse
@@ -77,6 +79,6 @@ class SocialLinkController extends Controller
 
         return redirect()
             ->route('cabinet.tab', ['tab' => 'social'])
-            ->with('status', 'Ссылка удалена.');
+            ->with('status', __('site.cabinet.flash.link_deleted'));
     }
 }

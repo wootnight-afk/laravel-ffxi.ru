@@ -21,7 +21,7 @@ class CommentController extends Controller
     public function store(StoreCommentRequest $request, News $news): JsonResponse
     {
         if (! $news->comments_enabled) {
-            abort(403, 'Комментарии к этой новости отключены.');
+            abort(403, __('site.comments.disabled'));
         }
 
         Gate::authorize('create', Comment::class);
@@ -35,13 +35,13 @@ class CommentController extends Controller
 
             // Разрешаем отвечать только на корневые комментарии (1 уровень вложенности).
             if ($parent === null || $parent->commentable_type !== News::class || $parent->commentable_id !== $news->id) {
-                abort(422, 'Недопустимый родительский комментарий.');
+                abort(422, __('site.comments.invalid_parent'));
             }
 
             $parentId = $parent->parent_id === null ? $parent->id : null;
 
             if ($parentId === null) {
-                abort(422, 'Ответ можно оставить только на корневой комментарий.');
+                abort(422, __('site.comments.reply_root_only'));
             }
         }
 
@@ -64,8 +64,8 @@ class CommentController extends Controller
             'id' => $comment->id,
             'status' => $comment->status,
             'message' => $status === Comment::STATUS_APPROVED
-                ? 'Комментарий опубликован.'
-                : 'Комментарий отправлен на модерацию.',
+                ? __('site.comments.published')
+                : __('site.comments.submitted'),
         ], 201);
     }
 
@@ -83,7 +83,7 @@ class CommentController extends Controller
         ])->save();
 
         return response()->json([
-            'message' => 'Комментарий обновлён.',
+            'message' => __('site.comments.updated'),
         ]);
     }
 
@@ -94,7 +94,7 @@ class CommentController extends Controller
         $comment->delete();
 
         return response()->json([
-            'message' => 'Комментарий удалён.',
+            'message' => __('site.comments.deleted'),
         ]);
     }
 
@@ -107,7 +107,7 @@ class CommentController extends Controller
         }
 
         return response()->json([
-            'message' => 'Жалоба отправлена модераторам.',
+            'message' => __('site.comments.reported_message'),
         ]);
     }
 

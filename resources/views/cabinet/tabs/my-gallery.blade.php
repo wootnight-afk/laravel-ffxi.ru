@@ -19,18 +19,17 @@
     <div class="form-status" style="margin-bottom: 16px;">{{ session('status') }}</div>
 @endif
 
-<h2 class="section-title" style="margin-top: 0;">Моя галерея</h2>
+<h2 class="section-title" style="margin-top: 0;">{{ __('site.cabinet.gallery.title') }}</h2>
 
 <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
-    Альбомы (до {{ $maxAlbums }}) видны на вашей странице игрока. Фотографии обрабатываются в фоне —
-    после загрузки они появятся в течение нескольких секунд.
+    {{ __('site.cabinet.gallery.intro', ['max' => $maxAlbums]) }}
 </p>
 
 {{-- ================= Create album ================= --}}
 @if ($albums->count() < $maxAlbums)
     <details style="margin-bottom: 24px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card);">
         <summary style="padding: 12px 16px; cursor: pointer; font-weight: 600; font-size: 14px;">
-            + Создать альбом
+            {{ __('site.cabinet.gallery.create_album') }}
         </summary>
 
         <form
@@ -41,13 +40,13 @@
             @csrf
 
             <div class="form-group">
-                <label for="album_title">Название</label>
+                <label for="album_title">{{ __('site.cabinet.gallery.name') }}</label>
                 <input type="text" id="album_title" name="title" class="form-control" value="{{ old('title') }}" minlength="3" maxlength="120" required>
                 @error('title') <div class="form-error">{{ $message }}</div> @enderror
             </div>
 
             <div class="form-group">
-                <label for="album_description">Описание (необязательно)</label>
+                <label for="album_description">{{ __('site.cabinet.gallery.description') }}</label>
                 <textarea id="album_description" name="description" class="form-control" rows="3" maxlength="2000" style="resize: vertical;">{{ old('description') }}</textarea>
                 @error('description') <div class="form-error">{{ $message }}</div> @enderror
             </div>
@@ -55,22 +54,22 @@
             <div class="form-group">
                 <label style="display: flex; align-items: center; gap: 6px; font-size: 13px;">
                     <input type="checkbox" name="is_published" value="1" {{ old('is_published', true) ? 'checked' : '' }}>
-                    Показывать альбом в профиле
+                    {{ __('site.cabinet.gallery.show_in_profile') }}
                 </label>
             </div>
 
-            <button type="submit" class="btn btn-primary">Создать альбом</button>
+            <button type="submit" class="btn btn-primary">{{ __('site.cabinet.gallery.create') }}</button>
         </form>
     </details>
 @else
     <div style="padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-light); font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">
-        Достигнут лимит альбомов ({{ $maxAlbums }}). Удалите ненужные, чтобы создать новые.
+        {{ __('site.cabinet.gallery.limit_reached', ['max' => $maxAlbums]) }}
     </div>
 @endif
 
 {{-- ================= Albums list ================= --}}
 @if ($albums->isEmpty())
-    <p style="color: var(--text-muted); font-size: 14px;">У вас пока нет альбомов.</p>
+    <p style="color: var(--text-muted); font-size: 14px;">{{ __('site.cabinet.gallery.empty') }}</p>
 @else
     <div style="display: flex; flex-direction: column; gap: 16px;">
         @foreach ($albums as $album)
@@ -80,11 +79,11 @@
                         <span style="flex: 1; min-width: 200px; font-size: 14px; font-weight: 600;">
                             {{ $album->title }}
                             @if (! $album->is_published)
-                                <span style="font-size: 11px; color: var(--text-muted); font-weight: 400; margin-left: 6px;">[скрыт]</span>
+                                <span style="font-size: 11px; color: var(--text-muted); font-weight: 400; margin-left: 6px;">{{ __('site.cabinet.gallery.hidden') }}</span>
                             @endif
                         </span>
                         <span style="font-size: 12px; color: var(--text-muted);">
-                            {{ $album->photos->count() }} фото
+                            {{ trans_choice('site.cabinet.gallery.photos_count', $album->photos->count()) }}
                         </span>
                     </summary>
 
@@ -97,15 +96,15 @@
                             <input type="hidden" name="description" value="{{ $album->description }}">
                             <input type="hidden" name="is_published" value="{{ $album->is_published ? '0' : '1' }}">
                             <button type="submit" class="btn" style="font-size: 12px; padding: 4px 10px;">
-                                {{ $album->is_published ? 'Скрыть' : 'Показать' }}
+                                {{ $album->is_published ? __('site.cabinet.gallery.hide') : __('site.cabinet.gallery.show') }}
                             </button>
                         </form>
 
-                        <form method="POST" action="{{ route('cabinet.gallery.albums.destroy', $album) }}" onsubmit="return confirm('Удалить альбом со всеми фотографиями?');">
+                        <form method="POST" action="{{ route('cabinet.gallery.albums.destroy', $album) }}" onsubmit="return confirm('{{ __('site.cabinet.gallery.delete_confirm') }}');">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn" style="font-size: 12px; padding: 4px 10px; color: #dc2626;">
-                                Удалить
+                                {{ __('site.cabinet.gallery.delete') }}
                             </button>
                         </form>
                     </div>
@@ -113,30 +112,30 @@
                     {{-- Edit album --}}
                     <details style="border-top: 1px solid var(--border-color);">
                         <summary style="padding: 8px 16px; cursor: pointer; font-size: 13px; color: var(--primary-color);">
-                            Редактировать
+                            {{ __('site.cabinet.gallery.edit') }}
                         </summary>
                         <form method="POST" action="{{ route('cabinet.gallery.albums.update', $album) }}" style="padding: 12px 16px; max-width: 720px; box-sizing: border-box;">
                             @csrf
                             @method('PATCH')
 
                             <div class="form-group">
-                                <label>Название</label>
+                                <label>{{ __('site.cabinet.gallery.name') }}</label>
                                 <input type="text" name="title" class="form-control" value="{{ $album->title }}" minlength="3" maxlength="120" required>
                             </div>
 
                             <div class="form-group">
-                                <label>Описание</label>
+                                <label>{{ __('site.cabinet.gallery.description_label') }}</label>
                                 <textarea name="description" class="form-control" rows="3" maxlength="2000" style="resize: vertical;">{{ $album->description }}</textarea>
                             </div>
 
                             <div class="form-group">
                                 <label style="display: flex; align-items: center; gap: 6px; font-size: 13px;">
                                     <input type="checkbox" name="is_published" value="1" {{ $album->is_published ? 'checked' : '' }}>
-                                    Показывать альбом в профиле
+                                    {{ __('site.cabinet.gallery.show_in_profile') }}
                                 </label>
                             </div>
 
-                            <button type="submit" class="btn btn-primary">Сохранить</button>
+                            <button type="submit" class="btn btn-primary">{{ __('site.cabinet.gallery.save') }}</button>
                         </form>
                     </details>
 
@@ -158,10 +157,10 @@
                                 style="font-size: 12px; max-width: 100%;"
                             >
                             <button type="submit" class="btn btn-primary" style="font-size: 12px; padding: 6px 12px;">
-                                Загрузить
+                                {{ __('site.cabinet.gallery.upload') }}
                             </button>
                             <span style="font-size: 12px; color: var(--text-muted); flex-basis: 100%;">
-                                До 10 файлов за раз, каждый ≤ 8 МБ. JPEG / PNG / WebP / GIF.
+                                {{ __('site.cabinet.gallery.upload_hint') }}
                             </span>
                         </form>
                     </div>
@@ -189,25 +188,25 @@
                                                     name="caption"
                                                     value="{{ $photo->caption }}"
                                                     maxlength="200"
-                                                    placeholder="Подпись…"
+                                                    placeholder="{{ __('site.cabinet.gallery.caption_placeholder') }}"
                                                     style="font-size: 12px; padding: 4px 6px; border: 1px solid var(--border-color); border-radius: 4px; width: 100%; box-sizing: border-box; background: var(--bg-card); color: var(--text-main);"
                                                 >
 
                                                 <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-                                                    <button type="submit" class="btn" style="font-size: 11px; padding: 2px 8px;">Сохранить</button>
+                                                    <button type="submit" class="btn" style="font-size: 11px; padding: 2px 8px;">{{ __('site.cabinet.gallery.save') }}</button>
                                                     <label style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted);">
                                                         <input type="hidden" name="is_published" value="0">
                                                         <input type="checkbox" name="is_published" value="1" {{ $photo->is_published ? 'checked' : '' }}>
-                                                        показ
+                                                        {{ __('site.cabinet.gallery.visible') }}
                                                     </label>
                                                 </div>
                                             </form>
 
-                                            <form method="POST" action="{{ route('cabinet.gallery.photos.destroy', $photo) }}" onsubmit="return confirm('Удалить фото?');" style="margin-top: 6px;">
+                                            <form method="POST" action="{{ route('cabinet.gallery.photos.destroy', $photo) }}" onsubmit="return confirm('{{ __('site.cabinet.gallery.delete_photo_confirm') }}');" style="margin-top: 6px;">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn" style="font-size: 11px; padding: 2px 8px; color: #dc2626;">
-                                                    Удалить
+                                                    {{ __('site.cabinet.gallery.delete') }}
                                                 </button>
                                             </form>
                                         </div>

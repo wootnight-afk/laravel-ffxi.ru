@@ -5,7 +5,7 @@
 @section('content')
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h1 class="page-title" style="margin-bottom: 0;">{{ $album->title }}</h1>
-        <a href="{{ route('gallery.album', $album->slug) }}">← К альбому</a>
+        <a href="{{ route('gallery.album', $album->slug) }}">{{ __('site.gallery.back_to_album') }}</a>
     </div>
 
     {{-- Модальное окно с полноразмерным изображением --}}
@@ -16,7 +16,7 @@
         >
             <img
                 src="{{ $photo->urlMedium() }}"
-                alt="{{ $photo->caption ?: 'Фото' }}"
+                alt="{{ $photo->caption ?: __('site.gallery.photo_alt') }}"
                 style="max-width: 100%; height: auto; border-radius: 4px;"
             >
         </div>
@@ -28,7 +28,7 @@
         >
             <img
                 src="{{ $photo->urlOriginal() }}"
-                alt="{{ $photo->caption ?: 'Фото' }}"
+                alt="{{ $photo->caption ?: __('site.gallery.photo_alt') }}"
                 style="max-width: 95vw; max-height: 95vh;"
             >
         </div>
@@ -40,7 +40,7 @@
 
     <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">
         @if ($photo->taken_at)
-            Снято: <x-naive-date :value="$photo->taken_at" />
+            {{ __('site.gallery.taken') }} <x-naive-date :value="$photo->taken_at" />
         @endif
         @if ($photo->width && $photo->height)
             · {{ $photo->width }}×{{ $photo->height }}
@@ -51,27 +51,29 @@
     <div style="display: flex; justify-content: space-between; margin-bottom: 32px;">
         <div>
             @if ($prevPhoto)
-                <a href="{{ route('gallery.photo', [$album->slug, $prevPhoto->id]) }}">← Предыдущее</a>
+                <a href="{{ route('gallery.photo', [$album->slug, $prevPhoto->id]) }}">{{ __('site.gallery.previous') }}</a>
             @endif
         </div>
         <div>
             @if ($nextPhoto)
-                <a href="{{ route('gallery.photo', [$album->slug, $nextPhoto->id]) }}">Следующее →</a>
+                <a href="{{ route('gallery.photo', [$album->slug, $nextPhoto->id]) }}">{{ __('site.gallery.next') }}</a>
             @endif
         </div>
     </div>
 
     @if ($photo->album->isSite())
         <section style="margin-top: 48px;">
-            <h2 class="section-title">Комментарии</h2>
+            <h2 class="section-title">{{ __('site.comments.title') }}</h2>
 
             @auth
                 <p style="font-size: 13px; color: var(--text-muted);">
-                    Форма комментариев к фото появится в следующем обновлении.
+                    {{ __('site.gallery.comments_soon') }}
                 </p>
             @else
                 <p style="font-size: 13px; color: var(--text-muted);">
-                    <a href="{{ route('login') }}">Войдите</a>, чтобы оставить комментарий.
+                    {!! __('site.comments.login_required', [
+                        'login' => '<a href="'.route('login').'">'.e(__('site.common.login')).'</a>',
+                    ]) !!}
                 </p>
             @endauth
         </section>

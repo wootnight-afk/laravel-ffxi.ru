@@ -34,13 +34,13 @@ class EventCommentController extends Controller
                 || $parent->commentable_type !== Event::class
                 || $parent->commentable_id !== $event->id
             ) {
-                abort(422, 'Недопустимый родительский комментарий.');
+                abort(422, __('site.comments.invalid_parent'));
             }
 
             $parentId = $parent->parent_id === null ? $parent->id : null;
 
             if ($parentId === null) {
-                abort(422, 'Ответ можно оставить только на корневой комментарий.');
+                abort(422, __('site.comments.reply_root_only'));
             }
         }
 
@@ -59,8 +59,8 @@ class EventCommentController extends Controller
         }
 
         $message = $status === Comment::STATUS_APPROVED
-            ? 'Комментарий опубликован.'
-            : 'Комментарий отправлен на модерацию.';
+            ? __('site.comments.published')
+            : __('site.comments.submitted');
 
         if ($request->expectsJson()) {
             return response()->json([

@@ -23,7 +23,7 @@ class EmailVerificationController extends Controller
 
         $request->fulfill();
 
-        return redirect()->route('home')->with('status', 'Email подтверждён.');
+        return redirect()->route('home')->with('status', __('site.auth.status.email_verified'));
     }
 
     public function resend(Request $request): RedirectResponse
@@ -35,6 +35,6 @@ class EmailVerificationController extends Controller
         $request->user()->sendEmailVerificationNotification();
 
         // Anti-enumeration: нейтральный ответ.
-        return back()->with('status', 'Если email не подтверждён, письмо отправлено повторно.');
+        return back()->with('status', __('site.auth.status.verification_resent'));
     }
 }

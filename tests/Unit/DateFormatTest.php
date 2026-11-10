@@ -57,7 +57,10 @@ it('labels chat dividers by the viewer local date', function () {
 
     expect(DateFormat::localDayLabel($today, 'Europe/Berlin', 'ru'))->toBe('Сегодня')
         ->and(DateFormat::localDayLabel($yesterday, 'Europe/Berlin', 'ru'))->toBe('Вчера')
-        ->and(DateFormat::localDayLabel($older, 'Europe/Berlin', 'ru'))->toBe('01.10.2026');
+        ->and(DateFormat::localDayLabel($older, 'Europe/Berlin', 'ru'))->toBe('01.10.2026')
+        ->and(DateFormat::localDayLabel($today, 'Europe/Berlin', 'en'))->toBe('Today')
+        ->and(DateFormat::localDayLabel($yesterday, 'Europe/Berlin', 'en'))->toBe('Yesterday')
+        ->and(DateFormat::localDayLabel($older, 'Europe/Berlin', 'en'))->toBe('Oct 01, 2026');
 });
 
 it('produces an ISO value for the time element', function () {

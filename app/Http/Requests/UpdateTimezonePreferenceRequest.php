@@ -29,10 +29,10 @@ class UpdateTimezonePreferenceRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'timezone.present' => 'Выберите часовой пояс или режим «авто».',
-            'timezone.string' => 'Некорректное значение часового пояса.',
-            'timezone.max' => 'Идентификатор часового пояса слишком длинный.',
-            'timezone.timezone' => 'Укажите корректный часовой пояс (IANA).',
+            'timezone.present' => __('site.cabinet.validation.timezone_present'),
+            'timezone.string' => __('site.cabinet.validation.timezone_string'),
+            'timezone.max' => __('site.cabinet.validation.timezone_max'),
+            'timezone.timezone' => __('site.cabinet.validation.timezone_timezone'),
         ];
     }
 }

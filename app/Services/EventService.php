@@ -57,7 +57,7 @@ class EventService
     {
         if ($event->status !== EventStatus::Planned) {
             throw ValidationException::withMessages([
-                'event' => 'Изменять можно только запланированное событие.',
+                'event' => __('site.events.validation.edit_planned_only'),
             ]);
         }
 
@@ -70,7 +70,7 @@ class EventService
 
         if ($forbiddenFields !== []) {
             throw ValidationException::withMessages([
-                $forbiddenFields[0] => 'После начала события это поле изменить нельзя.',
+                $forbiddenFields[0] => __('site.events.validation.field_locked'),
             ]);
         }
 
@@ -113,7 +113,7 @@ class EventService
     {
         if ($event->status !== EventStatus::Planned) {
             throw ValidationException::withMessages([
-                'event' => 'Отменить можно только запланированное событие.',
+                'event' => __('site.events.validation.cancel_planned_only'),
             ]);
         }
 
@@ -160,7 +160,7 @@ class EventService
 
             if ($lockedEvent->max_participants !== null && $joinedCount >= $lockedEvent->max_participants) {
                 throw ValidationException::withMessages([
-                    'event' => 'Свободных мест нет.',
+                    'event' => __('site.events.validation.full'),
                 ]);
             }
 
@@ -276,19 +276,19 @@ class EventService
     {
         if ($event->status !== EventStatus::Planned) {
             throw ValidationException::withMessages([
-                'event' => 'Записаться можно только на запланированное событие.',
+                'event' => __('site.events.validation.join_planned_only'),
             ]);
         }
 
         if ($event->starts_at->lessThanOrEqualTo(now())) {
             throw ValidationException::withMessages([
-                'event' => 'Регистрация на событие уже закрыта.',
+                'event' => __('site.events.validation.registration_closed'),
             ]);
         }
 
         if ($event->registration_close !== null && $event->registration_close->lessThanOrEqualTo(now())) {
             throw ValidationException::withMessages([
-                'event' => 'Регистрация на событие уже закрыта.',
+                'event' => __('site.events.validation.registration_closed'),
             ]);
         }
     }

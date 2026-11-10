@@ -7,6 +7,7 @@ namespace App\Http\Middleware;
 use App\Services\LocaleResolver;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -21,7 +22,10 @@ final class SetLocale
 
     public function handle(Request $request, Closure $next): Response
     {
-        app()->setLocale($this->resolver->resolve($request->user()));
+        $locale = $this->resolver->resolve($request->user());
+
+        app()->setLocale($locale);
+        Carbon::setLocale($locale);
 
         return $next($request);
     }

@@ -32,10 +32,10 @@ class RegisterRequest extends FormRequest
                     }
 
                     $fail(match ($result['reason']) {
-                        'invalid' => 'Ник должен начинаться с буквы; разрешены латиница, цифры, дефис и подчёркивание (3–24 символа).',
-                        'blacklisted' => 'Этот ник зарезервирован системой.',
-                        'taken' => 'Этот ник уже занят.',
-                        default => 'Ник не подходит.',
+                        'invalid' => __('site.auth.nickname.invalid'),
+                        'blacklisted' => __('site.auth.nickname.blacklisted'),
+                        'taken' => __('site.auth.nickname.taken'),
+                        default => __('site.auth.nickname.not_allowed'),
                     });
                 },
             ],
@@ -53,14 +53,14 @@ class RegisterRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Укажите ник.',
-            'email.required' => 'Укажите email.',
-            'email.email' => 'Некорректный email.',
-            'email.unique' => 'Этот email уже зарегистрирован.',
-            'password.required' => 'Укажите пароль.',
-            'password.confirmed' => 'Пароли не совпадают.',
-            'pd_consent.required' => 'Нужно согласие на обработку персональных данных.',
-            'pd_consent.accepted' => 'Нужно согласие на обработку персональных данных.',
+            'name.required' => __('site.auth.validation.name_required'),
+            'email.required' => __('site.auth.validation.email_required'),
+            'email.email' => __('site.auth.validation.email_invalid'),
+            'email.unique' => __('site.auth.validation.email_taken'),
+            'password.required' => __('site.auth.validation.password_required'),
+            'password.confirmed' => __('site.auth.validation.password_confirmed'),
+            'pd_consent.required' => __('site.auth.validation.pd_consent_required'),
+            'pd_consent.accepted' => __('site.auth.validation.pd_consent_required'),
         ];
     }
 }

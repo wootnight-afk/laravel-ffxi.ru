@@ -10,7 +10,9 @@ use App\Models\Comment;
 use App\Models\Event;
 use App\Models\EventType;
 use App\Services\ContentRenderer;
+use App\Services\EventsCreatePageContent;
 use App\Services\EventService;
+use App\Services\EventsPageContent;
 use App\Services\TimezoneOptions;
 use App\Services\TimezoneResolver;
 use Illuminate\Contracts\View\View;
@@ -47,6 +49,7 @@ class EventController extends Controller
             'events' => $query->paginate(12)->withQueryString(),
             'types' => EventType::query()->active()->orderBy('sort_order')->get(),
             'selectedType' => is_string($typeKey) ? $typeKey : '',
+            'page' => app(EventsPageContent::class)->view(),
         ]);
     }
 
@@ -122,6 +125,7 @@ class EventController extends Controller
             'types' => EventType::query()->active()->orderBy('sort_order')->get(),
             'timezoneOptions' => TimezoneOptions::options(),
             'defaultTimezone' => $this->defaultTimezone(),
+            'page' => app(EventsCreatePageContent::class)->view(),
         ]);
     }
 
@@ -131,7 +135,7 @@ class EventController extends Controller
 
         return redirect()
             ->route('events.show', $event)
-            ->with('status', 'Событие создано.');
+            ->with('status', __('site.events.flash.created'));
     }
 
     public function edit(Event $event): View
@@ -152,7 +156,7 @@ class EventController extends Controller
 
         return redirect()
             ->route('events.show', $event)
-            ->with('status', 'Событие обновлено.');
+            ->with('status', __('site.events.flash.updated'));
     }
 
     public function cancel(Request $request, Event $event): RedirectResponse
@@ -167,7 +171,7 @@ class EventController extends Controller
 
         return redirect()
             ->route('events.show', $event)
-            ->with('status', 'Событие отменено.');
+            ->with('status', __('site.events.flash.cancelled'));
     }
 
     private function defaultTimezone(): string

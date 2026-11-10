@@ -40,16 +40,18 @@ class NewsResource extends Resource
 
     protected static ?string $model = News::class;
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 0;
+
+    protected static ?string $navigationParentItem = 'content-components';
 
     public static function getNavigationLabel(): string
     {
-        return __('filament.resources.news.plural');
+        return __('filament.navigation.news_component');
     }
 
     public static function getNavigationGroup(): string|UnitEnum|null
     {
-        return __('filament.navigation.content');
+        return 'content';
     }
 
     public static function getModelLabel(): string
@@ -120,7 +122,9 @@ class NewsResource extends Resource
                         // published news item without published_at is invisible on
                         // the site, so the date is mandatory once published.
                         ->required(fn (callable $get): bool => $get('status') === News::STATUS_PUBLISHED)
-                        ->validationMessages(['required' => 'Укажите дату новости']),
+                        ->validationMessages([
+                            'required' => __('filament.resources.news.validation.published_at_required'),
+                        ]),
                     Textarea::make('rejection_reason')
                         ->label(__('filament.resources.news.fields.rejection_reason'))
                         ->maxLength(300)

@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
-@section('title', 'Сброс пароля')
+@section('title', __('site.auth.reset.title'))
 
 @section('content')
-    <h1 class="page-title">Сброс пароля</h1>
+    <h1 class="page-title">{{ __('site.auth.reset.title') }}</h1>
 
     <form method="POST" action="{{ route('password.update') }}">
         @csrf
@@ -11,7 +11,7 @@
         <input type="hidden" name="token" value="{{ $token }}">
 
         <div class="form-group">
-            <label for="email">Email</label>
+            <label for="email">{{ __('site.common.email') }}</label>
             <input
                 type="email"
                 id="email"
@@ -27,7 +27,7 @@
         </div>
 
         <div class="form-group">
-            <label for="password">Новый пароль</label>
+            <label for="password">{{ __('site.auth.reset.password') }}</label>
             <input
                 type="password"
                 id="password"
@@ -43,7 +43,7 @@
         </div>
 
         <div class="form-group">
-            <label for="password_confirmation">Новый пароль ещё раз</label>
+            <label for="password_confirmation">{{ __('site.auth.reset.password_confirmation') }}</label>
             <input
                 type="password"
                 id="password_confirmation"
@@ -54,6 +54,6 @@
             >
         </div>
 
-        <button type="submit" class="btn btn-primary">Сбросить пароль</button>
+        <button type="submit" class="btn btn-primary">{{ __('site.auth.reset.submit') }}</button>
     </form>
 @endsection

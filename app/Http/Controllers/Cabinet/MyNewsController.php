@@ -50,7 +50,7 @@ class MyNewsController extends Controller
 
         return redirect()
             ->route('cabinet.tab', ['tab' => 'news'])
-            ->with('status', 'Черновик создан.')
+            ->with('status', __('site.cabinet.flash.draft_created'))
             ->with('open_news_id', $news->id);
     }
 
@@ -92,7 +92,7 @@ class MyNewsController extends Controller
         if ($news->status !== News::STATUS_DRAFT) {
             return redirect()
                 ->route('cabinet.tab', ['tab' => 'news'])
-                ->with('status', 'Эту новость нельзя опубликовать повторно.');
+                ->with('status', __('site.cabinet.flash.cannot_publish_again'));
         }
 
         $this->applyModeration($news);
@@ -120,7 +120,7 @@ class MyNewsController extends Controller
 
         return redirect()
             ->route('cabinet.tab', ['tab' => 'news'])
-            ->with('status', 'Новость удалена.');
+            ->with('status', __('site.cabinet.flash.news_deleted'));
     }
 
     public function uploadCover(Request $request, News $news): RedirectResponse
@@ -140,7 +140,7 @@ class MyNewsController extends Controller
 
         return redirect()
             ->route('cabinet.tab', ['tab' => 'news'])
-            ->with('status', 'Обложка обновлена.')
+            ->with('status', __('site.cabinet.flash.cover_updated'))
             ->with('open_news_id', $news->id);
     }
 
@@ -153,7 +153,7 @@ class MyNewsController extends Controller
 
         return redirect()
             ->route('cabinet.tab', ['tab' => 'news'])
-            ->with('status', 'Обложка удалена.')
+            ->with('status', __('site.cabinet.flash.cover_deleted'))
             ->with('open_news_id', $news->id);
     }
 
@@ -181,16 +181,16 @@ class MyNewsController extends Controller
     private function ensureEditable(News $news): void
     {
         if (! $news->isPlayer() || ! in_array($news->status, self::EDITABLE_STATUSES, true)) {
-            abort(403, 'Эту новость нельзя изменить.');
+            abort(403, __('site.cabinet.flash.cannot_edit_news'));
         }
     }
 
     private function flashFor(News $news): string
     {
         return match ($news->status) {
-            News::STATUS_PENDING => 'Новость отправлена на модерацию.',
-            News::STATUS_PUBLISHED => 'Новость опубликована.',
-            default => 'Новость сохранена.',
+            News::STATUS_PENDING => __('site.cabinet.flash.news_pending'),
+            News::STATUS_PUBLISHED => __('site.cabinet.flash.news_published'),
+            default => __('site.cabinet.flash.news_saved'),
         };
     }
 }

@@ -31,10 +31,10 @@ class UpdateLocalePreferenceRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'locale.present' => 'Выберите язык интерфейса или режим «авто».',
-            'locale.string' => 'Некорректное значение языка интерфейса.',
-            'locale.max' => 'Код языка слишком длинный.',
-            'locale.in' => 'Недопустимый язык интерфейса.',
+            'locale.present' => __('site.cabinet.validation.locale_present'),
+            'locale.string' => __('site.cabinet.validation.locale_string'),
+            'locale.max' => __('site.cabinet.validation.locale_max'),
+            'locale.in' => __('site.cabinet.validation.locale_in'),
         ];
     }
 }

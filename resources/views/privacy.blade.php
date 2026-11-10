@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Политика обработки персональных данных')
+@section('title', __('site.privacy.title'))
 
 @section('content')
-    <h1 class="page-title">Политика обработки персональных данных</h1>
+    <h1 class="page-title">{{ __('site.privacy.heading') }}</h1>
 
     <div class="content-text">
-        <p><strong>Раздел в разработке.</strong></p>
-        <p>Полный текст политики будет опубликован после юридической проверки. Если у вас есть вопросы об обработке персональных данных — напишите на <a href="mailto:linkshell@yandex.ru">linkshell@yandex.ru</a>.</p>
+        <p><strong>{{ __('site.privacy.in_progress') }}</strong></p>
+        <p>{{ __('site.privacy.in_progress_hint', ['email' => 'linkshell@yandex.ru']) }}</p>
     </div>
 @endsection

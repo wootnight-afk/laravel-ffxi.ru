@@ -43,7 +43,7 @@ class SectionAccess
             if ($isReadOnlyRequest && ! $request->expectsJson()) {
                 return redirect()
                     ->guest(route('login'))
-                    ->with('status', 'Для доступа к этому разделу требуется авторизация.');
+                    ->with('status', __('site.section.login_required'));
             }
 
             abort(403);

@@ -119,10 +119,10 @@ it('joins through Livewire and updates the participant count without a page relo
 
     Livewire::actingAs($attendee)
         ->test(EventSignup::class, ['event' => $event])
-        ->assertSee('1 участников')
+        ->assertSee('1 participant')
         ->call('join')
-        ->assertSee('2 участников')
-        ->assertSee('Выйти');
+        ->assertSee('2 participants')
+        ->assertSee('Leave');
 
     expect($event->participants()->where('user_id', $attendee->id)->value('status'))
         ->toBe(EventParticipantStatus::Joined);
@@ -143,10 +143,10 @@ it('leaves through Livewire and updates the participant count without a page rel
 
     Livewire::actingAs($attendee)
         ->test(EventSignup::class, ['event' => $event])
-        ->assertSee('2 участников')
+        ->assertSee('2 participants')
         ->call('leave')
-        ->assertSee('1 участников')
-        ->assertSee('Записаться');
+        ->assertSee('1 participant')
+        ->assertSee('Sign up');
 
     Notification::assertSentTo($leader, EventParticipantLeftNotification::class);
 });
@@ -177,7 +177,7 @@ it('prevents a full event from accepting signup in the Livewire action', functio
 
     Livewire::actingAs($attendee)
         ->test(EventSignup::class, ['event' => $event])
-        ->assertSee('Мест нет')
+        ->assertSee('No seats left')
         ->call('join')
         ->assertHasErrors('event');
 
@@ -198,7 +198,7 @@ it('keeps leave available for a participant after cancellation', function () {
 
     Livewire::actingAs($attendee)
         ->test(EventSignup::class, ['event' => $event])
-        ->assertSee('Выйти')
+        ->assertSee('Leave')
         ->call('leave')
-        ->assertSee('Регистрация закрыта');
+        ->assertSee('Registration closed');
 });

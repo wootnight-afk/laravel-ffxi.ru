@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Активность')
+@section('title', __('site.activity.title'))
 
 @section('content')
-    <h1 class="page-title">Активность сообщества</h1>
+    <h1 class="page-title">{{ __('site.activity.heading') }}</h1>
 
     @if ($groups === [])
-        <div class="content-text"><p>Пока активности нет.</p></div>
+        <div class="content-text"><p>{{ __('site.activity.empty') }}</p></div>
     @else
         <div>
             @foreach ($groups as $group)

@@ -31,7 +31,7 @@ class UpdatePhotoRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'caption.max' => 'Подпись не должна превышать 200 символов.',
+            'caption.max' => __('site.cabinet.validation.caption_max'),
         ];
     }
 }

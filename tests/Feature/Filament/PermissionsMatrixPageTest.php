@@ -171,7 +171,7 @@ it('flushes the settings cache and closes a guest section immediately', function
     expect(app(SettingsRepository::class)->get('guest_sections')['news'])->toBeFalse();
 
     auth()->logout();
-    get(route('news.index'))->assertNotFound();
+    get(route('news.index'))->assertRedirect(route('login'));
 });
 
 it('opens a guest section immediately after saving', function () {
@@ -187,7 +187,7 @@ it('opens a guest section immediately after saving', function () {
         'player_profiles' => false,
     ]);
 
-    get(route('news.index'))->assertNotFound();
+    get(route('news.index'))->assertRedirect(route('login'));
 
     Livewire::actingAs($admin)
         ->test(PermissionsMatrixPage::class)
