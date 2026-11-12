@@ -63,11 +63,15 @@ body {
     background-color: var(--bg-body);
     line-height: 1.6;
     padding-top: var(--header-height);
+    /* The footer is fixed to the viewport bottom (docs/designreview.md §4, §10).
+     * Its height depends on the CMS content (ADR-011 §2.23), so the reserved
+     * space is measured at runtime by initFooterOffset() in resources/js/app.js
+     * and written to --footer-offset. The fallback keeps the layout usable
+     * before the script runs and when JS is disabled. */
+    padding-bottom: var(--footer-offset, var(--footer-height));
     transition: background-color 0.3s, color 0.3s;
 }
 
-/* The footer height depends on the CMS content (ADR-011 §2.23), so the footer
- * stays in the flow and is pinned to the viewport bottom with `sticky`. */
 body>.container {
     flex: 1 0 auto;
     width: 100%;
@@ -462,6 +466,67 @@ a:hover {
 
     .online-users {
         padding: 12px;
+    }
+}
+
+/* ------------------------------------------------------------------
+   Players section: shared shell and left menu sizing
+   ------------------------------------------------------------------ */
+
+/* One page scroll for the whole section: the menu column stretches to the
+ * working area and the menu card sticks below the header
+ * (docs/designreview.md §11). */
+.players-shell {
+    display: grid;
+    grid-template-columns: 248px minmax(0, 1fr);
+    gap: 28px;
+    align-items: stretch;
+}
+
+.players-shell__nav {
+    min-width: 0;
+    align-self: stretch;
+}
+
+/* Sticky without its own scroll container and without a height cap: a long
+ * menu grows with its content and stays reachable through the page. */
+.players-shell__nav-inner {
+    position: sticky;
+    top: calc(var(--header-height) + var(--spacing-md));
+    padding: 0;
+}
+
+.players-shell__main {
+    min-width: 0;
+}
+
+/* Fills the column when the content is short and grows with the content when
+ * it is long: no fixed height, so no item is clipped. */
+.players-section-nav {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+
+@media (max-width: 1023px) {
+    /* The menu becomes a horizontal strip: sticky is disabled and the card no
+     * longer stretches to the column height. */
+    .players-shell {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .players-shell__nav {
+        position: static;
+        overflow: visible;
+    }
+
+    .players-shell__nav-inner {
+        position: static;
+    }
+
+    .players-section-nav {
+        min-height: 0;
     }
 }
 
@@ -1122,12 +1187,14 @@ h2.section-title {
 }
 
 footer {
-    position: sticky;
+    /* Pinned to the viewport bottom on every page, short or long
+     * (docs/designreview.md §4, §10). The height follows the CMS content,
+     * so the page reserves space via --footer-offset (see body). */
+    position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     z-index: 1000;
-    flex-shrink: 0;
     background-color: var(--bg-light);
     border-top: 1px solid var(--border-color);
     padding: var(--spacing-lg) 0;

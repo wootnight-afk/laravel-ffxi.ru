@@ -387,6 +387,46 @@ function initGalleryLightbox() {
 }
 
 // ---------------------------------------------------------------------
+// Footer offset
+// ---------------------------------------------------------------------
+// The footer is fixed to the viewport bottom, but its height follows the CMS
+// navigation content (ADR-011 §2.23) and changes when the links wrap on a
+// narrower viewport. The page reserves exactly that height through
+// --footer-offset, so the last content is never hidden behind the footer.
+
+function initFooterOffset() {
+    const footer = document.querySelector('body > footer');
+
+    if (!footer) {
+        return;
+    }
+
+    const root = document.documentElement;
+    let lastHeight = -1;
+
+    const sync = () => {
+        const height = Math.ceil(footer.getBoundingClientRect().height);
+
+        if (height === lastHeight) {
+            return;
+        }
+
+        lastHeight = height;
+        root.style.setProperty('--footer-offset', `${height}px`);
+    };
+
+    sync();
+
+    if (typeof ResizeObserver === 'function') {
+        new ResizeObserver(sync).observe(footer);
+
+        return;
+    }
+
+    window.addEventListener('resize', sync);
+}
+
+// ---------------------------------------------------------------------
 // Bootstrap
 // ---------------------------------------------------------------------
 
@@ -397,6 +437,7 @@ function initPublicScripts() {
     initPhotoZoom();
     initGalleryLightbox();
     initNicknameCheck();
+    initFooterOffset();
 }
 
 if (document.readyState === 'loading') {
