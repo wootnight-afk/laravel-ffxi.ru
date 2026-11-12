@@ -6,7 +6,7 @@ use App\Events\CommentCreatedForActivity;
 use App\Http\Requests\StoreCommentRequest;
 use App\Models\Comment;
 use App\Models\News;
-use App\Services\SettingsRepository;
+use App\Services\CommentModerationResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Gate;
 class CommentController extends Controller
 {
     public function __construct(
-        private readonly SettingsRepository $settings,
+        private readonly CommentModerationResolver $moderation,
     ) {}
 
     public function store(StoreCommentRequest $request, News $news): JsonResponse
@@ -45,7 +45,7 @@ class CommentController extends Controller
             }
         }
 
-        $status = $this->resolveModerationStatus($request->user()->id);
+        $status = $this->moderation->resolve($request->user()->id);
 
         $comment = Comment::create([
             'user_id' => $request->user()->id,
@@ -109,29 +109,5 @@ class CommentController extends Controller
         return response()->json([
             'message' => __('site.comments.reported_message'),
         ]);
-    }
-
-    private function resolveModerationStatus(int $userId): string
-    {
-        $mode = (string) $this->settings->string('comments_moderation', 'reputation');
-
-        return match ($mode) {
-            'none' => Comment::STATUS_APPROVED,
-            'all' => Comment::STATUS_PENDING,
-            'reputation' => $this->resolveReputationStatus($userId),
-            default => Comment::STATUS_PENDING,
-        };
-    }
-
-    private function resolveReputationStatus(int $userId): string
-    {
-        $approvedCount = Comment::query()
-            ->where('user_id', $userId)
-            ->where('status', Comment::STATUS_APPROVED)
-            ->count();
-
-        return $approvedCount >= 5
-            ? Comment::STATUS_APPROVED
-            : Comment::STATUS_PENDING;
     }
 }

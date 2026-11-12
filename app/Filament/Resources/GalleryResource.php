@@ -18,6 +18,8 @@ use Filament\Forms\Components\Toggle;
 use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -61,20 +63,42 @@ class GalleryResource extends Resource
         return $schema->components([
             Section::make(__('filament.resources.gallery.sections.main'))
                 ->schema([
-                    TextInput::make('title')
-                        ->label(__('filament.resources.gallery.fields.title'))
-                        ->required()
-                        ->maxLength(120),
+                    Tabs::make('album_translations')
+                        ->tabs([
+                            Tab::make(__('filament.resources.pages.tabs.ru'))
+                                ->schema([
+                                    TextInput::make('title')
+                                        ->label(__('filament.resources.gallery.fields.title'))
+                                        ->required()
+                                        ->maxLength(120),
+                                    Textarea::make('description')
+                                        ->label(__('filament.resources.gallery.fields.description'))
+                                        ->maxLength(2000)
+                                        ->rows(3)
+                                        ->columnSpanFull(),
+                                ])
+                                ->columns(2),
+                            Tab::make(__('filament.resources.pages.tabs.en'))
+                                ->schema([
+                                    TextInput::make('title_en')
+                                        ->label(__('filament.resources.gallery.fields.title_en'))
+                                        ->maxLength(120)
+                                        ->helperText(__('filament.resources.gallery.fields.title_en_help')),
+                                    Textarea::make('description_en')
+                                        ->label(__('filament.resources.gallery.fields.description_en'))
+                                        ->maxLength(2000)
+                                        ->rows(3)
+                                        ->columnSpanFull()
+                                        ->helperText(__('filament.resources.gallery.fields.description_en_help')),
+                                ])
+                                ->columns(2),
+                        ])
+                        ->columnSpanFull(),
                     TextInput::make('slug')
                         ->label(__('filament.resources.gallery.fields.slug'))
                         ->maxLength(150)
                         ->unique(ignoreRecord: true)
                         ->helperText(__('filament.resources.gallery.fields.slug_help')),
-                    Textarea::make('description')
-                        ->label(__('filament.resources.gallery.fields.description'))
-                        ->maxLength(2000)
-                        ->rows(3)
-                        ->columnSpanFull(),
                 ])
                 ->columns(2),
             Section::make(__('filament.resources.gallery.sections.meta'))

@@ -341,9 +341,21 @@ title varchar(120), slug unique, description text null, cover_photo_id null,
 sort_order, is_published, timestamps, softDeletes`.
 
 **photos:** `id, album_id FK cascade, user_id FK, path_original,
-path_medium, path_thumb, caption varchar(200) null, taken_at null (EXIF),
+path_medium, path_thumb, path_preview null, caption varchar(200) null,
+caption_en varchar(200) null, title varchar(150) null, title_en null,
+summary varchar(300) null, summary_en null, details text null,
+details_en text null, show_title_in_lightbox bool default false,
+show_summary_in_lightbox bool default false, taken_at null (EXIF),
 exif json null (камера + дата), width, height, size_bytes, sort_order,
 is_published, timestamps, softDeletes`. Индекс `album_id`.
+
+`path_original` — обработанная основная фотография (WebP, ширина ≤ 3840 px),
+а не побайтная копия исходного файла. `path_preview` — отдельное превью
+(WebP, bounding box 480×480 без кропа); при его отсутствии сетки используют
+`path_thumb`. `caption` / `caption_en` — подпись под миниатюрой; `title` —
+заголовок в PhotoSwipe; `summary` — краткое описание в PhotoSwipe;
+`details` — дополнительное описание на странице фотографии. Историю полей
+см. в §6.6.1.
 
 Site-альбомы при сидировании: «Linkshell members», «Memories», «Areas».
 
@@ -698,10 +710,11 @@ q85, `scaleDown` без апскейла до 1920×1080). Каталог —
 
 ## 6.6 Галерея
 
-- `/gallery` — сетка альбомов. `/gallery/{album}` — сетка превью (thumb
+- `/gallery` — сетка альбомов; клик по миниатюре ведёт на страницу
+  альбома (не на фото). `/gallery/{album}` — сетка превью (thumb
   480, aspect 1:1/4:3/16:9), «Показать ещё» (24/стр).
-- `/gallery/{album}/{photo}` — medium 1280, клик → PhotoSwipe, подпись,
-  дата, prev/next, «поделиться», комментарии.
+- `/gallery/{album}/{photo}` — medium 1280, собственный зум, подпись,
+  дата, prev/next, комментарии.
 - Загрузка (кабинет): drag&drop до 10/партия, 50/день, превью, подписи,
   прогресс; обработка — queued job.
 - **ImageProcessor** (Intervention v4): валидация → EXIF-orientate →
@@ -714,6 +727,83 @@ q85, `scaleDown` без апскейла до 1920×1080). Каталог —
 - **`taken_at` (EXIF) — календарная метка** (ADR-011 §2.5A): без
   конвертации, формат по локали, компонент `<x-naive-date>`. В админке
   колонка `PhotosRelationManager` помечается `->timezone('UTC')`.
+
+### 6.6.1 Реализовано (актуализировано)
+
+- **Локализация RU/EN.** `albums.title_en`, `albums.description_en`,
+  `photos.caption_en` — nullable, без бэкфилла. Fallback по полю:
+  пустое `_en` → русское значение (`GalleryController::localized()`,
+  `PlayerGalleryController::localized()`). Slug генерируется только из
+  русского названия, поэтому английское на него не влияет.
+- **PhotoSwipe 5** (`photoswipe`, npm). Миниатюры альбома — `<a href>` на
+  основную фотографию (`urlOriginal()`, ≤3840 px) с `data-pswp-width`,
+  `data-pswp-height`, `data-photo-url` и — при включённом переключателе и
+  заполненном поле — `data-pswp-title` / `data-pswp-summary`. Кнопка
+  «Подробнее» и текстовые блоки регистрируются через `ui.registerElement`
+  в хуке `uiRegister` с `appendTo: 'root'` (вне `top-bar`, крестика и зума):
+  `.pswp__photo-title` — сверху, `.pswp__photo-summary` — снизу,
+  `.pswp__details-btn` — внизу по центру. Подпись кнопки читается из
+  `data-details-label` (`site.gallery.details`), поэтому переключается вместе
+  с языком интерфейса. Переход читает
+  `pswp.currSlide.data.element.dataset.photoUrl`, то есть ведёт на фото,
+  которое открыто в данный момент. Позиции синхронизируются на событии
+  `change`; без текста блок скрыт (`hidden`). `wheelToZoom` не включался:
+  Ctrl+колесо работает штатно через `ctrlKey`, обычное колесо — панорама.
+  Для записей без `width/height` используется fallback `1280×960`.
+  Стили — только `.pswp .pswp__*` (двойной класс перебивает `.pswp__button`);
+  классы `.gallery-grid`, `.gallery-item`, `.gallery-thumb`, `.gallery-caption`
+  не менялись.
+- **Переход из общей галереи к выбранной фотографии.** На `/gallery`
+  миниатюра альбома — ссылка
+  `route('gallery.album', ['album' => …, 'photo' => $photo->id])`, то есть
+  `/gallery/{album}?photo={id}`. Каждый слайд размечен `data-photo-id`;
+  `initGalleryLightbox()` после `lightbox.init()` находит слайд по этому id и
+  вызывает `lightbox.loadAndOpen(index)`, поэтому открывается именно выбранная
+  фотография, а не первая. Тот же deep link используют миниатюры обзорной
+  страницы личной галереи игрока (`gallery.player.index`). Параметр `photo`
+  сразу снимается через `history.replaceState`: закрытие лайтбокса оставляет
+  пользователя в альбоме, и повторная загрузка страницы лайтбокс не открывает.
+  Без `?photo` (обычный вход в альбом) автооткрытия нет; ручное открытие по
+  миниатюре работает как прежде. Если выбранного фото нет на
+  текущей странице пагинации, автооткрытие не выполняется.
+- **Превью и основная фотография.** `ImageProcessor::processPreview()` —
+  WebP, `scaleDown(480, 480)` без кропа, качество 75; файл
+  `photos/{Y}/{m}/{hash}_preview.webp`. Загружается отдельным действием
+  «Загрузить превью» в `PhotosRelationManager`. `Photo::urlThumb()`:
+  `path_preview → path_thumb → medium`. `ORIGINAL_MAX_WIDTH = 3840`,
+  `MAX_PIXELS = 50 Mp`. Лимит 16 MB действует только для админской загрузки
+  (`ImageProcessor::process(..., $maxBytes)`); кабинет использует 8 MB.
+- **Тексты фотографии.** `title` / `summary` / `details` (+ `_en`) —
+  независимые назначения; `caption` остаётся подписью сетки. Переключатели
+  `show_title_in_lightbox` / `show_summary_in_lightbox` хранятся отдельно от
+  текста, по умолчанию выключены; при пакетной загрузке значение применяется
+  ко всей партии, при редактировании — к одной фотографии. Страница
+  «Подробнее» показывает `details` и не дублирует `summary`.
+- **Комментарии к фото.** `PhotoCommentController` (`storeSite`,
+  `storePlayer`) — единая защита: `auth`, подтверждённый email и
+  `comments.create` через `CommentPolicy::create`, throttle 20/60,
+  `StoreCommentRequest` (20–2000 символов), родитель обязан принадлежать
+  этой же фотографии, глубина ответов — 1 уровень, модерация через
+  `CommentModerationResolver`, активность только для `approved`, JSON 201
+  или redirect на страницу фото соответствующего типа галереи.
+  Дополнительно проверяется принадлежность: фото → альбом, альбом →
+  пользователь из URL.
+- **Галереи игроков.** `/players/{user:name}/gallery` (+`/{album}`,
+  `/{album}/{photo}`) — `PlayerGalleryController`. Маршруты объявлены с
+  `withoutScopedBindings()`, принадлежность проверяется в контроллере.
+  Видимость: владелец и admin — всегда; остальные — только при
+  `isGalleryPublic()` (то есть одновременно открытый профиль и включённая
+  галерея). Неопубликованные фото и альбомы недоступны посторонним.
+- **Настройка видимости.** `users.is_gallery_public` (default `true`),
+  чекбокс в кабинете рядом с публичностью профиля. Флаг дополняет
+  `is_profile_public`, но не заменяет его.
+- **Блок «Фотографии» на странице игрока.** Показывает только фотографии
+  личных альбомов (`scope = player`) этого игрока; посторонним — только
+  опубликованные альбомы. Ссылка ведёт на `gallery.player.photo`, поэтому
+  site-альбомы и закрытые личные альбомы в блок не попадают.
+- **ActivitySubjectResolver** строит публичную ссылку на player-фото только
+  если опубликованы фото и альбом и галерея публична; иначе ссылки нет —
+  даже для владельца или администратора.
 
 ## 6.7 Дашборд сообщества
 

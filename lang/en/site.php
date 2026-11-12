@@ -216,6 +216,7 @@ return [
         'taken' => 'Taken:',
         'previous' => '← Previous',
         'next' => 'Next →',
+        'details' => 'Details',
         'comments_soon' => 'Photo comments will be available in a future update.',
     ],
     'comments' => [
@@ -436,6 +437,8 @@ return [
             'phone_public' => 'Show the phone in the profile',
             'public_profile' => 'Public profile',
             'public_profile_hint' => 'Other players will see your legend, news, photos and social links.',
+            'public_gallery' => 'Show my gallery on the profile',
+            'public_gallery_hint' => 'The gallery is visible to other players only while the profile is public too.',
             'upload' => 'Upload',
             'delete' => 'Delete',
             'delete_avatar_confirm' => 'Delete the avatar?',

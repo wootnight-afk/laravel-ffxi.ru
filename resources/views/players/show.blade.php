@@ -83,11 +83,13 @@
 
         @if ($photos->isNotEmpty())
             <section style="margin-top: 32px;">
-                <h2 class="section-title">Фотографии</h2>
+                <h2 class="section-title">
+                    <a href="{{ route('gallery.player.index', $user->name) }}">Фотографии</a>
+                </h2>
                 <div class="gallery-grid">
                     @foreach ($photos as $photo)
                         <div class="gallery-item">
-                            <a href="{{ route('gallery.photo', [$photo->album->slug, $photo->id]) }}">
+                            <a href="{{ route('gallery.player.photo', [$user->name, $photo->album->slug, $photo->id]) }}">
                                 <img
                                     src="{{ $photo->urlThumb() }}"
                                     alt="{{ $photo->caption ?: 'Фото' }}"

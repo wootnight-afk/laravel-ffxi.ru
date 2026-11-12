@@ -100,6 +100,23 @@ it('updates album metadata through the edit page', function () {
         ->and($album->is_published)->toBeTrue();
 });
 
+it('saves the english album title through the edit page', function () {
+    $editor = makeGalleryPanelUser('editor');
+    $album = makeAlbumRecord($editor);
+
+    Livewire::actingAs($editor)
+        ->test(EditAlbum::class, ['record' => $album->getKey()])
+        ->set('data.title_en', 'English album title')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect($album->refresh()->title_en)->toBe('English album title');
+});
+
+it('combines the photos relation manager with the album form tabs', function () {
+    expect((new EditAlbum)->hasCombinedRelationManagerTabsWithContent())->toBeTrue();
+});
+
 // ------------------------------------------------------------------
 // Publication
 // ------------------------------------------------------------------

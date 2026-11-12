@@ -38,8 +38,8 @@
         <section style="margin-top: 48px;">
             <h2 class="section-title">{{ __('site.comments.title') }}</h2>
 
-            <x-comment-thread :comments="$news->comments" :news="$news" />
-            <x-comment-form :news="$news" />
+            <x-comment-thread :comments="$news->comments" />
+            <x-comment-form :action="route('comments.store', $news->slug)" />
         </section>
     @endif
 @endsection

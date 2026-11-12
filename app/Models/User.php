@@ -45,7 +45,7 @@ use Spatie\Permission\Traits\HasRoles;
 #[Fillable([
     'name', 'email', 'email_verified_at', 'password',
     'rank_id', 'phone', 'phone_is_public', 'avatar_path',
-    'is_profile_public', 'race', 'main_job', 'legend', 'legend_html',
+    'is_profile_public', 'is_gallery_public', 'race', 'main_job', 'legend', 'legend_html',
     'last_seen_at', 'last_activity_seen_at',
     'chat_banned_until', 'chat_banned_permanently', 'banned_until', 'ban_reason',
     'status', 'deletion_requested_at', 'deletion_reason', 'suspended_at', 'suspension_reason',
@@ -66,6 +66,7 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
             'phone' => 'encrypted',
             'phone_is_public' => 'boolean',
             'is_profile_public' => 'boolean',
+            'is_gallery_public' => 'boolean',
             'last_seen_at' => 'datetime',
             'last_activity_seen_at' => 'datetime',
             'chat_banned_until' => 'datetime',
@@ -190,6 +191,15 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     public function isProfilePublic(): bool
     {
         return $this->is_profile_public && ! $this->isDeletionRequested() && ! $this->isSuspended();
+    }
+
+    /**
+     * Personal gallery visibility: the gallery switch complements the profile
+     * switch. A public gallery is impossible while the profile is private.
+     */
+    public function isGalleryPublic(): bool
+    {
+        return $this->is_gallery_public && $this->isProfilePublic();
     }
 
     /**

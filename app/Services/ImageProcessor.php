@@ -20,7 +20,7 @@ class ImageProcessor
 
     public const MIN_SIDE = 50;
 
-    public const ORIGINAL_MAX_WIDTH = 2560;
+    public const ORIGINAL_MAX_WIDTH = 3840;
 
     public const MEDIUM_WIDTH = 1280;
 
@@ -38,9 +38,13 @@ class ImageProcessor
         private readonly ImageManager $manager,
     ) {}
 
-    public function process(UploadedFile $file, Album $album, int $userId): Photo
+    /**
+     * @param  int|null  $maxBytes  Лимит размера файла. NULL — общий лимит (8 MB).
+     *                              Админская загрузка Галереи передаёт 16 MB.
+     */
+    public function process(UploadedFile $file, Album $album, int $userId, ?int $maxBytes = null): Photo
     {
-        $this->validate($file);
+        $this->validate($file, $maxBytes ?? self::MAX_BYTES);
 
         $meta = $this->extractMeta($file);
 
@@ -97,15 +101,47 @@ class ImageProcessor
         ]);
     }
 
-    private function validate(UploadedFile $file): void
+    /**
+     * Отдельное превью альбома: WebP 480×480 без кропа, пропорции сохраняются.
+     * Используется в сетках галереи вместо thumb; основная фотография не меняется.
+     */
+    public function processPreview(UploadedFile $file, Photo $photo): void
+    {
+        $this->validate($file, self::MAX_BYTES);
+
+        $hash = Str::random(16).'-'.substr(sha1_file($file->getRealPath()) ?: '', 0, 12);
+        $path = 'photos/'.now()->format('Y/m')."/{$hash}_preview.webp";
+
+        $disk = Storage::disk('public');
+
+        try {
+            $image = $this->manager->decodePath($file->getRealPath());
+            $image->orient();
+            $image->scaleDown(width: self::THUMB_SIDE, height: self::THUMB_SIDE);
+            $disk->put($path, (string) $image->encodeUsingFileExtension('webp', quality: 75));
+        } catch (Throwable $e) {
+            $disk->delete($path);
+            throw new ImageProcessingException(__('site.images.errors.processing_image', ['error' => $e->getMessage()]), 0, $e);
+        }
+
+        $previous = $photo->path_preview;
+
+        $photo->forceFill(['path_preview' => $path])->save();
+
+        if (is_string($previous) && $previous !== '' && $previous !== $path) {
+            $disk->delete($previous);
+        }
+    }
+
+    private function validate(UploadedFile $file, int $maxBytes): void
     {
         if (! $file->isValid()) {
             throw new ImageProcessingException(__('site.images.errors.no_file'));
         }
 
         $size = (int) $file->getSize();
-        if ($size > self::MAX_BYTES) {
-            throw ImageProcessingException::tooLarge($size, self::MAX_BYTES);
+        if ($size > $maxBytes) {
+            throw ImageProcessingException::tooLarge($size, $maxBytes);
         }
 
         $finfo = new \finfo(FILEINFO_MIME_TYPE);

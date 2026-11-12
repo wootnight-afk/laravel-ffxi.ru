@@ -961,6 +961,93 @@ h2.section-title {
     color: var(--primary-color);
 }
 
+/* --- PhotoSwipe: название, краткое описание, кнопка «Подробнее» ---
+   Только элементы внутри .pswp: сетка, миниатюры и подписи галереи
+   (.gallery-*) не затрагиваются. Блоки ограничены по размеру и не
+   перекрывают фотографию и элементы управления.
+   Двойной класс нужен, потому что PhotoSwipe вешает на кнопку свой
+   .pswp__button (position: relative, 50×60) и перебивает одиночный класс. */
+.pswp .pswp__photo-title,
+.pswp .pswp__photo-summary {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(90vw, 900px);
+    max-height: 4.5em;
+    overflow: hidden;
+    padding: 6px 12px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 14px;
+    line-height: 1.35;
+    text-align: center;
+    pointer-events: none;
+}
+
+.pswp .pswp__photo-title[hidden],
+.pswp .pswp__photo-summary[hidden] {
+    display: none !important;
+}
+
+.pswp .pswp__photo-title {
+    top: 56px;
+    font-weight: 600;
+}
+
+.pswp .pswp__photo-summary {
+    bottom: 64px;
+}
+
+.pswp .pswp__details-btn {
+    position: absolute;
+    top: auto;
+    right: auto;
+    left: 50%;
+    bottom: 16px;
+    transform: translateX(-50%);
+    width: auto;
+    height: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 6px 16px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.65);
+    color: #fff;
+    font-size: 13px;
+    line-height: 1.4;
+    text-decoration: none;
+    white-space: nowrap;
+    z-index: 1;
+}
+
+.pswp .pswp__details-btn:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+@media (max-width: 640px) {
+    .pswp .pswp__photo-title,
+    .pswp .pswp__photo-summary {
+        width: 88vw;
+        max-height: 3.6em;
+        font-size: 13px;
+    }
+
+    .pswp .pswp__photo-title {
+        top: 48px;
+    }
+
+    .pswp .pswp__photo-summary {
+        bottom: 58px;
+    }
+
+    .pswp .pswp__details-btn {
+        bottom: 12px;
+        padding: 5px 12px;
+        font-size: 12px;
+    }
+}
+
 .form-group {
     margin-bottom: var(--spacing-md);
     max-width: 400px;

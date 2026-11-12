@@ -23,6 +23,7 @@ class UpdateProfileRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:32'],
             'phone_is_public' => ['nullable', 'boolean'],
             'is_profile_public' => ['nullable', 'boolean'],
+            'is_gallery_public' => ['nullable', 'boolean'],
         ];
     }
 

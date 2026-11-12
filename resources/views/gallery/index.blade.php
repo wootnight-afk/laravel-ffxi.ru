@@ -19,8 +19,13 @@
             </div>
         @else
             @foreach ($albums as $album)
+                @php
+                    $albumTitle = app()->getLocale() === \App\Enums\Locale::En->value && filled($album->title_en)
+                        ? $album->title_en
+                        : $album->title;
+                @endphp
                 <h2 class="section-title">
-                    <a href="{{ route('gallery.album', $album->slug) }}">{{ $album->title }}</a>
+                    <a href="{{ route('gallery.album', $album->slug) }}">{{ $albumTitle }}</a>
                 </h2>
 
                 @if ($album->photos->isEmpty())
@@ -28,17 +33,24 @@
                 @else
                     <div class="gallery-grid">
                         @foreach ($album->photos as $photo)
+                            @php
+                                $photoCaption = app()->getLocale() === \App\Enums\Locale::En->value && filled($photo->caption_en)
+                                    ? $photo->caption_en
+                                    : $photo->caption;
+                            @endphp
                             <div class="gallery-item">
-                                <a href="{{ route('gallery.photo', [$album->slug, $photo->id]) }}">
+                                {{-- ?photo=<id> is the deep link: the album page opens
+                                     PhotoSwipe on exactly this photo. --}}
+                                <a href="{{ route('gallery.album', ['album' => $album->slug, 'photo' => $photo->id]) }}">
                                     <img
                                         src="{{ $photo->urlThumb() }}"
-                                        alt="{{ $photo->caption ?: __('site.gallery.photo_alt') }}"
+                                        alt="{{ $photoCaption ?: __('site.gallery.photo_alt') }}"
                                         class="gallery-thumb"
                                         loading="lazy"
                                     >
                                 </a>
-                                @if ($photo->caption)
-                                    <div class="gallery-caption">{{ $photo->caption }}</div>
+                                @if ($photoCaption)
+                                    <div class="gallery-caption">{{ $photoCaption }}</div>
                                 @endif
                             </div>
                         @endforeach

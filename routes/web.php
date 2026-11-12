@@ -22,7 +22,9 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MfaChallengeController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PhotoCommentController;
 use App\Http\Controllers\PlayerController;
+use App\Http\Controllers\PlayerGalleryController;
 use App\Http\Controllers\PreferencesController;
 use App\Http\Controllers\SocialLinkController;
 use Illuminate\Support\Facades\Route;
@@ -59,6 +61,11 @@ Route::get('/gallery/{album:slug}/{photo}', [GalleryController::class, 'showPhot
     ->whereNumber('photo')
     ->middleware('section.access:gallery')
     ->name('gallery.photo');
+
+Route::post('/gallery/{album:slug}/{photo}/comments', [PhotoCommentController::class, 'storeSite'])
+    ->whereNumber('photo')
+    ->middleware(['auth', 'section.access:gallery', 'throttle:20,60'])
+    ->name('gallery.photo.comments.store');
 
 Route::middleware('section.access:events')->group(function () {
     Route::get('/events', [EventController::class, 'index'])->name('events.index');
@@ -97,7 +104,24 @@ Route::get('/activity', [ActivityController::class, 'index'])
 
 Route::middleware(['auth', 'section.access:player_profiles', 'mfa.required'])->group(function () {
     Route::get('/players/{user:name}', [PlayerController::class, 'show'])->name('players.show');
+
+    Route::get('/players/{user:name}/gallery', [PlayerGalleryController::class, 'index'])
+        ->withoutScopedBindings()
+        ->name('gallery.player.index');
+    Route::get('/players/{user:name}/gallery/{album:slug}', [PlayerGalleryController::class, 'showAlbum'])
+        ->withoutScopedBindings()
+        ->name('gallery.player.album');
+    Route::get('/players/{user:name}/gallery/{album:slug}/{photo}', [PlayerGalleryController::class, 'showPhoto'])
+        ->whereNumber('photo')
+        ->withoutScopedBindings()
+        ->name('gallery.player.photo');
 });
+
+Route::post('/players/{user:name}/gallery/{album:slug}/{photo}/comments', [PhotoCommentController::class, 'storePlayer'])
+    ->whereNumber('photo')
+    ->withoutScopedBindings()
+    ->middleware(['auth', 'section.access:player_profiles', 'mfa.required', 'throttle:20,60'])
+    ->name('gallery.player.comments.store');
 
 // ------------------------------------------------------------------
 // Cabinet (auth; write actions require verified email)

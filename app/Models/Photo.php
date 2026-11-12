@@ -12,8 +12,10 @@ use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
     'album_id', 'user_id',
-    'path_original', 'path_medium', 'path_thumb',
-    'caption', 'taken_at', 'exif',
+    'path_original', 'path_medium', 'path_thumb', 'path_preview',
+    'caption', 'caption_en', 'taken_at', 'exif',
+    'title', 'title_en', 'summary', 'summary_en', 'details', 'details_en',
+    'show_title_in_lightbox', 'show_summary_in_lightbox',
     'width', 'height', 'size_bytes',
     'sort_order', 'is_published',
 ])]
@@ -31,6 +33,8 @@ class Photo extends Model
             'size_bytes' => 'integer',
             'sort_order' => 'integer',
             'is_published' => 'boolean',
+            'show_title_in_lightbox' => 'boolean',
+            'show_summary_in_lightbox' => 'boolean',
         ];
     }
 
@@ -67,6 +71,10 @@ class Photo extends Model
 
     public function urlThumb(): string
     {
+        if ($this->path_preview) {
+            return Storage::disk('public')->url($this->path_preview);
+        }
+
         return $this->path_thumb
             ? Storage::disk('public')->url($this->path_thumb)
             : $this->urlMedium();

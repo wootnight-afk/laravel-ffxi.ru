@@ -1,4 +1,4 @@
-@props(['comments', 'news'])
+@props(['comments'])
 
 @php
     $user = auth()->user();

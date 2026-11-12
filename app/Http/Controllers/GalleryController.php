@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Locale;
 use App\Models\Album;
 use App\Models\Comment;
 use App\Models\Photo;
@@ -42,6 +43,10 @@ class GalleryController extends Controller
         return view('gallery.album', [
             'album' => $album,
             'photos' => $photos,
+            'title' => $this->localized($album->title, $album->title_en),
+            'description' => $this->localized($album->description, $album->description_en),
+            'routePrefix' => 'gallery',
+            'routeParams' => [],
         ]);
     }
 
@@ -82,6 +87,18 @@ class GalleryController extends Controller
             'comments' => $comments,
             'prevPhoto' => $prev,
             'nextPhoto' => $next,
+            'title' => $this->localized($album->title, $album->title_en),
+            'caption' => $this->localized($photo->caption, $photo->caption_en),
+            'details' => $this->localized($photo->details, $photo->details_en),
+            'routePrefix' => 'gallery',
+            'routeParams' => [],
         ]);
+    }
+
+    private function localized(?string $russian, ?string $english): ?string
+    {
+        return app()->getLocale() === Locale::En->value && filled($english)
+            ? $english
+            : $russian;
     }
 }

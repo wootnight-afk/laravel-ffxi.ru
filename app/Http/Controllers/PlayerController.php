@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\UserStatus;
 use App\Models\Activity;
+use App\Models\Album;
 use App\Models\DashboardWidget;
 use App\Models\News;
 use App\Models\Photo;
@@ -100,10 +101,23 @@ class PlayerController extends Controller
                 ->pinnedFirst()
                 ->limit(4)
                 ->get();
+        }
 
+        if ($hasFullAccess && ($isOwner || $isAdmin || $user->isGalleryPublic())) {
             $photos = Photo::query()
                 ->where('user_id', $user->id)
                 ->where('is_published', true)
+                // Only the personal gallery: the block links to
+                // gallery.player.photo, which never resolves site albums.
+                ->whereHas('album', function ($query) use ($user, $isOwner, $isAdmin): void {
+                    $query->where('scope', Album::SCOPE_PLAYER)
+                        ->where('user_id', $user->id);
+
+                    if (! $isOwner && ! $isAdmin) {
+                        $query->where('is_published', true);
+                    }
+                })
+                ->with('album')
                 ->orderByDesc('id')
                 ->limit(6)
                 ->get();

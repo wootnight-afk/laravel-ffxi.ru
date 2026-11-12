@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 #[Fillable([
-    'user_id', 'scope', 'title', 'slug', 'description',
+    'user_id', 'scope', 'title', 'title_en', 'slug', 'description', 'description_en',
     'cover_photo_id', 'sort_order', 'is_published',
 ])]
 class Album extends Model

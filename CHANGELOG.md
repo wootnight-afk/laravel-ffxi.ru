@@ -6,6 +6,100 @@
 
 ## [Unreleased]
 
+### Галерея: отдельное превью, тексты фотографии, 4K и PhotoSwipe-оверлей
+
+Расширение существующей галереи: собственное превью для сеток, три независимых
+текста фотографии с переключателями, поддержка 4K в основной фотографии и
+корректное расположение элементов внутри лайтбокса.
+
+- **Миграция:** `add_lightbox_fields_and_preview_to_photos_table` —
+  `photos.path_preview` (string 255, nullable); `photos.title` / `title_en`
+  (150), `summary` / `summary_en` (300), `details` / `details_en` (text);
+  `show_title_in_lightbox`, `show_summary_in_lightbox` (boolean, default `false`).
+  Существующие записи не затрагиваются, бэкфилл не нужен. `caption` / `caption_en`
+  сохранили прежнее назначение (подпись в сетке, `alt`, заголовок страницы).
+- **Назначение полей:** `title` — заголовок над изображением в PhotoSwipe,
+  `summary` — краткое описание под изображением в PhotoSwipe, `details` —
+  дополнительное описание на странице «Подробнее» над комментариями. Одно поле
+  не используется для двух назначений; выключение переключателя текст не удаляет.
+- **Превью:** `ImageProcessor::processPreview()` — WebP, `scaleDown` в bounding box
+  480×480 без кропа (пропорции сохраняются), качество 75 (как thumb). Файл
+  `photos/{Y}/{m}/{hash}_preview.webp`; предыдущий файл превью удаляется после
+  успешной записи. Загрузка — действие «Загрузить превью» в `PhotosRelationManager`
+  (`albums.manage_site` + `update` политика). `Photo::urlThumb()` теперь:
+  `path_preview → path_thumb → medium`. Сетка, размеры и CSS миниатюр не менялись.
+- **4K:** `ImageProcessor::ORIGINAL_MAX_WIDTH` 2560 → 3840. `path_original` —
+  обработанная основная фотография (≤3840 px по ширине), а не побайтная копия
+  исходного файла. Старые файлы не пересоздаются. `MAX_PIXELS` оставлен 50 Mp.
+- **Лимит загрузки:** 16 MB только для админской загрузки Галереи —
+  `PhotosRelationManager::ADMIN_UPLOAD_MAX_KB`, `ImageProcessor::process(...,
+  ?int $maxBytes = null)`. Кабинет (`ProcessPhotoJob`) вызывает без аргумента и
+  продолжает работать с лимитом 8 MB; его логика не менялась.
+- **PhotoSwipe:** `href` миниатюры и лайтбокс используют основную фотографию
+  (`urlOriginal()`), страница «Подробнее» — тоже. Кнопка «Подробнее» перенесена из
+  `top-bar` в `root` (`.pswp__details-btn`, внизу по центру) и больше не пересекается
+  с крестиком и зумом; название и краткое описание — отдельные блоки
+  (`.pswp__photo-title` сверху, `.pswp__photo-summary` снизу), ограничены по ширине
+  и высоте, при отсутствии текста или выключенном переключателе скрываются.
+  `wheelToZoom` не включался: Ctrl+колесо работает штатно (`ctrlKey`), обычное
+  колесо остаётся панорамированием.
+- **Переключатели в админке:** при пакетной загрузке выбранные значения
+  применяются ко всем фотографиям партии одним `update()`; при редактировании
+  фотографии — независимо. По умолчанию выключены.
+- **CSS:** добавлен только блок `.pswp .pswp__*` (двойной класс перебивает
+  `.pswp__button`). Классы `.gallery-grid`, `.gallery-item`, `.gallery-thumb`,
+  `.gallery-caption` не изменялись.
+
+### Галерея: локализация RU/EN, PhotoSwipe, комментарии к фото, галереи игроков
+
+Локализация админки и публичной части, лайтбокс и обсуждение фотографий.
+
+- **Миграции:** `add_localized_columns_to_albums_and_photos_table` (`albums.title_en`,
+  `albums.description_en`, `photos.caption_en`; все nullable, без бэкфилла —
+  пустое значение означает fallback на русское поле, как у `pages`);
+  `add_gallery_visibility_to_users_table` (`users.is_gallery_public`, boolean,
+  default `true`).
+- **Модели:** `Album`, `Photo` — новые поля в `#[Fillable]`; `User::isGalleryPublic()`
+  (`is_gallery_public && isProfilePublic()`), каст `boolean`.
+- **Админка:** форма `GalleryResource` — языковые вкладки RU/EN внутри вкладки
+  «Альбом»; `EditAlbum::hasCombinedRelationManagerTabsWithContent()` показывает
+  RelationManager фотографий вкладкой рядом с формой (штатный механизм Filament);
+  `PhotosRelationManager` — поле `caption_en` и поиск по двум локалям.
+- **Локализация фронта:** per-field fallback в `GalleryController` и
+  `PlayerGalleryController` (пустое `_en` → русское значение).
+- **PhotoSwipe 5** (`npm i photoswipe`): миниатюры альбома открывают лайтбокс,
+  кнопка «Подробнее» в тулбаре ведёт на страницу фотографии; `data-pswp-width/height`
+  с fallback `1280×960` для записей без размеров. CSS галереи не менялся.
+- **Deep link из галереи игрока:** миниатюры `gallery.player.index` ведут на
+  `/players/{user}/gallery/{album}?photo={id}` — открывается именно выбранная
+  фотография, как в общей галерее.
+- **Локализация интерфейса галереи:** подпись кнопки «Подробнее» берётся из
+  `site.gallery.details` через `data-details-label`; EN-названия альбомов
+  используются и на обзорной странице `/gallery`.
+- **Комментарии к фото:** новый `PhotoCommentController` (site- и player-маршруты),
+  переиспользованы `Comment`, `CommentPolicy`, `Photo::comments()`; модерация
+  вынесена в `CommentModerationResolver` (общий для новостей, событий и фото).
+  `x-comment-form` получает `action` вместо модели новости, у `x-comment-thread`
+  удалён неиспользуемый проп `news`.
+- **Галереи игроков:** публичные маршруты `gallery.player.index|album|photo`
+  и `PlayerGalleryController` с проверками принадлежности (альбом → пользователь,
+  фото → альбом). `AlbumPolicy::view()` для player-альбомов использует
+  `isGalleryPublic()`; владелец и admin проверяются до публичности.
+  Неопубликованные фото недоступны посторонним (404).
+- **Кабинет:** чекбокс `is_gallery_public` рядом с публичностью профиля
+  (`$request->boolean()` корректно сохраняет снятый чекбокс как `false`).
+- **Профиль игрока:** блок «Фотографии» показывает только фотографии личных
+  альбомов (`scope = player`), посторонним — только опубликованные альбомы;
+  ссылки блока всегда разрешаются в `gallery.player.photo`.
+- **ActivitySubjectResolver:** публичная ссылка на player-фото строится только для
+  опубликованных фото и альбомов при публичной галерее; иначе `null`.
+- **Исправлен существующий баг:** ссылка на фото в `players/show.blade.php` вела на
+  site-маршрут `gallery.photo` и давала 404 — теперь `gallery.player.photo`.
+- **Тесты:** `PlayerGalleryTest`, `PhotoCommentTest`; дополнены `GalleryTest`
+  (локаль, разметка PhotoSwipe) и `GalleryResourceTest` (EN-название, вкладки).
+- **Ограничения:** `albums.delete_own` по-прежнему не проверяется (вне задачи);
+  перепланировка раздела «Игроки» — отдельный проект.
+
 ### L2 ADR-011 — резолверы, cookie и middleware (в рабочем дереве, без commit)
 
 Переключение языка и определение часового пояса. Миграций нет.

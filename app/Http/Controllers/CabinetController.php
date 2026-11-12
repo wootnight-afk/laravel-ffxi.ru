@@ -47,6 +47,7 @@ class CabinetController extends Controller
             'phone' => $data['phone'] ?? null,
             'phone_is_public' => $request->boolean('phone_is_public'),
             'is_profile_public' => $request->boolean('is_profile_public'),
+            'is_gallery_public' => $request->boolean('is_gallery_public'),
         ]);
 
         $newLegend = $data['legend'] ?? null;

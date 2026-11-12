@@ -194,3 +194,199 @@ it('returns 404 for photo in another album', function () {
     $this->get(route('gallery.photo', [$albumB->slug, $photo->id]))
         ->assertNotFound();
 });
+
+it('falls back to the russian album title on the english locale', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $album = makeAlbum($admin, ['title' => 'Русский альбом', 'title_en' => null]);
+
+    $viewer = User::factory()->create(['email_verified_at' => now(), 'locale' => 'en']);
+    $viewer->assignRole('user');
+
+    $this->actingAs($viewer)
+        ->get(route('gallery.album', $album->slug))
+        ->assertOk()
+        ->assertSee('Русский альбом');
+});
+
+it('uses the english album title when it is filled', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $album = makeAlbum($admin, ['title' => 'Русский альбом', 'title_en' => 'English album']);
+
+    $viewer = User::factory()->create(['email_verified_at' => now(), 'locale' => 'en']);
+    $viewer->assignRole('user');
+
+    $this->actingAs($viewer)
+        ->get(route('gallery.album', $album->slug))
+        ->assertOk()
+        ->assertSee('English album')
+        ->assertDontSee('Русский альбом');
+});
+
+it('renders photoswipe attributes and keeps the gallery markup', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $album = makeAlbum($admin);
+
+    Photo::create([
+        'album_id' => $album->id,
+        'user_id' => $admin->id,
+        'path_original' => 'photos/pswp_orig.webp',
+        'path_medium' => 'photos/pswp_medium.webp',
+        'path_thumb' => 'photos/pswp_thumb.webp',
+        'width' => 800,
+        'height' => 600,
+        'size_bytes' => 1000,
+        'is_published' => true,
+    ]);
+
+    $this->get(route('gallery.album', $album->slug))
+        ->assertOk()
+        ->assertSee('class="gallery-grid"', false)
+        ->assertSee('class="gallery-thumb"', false)
+        ->assertSee('data-pswp-width="800"', false)
+        ->assertSee('data-pswp-height="600"', false)
+        ->assertSee('data-photo-url=', false);
+});
+
+it('links an overview thumbnail to its album with the clicked photo deep link', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $album = makeAlbum($admin);
+
+    $photo = Photo::create([
+        'album_id' => $album->id,
+        'user_id' => $admin->id,
+        'path_original' => 'photos/deep_orig.webp',
+        'path_medium' => 'photos/deep_medium.webp',
+        'path_thumb' => 'photos/deep_thumb.webp',
+        'width' => 800,
+        'height' => 600,
+        'size_bytes' => 1000,
+        'is_published' => true,
+    ]);
+
+    $this->get(route('gallery.index'))
+        ->assertOk()
+        ->assertSee(route('gallery.album', ['album' => $album->slug, 'photo' => $photo->id]), false);
+});
+
+it('exposes the photo id on album slides for the deep link handoff', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $album = makeAlbum($admin);
+
+    $photo = Photo::create([
+        'album_id' => $album->id,
+        'user_id' => $admin->id,
+        'path_original' => 'photos/deep2_orig.webp',
+        'width' => 800,
+        'height' => 600,
+        'size_bytes' => 1000,
+        'is_published' => true,
+    ]);
+
+    $this->get(route('gallery.album', $album->slug))
+        ->assertOk()
+        ->assertSee('data-photo-id="'.$photo->id.'"', false);
+});
+
+it('keeps the album page working when the deep link photo is unknown', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $album = makeAlbum($admin);
+
+    Photo::create([
+        'album_id' => $album->id,
+        'user_id' => $admin->id,
+        'path_original' => 'photos/deep3_orig.webp',
+        'width' => 800,
+        'height' => 600,
+        'size_bytes' => 1000,
+        'is_published' => true,
+    ]);
+
+    $this->get(route('gallery.album', ['album' => $album->slug, 'photo' => 999999]))
+        ->assertOk()
+        ->assertSee('class="gallery-grid"', false);
+});
+
+it('uses the english album title on the gallery overview', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $album = makeAlbum($admin, ['title' => 'Русский обзорный альбом', 'title_en' => 'English overview album']);
+
+    Photo::create([
+        'album_id' => $album->id,
+        'user_id' => $admin->id,
+        'path_original' => 'photos/overview_orig.webp',
+        'width' => 800,
+        'height' => 600,
+        'size_bytes' => 1000,
+        'is_published' => true,
+    ]);
+
+    $viewer = User::factory()->create(['email_verified_at' => now(), 'locale' => 'en']);
+    $viewer->assignRole('user');
+
+    $this->actingAs($viewer)
+        ->get(route('gallery.index'))
+        ->assertOk()
+        ->assertSee('English overview album')
+        ->assertDontSee('Русский обзорный альбом');
+});
+
+it('falls back to the russian album title on the gallery overview', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $album = makeAlbum($admin, ['title' => 'Русский обзорный альбом', 'title_en' => null]);
+
+    Photo::create([
+        'album_id' => $album->id,
+        'user_id' => $admin->id,
+        'path_original' => 'photos/overview2_orig.webp',
+        'width' => 800,
+        'height' => 600,
+        'size_bytes' => 1000,
+        'is_published' => true,
+    ]);
+
+    $viewer = User::factory()->create(['email_verified_at' => now(), 'locale' => 'en']);
+    $viewer->assignRole('user');
+
+    $this->actingAs($viewer)
+        ->get(route('gallery.index'))
+        ->assertOk()
+        ->assertSee('Русский обзорный альбом');
+});
+
+it('localizes the lightbox details button label', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $album = makeAlbum($admin);
+
+    Photo::create([
+        'album_id' => $album->id,
+        'user_id' => $admin->id,
+        'path_original' => 'photos/label_orig.webp',
+        'width' => 800,
+        'height' => 600,
+        'size_bytes' => 1000,
+        'is_published' => true,
+    ]);
+
+    $this->get(route('gallery.album', $album->slug))
+        ->assertOk()
+        ->assertSee('data-details-label="Подробнее"', false);
+
+    $viewer = User::factory()->create(['email_verified_at' => now(), 'locale' => 'en']);
+    $viewer->assignRole('user');
+
+    $this->actingAs($viewer)
+        ->get(route('gallery.album', $album->slug))
+        ->assertOk()
+        ->assertSee('data-details-label="Details"', false);
+});

@@ -124,6 +124,13 @@
                         {{ __('site.cabinet.profile.public_profile_hint') }}
                     </span>
                 </label>
+                <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.5; margin-top: 10px;">
+                    <input type="checkbox" name="is_gallery_public" value="1" {{ old('is_gallery_public', $user->is_gallery_public) ? 'checked' : '' }} style="margin-top: 3px;">
+                    <span>
+                        <strong>{{ __('site.cabinet.profile.public_gallery') }}</strong><br>
+                        {{ __('site.cabinet.profile.public_gallery_hint') }}
+                    </span>
+                </label>
             </div>
 
             <button type="submit" class="btn btn-primary">{{ __('site.cabinet.profile.save') }}</button>

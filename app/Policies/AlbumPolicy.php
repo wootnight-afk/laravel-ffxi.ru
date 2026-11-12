@@ -18,12 +18,13 @@ class AlbumPolicy
             return $album->is_published;
         }
 
-        // Player-альбом: видит владелец или admin; публично — если профиль открыт.
+        // Player-альбом: видит владелец или admin; публично — если открыты
+        // и профиль, и галерея (isGalleryPublic включает проверку профиля).
         if ($user !== null && ($user->id === $album->user_id || $user->isAdmin())) {
             return true;
         }
 
-        return $album->is_published && $album->user?->isProfilePublic();
+        return $album->is_published && $album->user?->isGalleryPublic();
     }
 
     public function create(User $user): bool

@@ -69,7 +69,7 @@ Stage 9 закрыт `bb3bbf7`.
 | 2 | Docker + skeleton | done | docker-compose.yml, /up |
 | 3 | Auth, roles, foundation | done | section.access, Gate::before (scoped) |
 | 4 | Content engine | done | news, pages, comments, sanitizer |
-| 5 | Gallery | done | ImageProcessor, ProcessPhotoJob |
+| 5 | Gallery | done | ImageProcessor, ProcessPhotoJob; RU/EN-поля, PhotoSwipe, комментарии к фото, публичные галереи игроков |
 | 6 | Profiles & cabinet | ACCEPTED | docs/acceptance/stage-6.md |
 | 7 | Dashboard | ACCEPTED | docs/acceptance/stage-7.md |
 | 8 | Filament | ACCEPTED | docs/acceptance/stage-8.md; контракт: docs/ai/STAGE-8-CONTRACT.md |

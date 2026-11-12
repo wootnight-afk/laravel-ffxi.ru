@@ -1,4 +1,4 @@
-@props(['news'])
+@props(['action'])
 
 @auth
     @php
@@ -72,7 +72,7 @@
                             this.success = null;
 
                             try {
-                                const response = await fetch('{{ route('comments.store', $news->slug) }}', {
+                                const response = await fetch('{{ $action }}', {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json',

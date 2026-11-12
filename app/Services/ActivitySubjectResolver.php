@@ -85,17 +85,31 @@ class ActivitySubjectResolver
         }
 
         $album = $photo->album;
+        if (! $album instanceof Album || ! $album->is_published) {
+            return null;
+        }
+
+        if ($album->isSite()) {
+            return $this->canViewSection($viewer, 'gallery') && Route::has('gallery.photo')
+                ? route('gallery.photo', [$album->slug, $photo->getKey()])
+                : null;
+        }
+
+        // Player albums: activity links are public, so they must never expose
+        // a gallery that is closed, private, or no longer published — even to
+        // the owner or an admin reading the feed.
+        $author = $album->user;
+
         if (
-            ! $album instanceof Album
-            || ! $album->isSite()
-            || ! $album->is_published
-            || ! $this->canViewSection($viewer, 'gallery')
-            || ! Route::has('gallery.photo')
+            $author === null
+            || ! $author->isGalleryPublic()
+            || ! $this->canViewSection($viewer, 'player_profiles')
+            || ! Route::has('gallery.player.photo')
         ) {
             return null;
         }
 
-        return route('gallery.photo', [$album->slug, $photo->getKey()]);
+        return route('gallery.player.photo', [$author->name, $album->slug, $photo->getKey()]);
     }
 
     private function eventUrl(Event $event, User $viewer): ?string
