@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActiveCharacterController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\LoginController;
@@ -27,6 +28,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\PhotoCommentController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\PlayerGalleryController;
+use App\Http\Controllers\PlayerServerFilterController;
 use App\Http\Controllers\PreferencesController;
 use App\Http\Controllers\SocialLinkController;
 use Illuminate\Support\Facades\Route;
@@ -107,6 +109,25 @@ Route::middleware(['auth', 'section.access:players', 'mfa.required'])->group(fun
     Route::get('/players/characters', function () {
         return redirect()->route('cabinet.characters.index', request()->query());
     })->name('players.characters.index');
+
+    // Active character of the account (STAGE-2 §5). Explicit choice only:
+    // a POST stores it, a DELETE clears it, a GET never changes anything.
+    // `verified` matches the character-write rule of the cabinet; the section
+    // and MFA middleware come from the group.
+    Route::middleware('verified')->group(function () {
+        Route::post('/players/active-character', [ActiveCharacterController::class, 'store'])
+            ->middleware('throttle:30,60')
+            ->name('players.active-character.store');
+        Route::delete('/players/active-character', [ActiveCharacterController::class, 'destroy'])
+            ->middleware('throttle:10,60')
+            ->name('players.active-character.destroy');
+    });
+
+    // Game-server filter of the directory (STAGE-2 §6.1). POST, not GET: the
+    // filter lives in the session and a GET request must not write.
+    Route::post('/players/server-filter', [PlayerServerFilterController::class, 'update'])
+        ->middleware('throttle:30,60')
+        ->name('players.server-filter.update');
 });
 
 Route::get('/activity', [ActivityController::class, 'index'])

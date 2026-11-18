@@ -3,6 +3,7 @@
 use App\Http\Middleware\IdentifyGuest;
 use App\Http\Middleware\RegistrationOpen;
 use App\Http\Middleware\RequireMfa;
+use App\Http\Middleware\ResolveCharacterContext;
 use App\Http\Middleware\SectionAccess;
 use App\Http\Middleware\SetLocale;
 use App\Jobs\DispatchEventRemindersJob;
@@ -52,9 +53,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // SetLocale runs after IdentifyGuest: the session is already started and
         // the resolved locale can rely on session, cookie and Accept-Language.
+        // ResolveCharacterContext runs last: it shares the active character of
+        // the account and never writes, so a GET request cannot change it.
         $middleware->web(append: [
             IdentifyGuest::class,
             SetLocale::class,
+            ResolveCharacterContext::class,
         ]);
 
         $middleware->alias([

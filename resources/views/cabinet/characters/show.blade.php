@@ -18,6 +18,21 @@
         </div>
     @endif
 
+    @if ($activeCharacterId === $character->getKey())
+        <p class="content-text">
+            <strong>{{ __('site.cabinet.characters.active_badge') }}</strong> —
+            {{ __('site.cabinet.characters.active_hint') }}
+        </p>
+    @else
+        <form method="POST" action="{{ route('players.active-character.store') }}" class="content-text">
+            @csrf
+            <input type="hidden" name="character_id" value="{{ $character->getKey() }}">
+            <button type="submit" class="btn">
+                {{ __('site.cabinet.characters.make_active') }}
+            </button>
+        </form>
+    @endif
+
     @include('cabinet.characters._form', [
         'action' => route('cabinet.characters.update', $character),
         'method' => 'PUT',

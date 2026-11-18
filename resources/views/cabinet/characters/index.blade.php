@@ -41,6 +41,20 @@
                             </div>
                         </div>
 
+                        @if ($activeCharacterId === $character->getKey())
+                            <p class="players-card__meta">
+                                <strong>{{ __('site.cabinet.characters.active_badge') }}</strong>
+                            </p>
+                        @else
+                            <form method="POST" action="{{ route('players.active-character.store') }}">
+                                @csrf
+                                <input type="hidden" name="character_id" value="{{ $character->getKey() }}">
+                                <button type="submit" class="btn">
+                                    {{ __('site.cabinet.characters.make_active') }}
+                                </button>
+                            </form>
+                        @endif
+
                         <a href="{{ route('cabinet.characters.show', $character) }}" class="btn">
                             {{ __('site.cabinet.characters.open') }}
                         </a>

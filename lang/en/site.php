@@ -432,6 +432,9 @@ return [
             'server_inactive' => 'server inactive',
             'visibility_public' => 'Public',
             'visibility_hidden' => 'Hidden',
+            'active_badge' => 'Active',
+            'make_active' => 'Make active',
+            'active_hint' => 'The active character is shown in the Players section.',
             'fields' => [
                 'name' => 'Character name',
                 'server' => 'Game server',
@@ -876,6 +879,29 @@ return [
             'characters' => 'My characters',
             'cabinet' => 'Account',
             'footer' => 'Community section',
+        ],
+        'context' => [
+            'label' => 'Active character',
+            'switch' => 'Switch',
+            'manage' => 'My characters',
+            'no_characters' => 'This account has no characters.',
+            'not_selected' => 'no character selected',
+            'none' => '—',
+            'flash' => [
+                'selected' => 'Active character changed.',
+                'cleared' => 'Active character cleared.',
+            ],
+        ],
+        'server_filter' => [
+            'label' => 'Game server',
+            'all' => 'All servers',
+            'apply' => 'Apply',
+            'mismatch' => 'The active character is on another server.',
+            'reset' => 'Reset filter',
+            'invalid' => 'No such game server.',
+            'flash' => [
+                'applied' => 'Game server filter updated.',
+            ],
         ],
         'overview' => [
             'title' => 'Community overview',

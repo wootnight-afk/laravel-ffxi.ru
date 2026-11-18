@@ -20,6 +20,7 @@ class GameCharacterSaver
     public function __construct(
         private readonly CharacterTransaction $transaction,
         private readonly ContentRenderer $renderer,
+        private readonly CharacterContext $context,
     ) {}
 
     /**
@@ -66,8 +67,18 @@ class GameCharacterSaver
 
     public function delete(User $account, GameCharacter $character): void
     {
-        $this->transaction->run($account, function (CharacterTransaction $tx) use ($character) {
-            $tx->lockCharacter((int) $character->getKey())?->delete();
+        $this->transaction->run($account, function (CharacterTransaction $tx) use ($character): void {
+            $locked = $tx->lockCharacter((int) $character->getKey());
+
+            if ($locked === null) {
+                return;
+            }
+
+            $locked->delete();
+
+            // Same transaction as `deleted_at`: the pointer can never survive
+            // the character it names, even if the observer is bypassed.
+            $this->context->forgetCharacter((int) $locked->getKey());
         });
     }
 

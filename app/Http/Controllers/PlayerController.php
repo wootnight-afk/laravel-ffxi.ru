@@ -10,6 +10,7 @@ use App\Models\News;
 use App\Models\Photo;
 use App\Models\User;
 use App\Services\ActivityFeedGrouper;
+use App\Services\ServerFilter;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -51,10 +52,22 @@ class PlayerController extends Controller
         ]);
     }
 
-    public function directory(Request $request): View
+    public function directory(Request $request, ServerFilter $serverFilter): View
     {
         $query = User::query()
             ->where('status', UserStatus::Active);
+
+        // Game-server filter (STAGE-2 §6.1): it narrows the existing account
+        // listing to accounts that have a public character on the chosen
+        // server. It is a viewing preference of the catalogue and is unrelated
+        // to the active character of the viewer.
+        $activeServer = $serverFilter->server();
+
+        if ($activeServer !== null) {
+            $query->whereHas('gameCharacters', function ($characters) use ($activeServer): void {
+                $characters->public()->where('game_server_id', $activeServer->getKey());
+            });
+        }
 
         $search = trim((string) $request->query('q', ''));
         if ($search !== '') {
@@ -73,6 +86,7 @@ class PlayerController extends Controller
         return view('players.directory', [
             'users' => $users,
             'search' => $search,
+            'activeServer' => $activeServer,
         ]);
     }
 

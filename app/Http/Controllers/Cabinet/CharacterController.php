@@ -7,6 +7,7 @@ use App\Http\Requests\StoreGameCharacterRequest;
 use App\Http\Requests\UpdateGameCharacterRequest;
 use App\Models\GameCharacter;
 use App\Models\GameServer;
+use App\Services\CharacterContext;
 use App\Services\GameCharacterSaver;
 use App\Services\LegacyGameDataImporter;
 use Illuminate\Contracts\View\View;
@@ -27,6 +28,7 @@ class CharacterController extends Controller
     public function __construct(
         private readonly GameCharacterSaver $saver,
         private readonly LegacyGameDataImporter $importer,
+        private readonly CharacterContext $context,
     ) {}
 
     public function index(Request $request): View
@@ -50,6 +52,7 @@ class CharacterController extends Controller
             'characters' => $characters,
             'servers' => GameServer::query()->active()->ordered()->get(),
             'legacy' => $this->importer->pendingFor($user, $characters->count()),
+            'activeCharacterId' => $this->context->for($user)?->getKey(),
         ]);
     }
 
@@ -65,6 +68,7 @@ class CharacterController extends Controller
             'levels' => $character->jobs
                 ->mapWithKeys(fn ($job): array => [$job->job->value => $job->level])
                 ->all(),
+            'activeCharacterId' => $this->context->for(request()->user())?->getKey(),
         ]);
     }
 

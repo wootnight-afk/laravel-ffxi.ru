@@ -665,6 +665,125 @@ a:hover {
     background: var(--primary-color);
 }
 
+/* Активный персонаж и фильтр сервера (STAGE-2 §6.1, §6.3).
+ *
+ * Самостоятельный блок, а не наследник .players-section-nav__footer: правило
+ * @media (max-width: 1023px) ниже скрывает __brand и __footer, а этот блок
+ * обязан оставаться доступным и на мобильных. Внутренней прокрутки нет:
+ * выбор персонажа — нативный select, поэтому карточка не переполняется. */
+.players-context {
+    /* Прижатие к низу карточки — та же роль, которую раньше играл футер. */
+    margin-top: auto;
+    padding: 12px 12px 2px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.players-context__current {
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+}
+
+.players-context__account {
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.players-context__sep {
+    opacity: 0.45;
+}
+
+.players-context__character {
+    color: var(--text-main);
+}
+
+.players-context__form {
+    margin: 0;
+}
+
+.players-context__label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.players-context__row {
+    display: flex;
+    gap: 6px;
+}
+
+.players-context__select {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 6px 8px;
+    font-size: 12px;
+    color: var(--text-main);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+
+.players-context__submit,
+.players-context__reset {
+    flex: 0 0 auto;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--primary-color);
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.players-context__reset {
+    width: 100%;
+    font-weight: 500;
+    color: var(--text-main);
+    background: transparent;
+    border-color: var(--border-color);
+}
+
+.players-context__submit:hover,
+.players-context__reset:hover {
+    filter: brightness(0.95);
+}
+
+.players-context__hint {
+    margin: 0;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.players-context__link {
+    font-size: 11px;
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.players-context__link:hover {
+    text-decoration: underline;
+}
+
+.players-context__filter {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border-color);
+}
+
+.players-context__note {
+    margin: 6px 0;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
 .players-layout {
     display: flex;
     gap: 24px;
@@ -854,6 +973,18 @@ a:hover {
     .players-section-nav__link {
         white-space: nowrap;
         padding: 8px 12px;
+    }
+
+    /* Активный персонаж и фильтр сервера остаются доступными на мобильных:
+     * блок не скрывается вместе с __footer (STAGE-2 §6.3). */
+    .players-context {
+        margin-top: 0;
+        padding: 10px 4px 0;
+    }
+
+    .players-context__filter {
+        margin-top: 8px;
+        padding-top: 8px;
     }
 }
 

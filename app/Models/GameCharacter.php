@@ -4,8 +4,10 @@ namespace App\Models;
 
 use App\Enums\CharacterRace;
 use App\Enums\UserStatus;
+use App\Observers\GameCharacterObserver;
 use Database\Factories\GameCharacterFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -26,6 +28,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'race', 'main_job', 'legend', 'legend_html',
     'legend_ru', 'legend_ru_html', 'legend_en', 'legend_en_html',
 ])]
+#[ObservedBy(GameCharacterObserver::class)]
 class GameCharacter extends Model
 {
     /** @use HasFactory<GameCharacterFactory> */

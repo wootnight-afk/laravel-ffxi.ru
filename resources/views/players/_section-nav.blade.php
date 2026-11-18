@@ -102,10 +102,9 @@
         </ul>
     @endforeach
 
-    <div class="players-section-nav__footer">
-        <span class="players-section-nav__pill">
-            <span class="players-section-nav__dot" aria-hidden="true"></span>
-            {{ __('site.players.section_nav.footer') }}
-        </span>
-    </div>
+    @inject('characterSwitcher', \App\Services\CharacterSwitcher::class)
+    @php($context = $characterSwitcher->data(auth()->user()))
+
+    @include('players._character-switcher', ['context' => $context])
+    @include('players._server-filter', ['context' => $context])
 </nav>
