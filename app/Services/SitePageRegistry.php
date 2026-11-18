@@ -28,6 +28,12 @@ class SitePageRegistry
         'gallery.player.photo' => ['photo', 'template'],
         'players.dashboard' => ['players', 'system'],
         'players.directory' => ['directory', 'system'],
+        // The old character URL is a technical alias to the cabinet page: it
+        // stays classified as a system record so the route reference has no
+        // unclassified entries.
+        'players.characters.index' => ['my_characters', 'system'],
+        'cabinet.characters.index' => ['my_characters', 'system'],
+        'cabinet.characters.show' => ['cabinet_character', 'template'],
         'players.show' => ['player', 'template'],
         'activity.index' => ['activity', 'system'],
         'cabinet.show' => ['cabinet', 'system'],

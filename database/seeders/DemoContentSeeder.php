@@ -69,12 +69,22 @@ class DemoContentSeeder extends Seeder
             [
                 'title' => 'Правила сообщества',
                 'body' => "## Общие правила\n\n1. Уважайте других участников.\n2. Не публикуйте материалы, нарушающие законодательство РФ.\n3. Спам и реклама запрещены.\n\nНарушение правил может привести к блокировке аккаунта.",
+                // Full English version (STAGE-1 §18.3): the page never falls back
+                // to the Russian text when the interface language is English.
+                'title_en' => 'Community Rules',
+                'body_en' => "## General rules\n\n1. Respect other members.\n2. Do not publish material that violates the law of the Russian Federation.\n3. Spam and advertising are prohibited.\n\nBreaking the rules may result in the account being blocked.",
+                'meta_title_en' => 'Community Rules',
+                'meta_description_en' => 'Community rules: respect for other members, no illegal content, no spam or advertising.',
                 'show_in_menu' => true,
                 'menu_order' => 10,
             ],
             [
                 'title' => 'О сообществе',
                 'body' => "Содружество русскоязычных игроков Final Fantasy XI — **Phoenix Server**.\n\nМы объединяем игроков из разных городов и стран, помогаем новичкам, организуем события и делимся впечатлениями.",
+                'title_en' => 'About the Community',
+                'body_en' => "A community of Russian-speaking Final Fantasy XI players — **Phoenix Server**.\n\nWe bring together players from different cities and countries, help newcomers, organise events and share our impressions.",
+                'meta_title_en' => 'About the Community',
+                'meta_description_en' => 'The Russian-speaking Final Fantasy XI community on Phoenix Server: who we are, how we help newcomers and which events we run.',
                 'show_in_menu' => true,
                 'menu_order' => 20,
             ],
@@ -88,6 +98,10 @@ class DemoContentSeeder extends Seeder
                 [
                     'title' => $item['title'],
                     'body' => $item['body'],
+                    'title_en' => $item['title_en'],
+                    'body_en' => $item['body_en'],
+                    'meta_title_en' => $item['meta_title_en'],
+                    'meta_description_en' => $item['meta_description_en'],
                     'is_published' => true,
                     'show_in_menu' => $item['show_in_menu'],
                     'menu_order' => $item['menu_order'],

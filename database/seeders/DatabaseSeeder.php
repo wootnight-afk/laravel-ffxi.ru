@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             UserRankSeeder::class,
             EventTypeSeeder::class,
             DashboardWidgetSeeder::class,
+            GameServerSeeder::class,
         ]);
 
         // Демо-контент — только в local/testing, никогда на production.

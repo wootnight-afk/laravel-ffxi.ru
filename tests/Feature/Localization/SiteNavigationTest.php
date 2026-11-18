@@ -415,6 +415,68 @@ it('saves footer text and links through the admin page', function () {
         ->and($items[0]['target'])->toBe('contacts');
 });
 
+it('renders both footer text fields in the footer editor', function () {
+    $admin = navUser('admin');
+
+    Livewire::actingAs($admin)
+        ->test(FooterPage::class)
+        ->assertSee(__('filament.footer.fields.text_ru'))
+        ->assertSee(__('filament.footer.fields.text_en'));
+});
+
+it('stores the two footer texts independently', function () {
+    $admin = navUser('admin');
+
+    Livewire::actingAs($admin)
+        ->test(FooterPage::class)
+        ->set('data.text', [
+            'text_ru' => 'Русский текст футера',
+            'text_en' => 'English footer text',
+        ])
+        ->call('save')
+        ->assertHasNoErrors();
+
+    // Only the Russian text changes: the English one must stay untouched.
+    Livewire::actingAs($admin)
+        ->test(FooterPage::class)
+        ->set('data.text', [
+            'text_ru' => 'Новый русский текст',
+            'text_en' => 'English footer text',
+        ])
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $settings = app(SettingsRepository::class);
+
+    expect($settings->get(SiteNavigation::KEY_FOOTER_TEXT_RU))->toBe('Новый русский текст')
+        ->and($settings->get(SiteNavigation::KEY_FOOTER_TEXT_EN))->toBe('English footer text');
+});
+
+it('shows the footer text saved in the editor right away', function () {
+    $admin = navUser('admin');
+
+    Livewire::actingAs($admin)
+        ->test(FooterPage::class)
+        ->set('data.text', [
+            'text_ru' => 'Содружество игроков FFXI',
+            'text_en' => 'Community of Players FFXI',
+        ])
+        ->call('save')
+        ->assertHasNoErrors();
+
+    // The repository cache must be flushed by the save, otherwise the public
+    // page keeps rendering the previous wording.
+    $this->withSession(['locale' => 'ru'])
+        ->get(route('home'))
+        ->assertOk()
+        ->assertSee('Содружество игроков FFXI');
+
+    $this->withSession(['locale' => 'en'])
+        ->get(route('home'))
+        ->assertOk()
+        ->assertSee('Community of Players FFXI');
+});
+
 it('drops an item without a target instead of breaking the layout', function () {
     $admin = navUser('admin');
 

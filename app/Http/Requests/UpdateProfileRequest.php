@@ -20,6 +20,8 @@ class UpdateProfileRequest extends FormRequest
             'race' => ['nullable', 'string', 'in:hume,elvaan,tarutaru,mithra,galka'],
             'main_job' => ['nullable', 'string', 'max:10'],
             'legend' => ['nullable', 'string', 'max:4000'],
+            'legend_ru' => ['nullable', 'string', 'max:4000'],
+            'legend_en' => ['nullable', 'string', 'max:4000'],
             'phone' => ['nullable', 'string', 'max:32'],
             'phone_is_public' => ['nullable', 'boolean'],
             'is_profile_public' => ['nullable', 'boolean'],
@@ -36,6 +38,8 @@ class UpdateProfileRequest extends FormRequest
             'race.in' => __('site.cabinet.validation.race_invalid'),
             'main_job.max' => __('site.cabinet.validation.main_job_max'),
             'legend.max' => __('site.cabinet.validation.legend_max'),
+            'legend_ru.max' => __('site.cabinet.validation.legend_max'),
+            'legend_en.max' => __('site.cabinet.validation.legend_max'),
             'phone.max' => __('site.cabinet.validation.phone_max'),
         ];
     }

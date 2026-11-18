@@ -80,8 +80,15 @@ class PageMenuManager
                         // it is the only source of truth of the menu order, so
                         // an existing binding is never renumbered here.
                         $item['target'] = (string) $page->getKey();
-                        $item['label_ru'] = (string) $page->title;
-                        $item['label_en'] = (string) ($page->title_en ?? '');
+                        // The Header/Footer editor owns the wording: saving a page
+                        // only seeds an empty label, it never overwrites a label
+                        // edited in the menu (STAGE-1 §20).
+                        if (trim((string) ($item['label_ru'] ?? '')) === '') {
+                            $item['label_ru'] = (string) $page->title;
+                        }
+                        if (trim((string) ($item['label_en'] ?? '')) === '') {
+                            $item['label_en'] = (string) ($page->title_en ?? '');
+                        }
                         $item['order'] ??= (int) $page->menu_order;
                         unset($item['visible']);
 

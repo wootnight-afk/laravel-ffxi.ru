@@ -387,6 +387,47 @@ function initGalleryLightbox() {
 }
 
 // ---------------------------------------------------------------------
+// Header offset
+// ---------------------------------------------------------------------
+// The header is fixed to the top and the page reserves its height through
+// --header-height. A hard-coded value does not hold: below 768px the navigation
+// stacks inside the header, and in English the labels change width, so the real
+// height differs from the written one and the reserved space shows as a blank
+// strip under the menu. The measured height keeps the reservation exact.
+
+function initHeaderOffset() {
+    const header = document.querySelector('body > header');
+
+    if (!header) {
+        return;
+    }
+
+    const root = document.documentElement;
+    let lastHeight = -1;
+
+    const sync = () => {
+        const height = Math.ceil(header.getBoundingClientRect().height);
+
+        if (height === 0 || height === lastHeight) {
+            return;
+        }
+
+        lastHeight = height;
+        root.style.setProperty('--header-height', `${height}px`);
+    };
+
+    sync();
+
+    if (typeof ResizeObserver === 'function') {
+        new ResizeObserver(sync).observe(header);
+
+        return;
+    }
+
+    window.addEventListener('resize', sync);
+}
+
+// ---------------------------------------------------------------------
 // Footer offset
 // ---------------------------------------------------------------------
 // The footer is fixed to the viewport bottom, but its height follows the CMS
@@ -427,6 +468,112 @@ function initFooterOffset() {
 }
 
 // ---------------------------------------------------------------------
+// Players left menu
+// ---------------------------------------------------------------------
+// The menu panel is fixed to the viewport (see .players-shell__nav-inner).
+// Its vertical bounds come from CSS: top is the real header bottom and bottom
+// is the footer height measured by initFooterOffset(). This keeps the
+// horizontal box in sync with the grid column that reserves the space, so the
+// panel follows window resizing and browser zoom without duplicating the
+// footer measurement.
+
+function initPlayersNavOffset() {
+    const shell = document.querySelector('.players-shell');
+
+    if (!shell) {
+        return;
+    }
+
+    const column = shell.querySelector('.players-shell__nav');
+    const panel = shell.querySelector('.players-shell__nav-inner');
+    const header = document.querySelector('body > header');
+
+    if (!column || !panel || !header) {
+        return;
+    }
+
+    const sync = () => {
+        const columnBox = column.getBoundingClientRect();
+        const headerBox = header.getBoundingClientRect();
+
+        panel.style.setProperty('--players-nav-top', `${Math.round(headerBox.bottom)}px`);
+        panel.style.setProperty('--players-nav-left', `${Math.round(columnBox.left)}px`);
+        panel.style.setProperty('--players-nav-width', `${Math.round(columnBox.width)}px`);
+    };
+
+    sync();
+
+    if (typeof ResizeObserver === 'function') {
+        const observer = new ResizeObserver(sync);
+
+        observer.observe(header);
+        observer.observe(column);
+    }
+
+    window.addEventListener('resize', sync);
+}
+
+// ---------------------------------------------------------------------
+// Localized file picker (STAGE-1 §18.2)
+// ---------------------------------------------------------------------
+// A native file input renders "Choose file / No file chosen" in the BROWSER
+// language, which cannot be changed from the page. The input therefore stays
+// intact (required, focusable, standard multipart submission) but is made
+// transparent over a localized button; the selected file name is printed next
+// to it. Without JavaScript the native control keeps working as before.
+
+function initFileFields() {
+    document.querySelectorAll('[data-file-field]').forEach((field) => {
+        const input = field.querySelector('[data-file-input]');
+        const name = field.querySelector('[data-file-name]');
+
+        if (!input || !name) {
+            return;
+        }
+
+        const emptyLabel = name.dataset.emptyLabel || name.textContent;
+
+        const sync = () => {
+            name.textContent = input.files && input.files.length > 0
+                ? input.files[0].name
+                : emptyLabel;
+        };
+
+        input.addEventListener('change', sync);
+        // A page restored from the bfcache keeps the input state but not the
+        // rendered name, so the label is recomputed on every restore.
+        window.addEventListener('pageshow', sync);
+        sync();
+    });
+}
+
+// ---------------------------------------------------------------------
+// Single submit
+// ---------------------------------------------------------------------
+// An upload must not be sent twice. The submit button is disabled on the
+// first submit and re-enabled when the page comes back from the bfcache;
+// the form itself is never blocked, so native validation still runs first
+// (the submit event fires only after the browser accepted the form).
+
+function initSubmitOnce() {
+    document.querySelectorAll('form[data-submit-once]').forEach((form) => {
+        const submit = form.querySelector('button[type="submit"]');
+
+        if (!submit) {
+            return;
+        }
+
+        form.addEventListener('submit', () => {
+            submit.disabled = true;
+        });
+
+        window.addEventListener('pageshow', () => {
+            submit.disabled = false;
+        });
+    });
+}
+
+// ---------------------------------------------------------------------
 // Bootstrap
 // ---------------------------------------------------------------------
 
@@ -437,7 +584,11 @@ function initPublicScripts() {
     initPhotoZoom();
     initGalleryLightbox();
     initNicknameCheck();
+    initHeaderOffset();
     initFooterOffset();
+    initPlayersNavOffset();
+    initFileFields();
+    initSubmitOnce();
 }
 
 if (document.readyState === 'loading') {

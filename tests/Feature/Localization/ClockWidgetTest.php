@@ -35,6 +35,11 @@ beforeEach(function () {
     $this->travelTo(now()->setTimezone('UTC')->setTime(12, 0, 0));
 
     Filament::setCurrentPanel(Filament::getPanel('admin'));
+
+    // Livewire::create() merges the cookies of the current request, so a format
+    // cookie left by an earlier test would leak into a 24-hour assertion. Every
+    // test starts from the documented default instead.
+    app('request')->cookies->remove(ClockWidget::FORMAT_COOKIE);
 });
 
 // ------------------------------------------------------------------

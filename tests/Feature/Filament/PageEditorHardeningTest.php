@@ -114,7 +114,7 @@ it('falls back to the russian meta description when the english one is empty', f
 // Menu synchronization (audit §2.2 / §3.2, §2.7 / §4.1)
 // ------------------------------------------------------------------
 
-it('synchronizes binding labels and collapses duplicates without renumbering the menu', function () {
+it('keeps the labels edited in the navigation editor and collapses duplicates', function () {
     $page = hardeningPage(['title' => 'Old title', 'title_en' => 'Old EN', 'show_in_menu' => true, 'menu_order' => 5]);
     $settings = app(SettingsRepository::class);
 
@@ -134,11 +134,36 @@ it('synchronizes binding labels and collapses duplicates without renumbering the
     $header = $settings->get(SiteNavigation::KEY_HEADER_ITEMS);
 
     expect($header)->toHaveCount(1)
-        ->and($header[0]['label_ru'])->toBe('New title')
-        ->and($header[0]['label_en'])->toBe('New EN')
+        // The Header/Footer editor owns the wording: saving the page re-targets
+        // the binding by ID but never overwrites a filled label (STAGE-1 §20).
+        ->and($header[0]['label_ru'])->toBe('Old title')
+        ->and($header[0]['label_en'])->toBe('Old EN')
+        ->and($header[0]['target'])->toBe((string) $page->getKey())
         // The Header/Footer editor owns the order of an existing binding.
         ->and($header[0]['order'])->toBe(40)
         ->and($header[0])->not->toHaveKey('visible');
+});
+
+it('seeds an empty binding label from the page', function () {
+    $page = hardeningPage(['title' => 'Seeded title', 'title_en' => 'Seeded EN', 'show_in_menu' => true]);
+    $settings = app(SettingsRepository::class);
+
+    $settings->set(SiteNavigation::KEY_HEADER_ITEMS, [
+        ['id' => 'empty', 'type' => 'page', 'target' => (string) $page->getKey(), 'label_ru' => '', 'label_en' => '', 'order' => 0],
+    ]);
+
+    app(PageMenuManager::class)->save($page, [
+        'title' => 'Seeded title',
+        'title_en' => 'Seeded EN',
+        'show_in_menu' => true,
+        'show_in_footer' => false,
+        'menu_order' => 0,
+    ]);
+
+    $header = $settings->get(SiteNavigation::KEY_HEADER_ITEMS);
+
+    expect($header[0]['label_ru'])->toBe('Seeded title')
+        ->and($header[0]['label_en'])->toBe('Seeded EN');
 });
 
 it('uses menu_order as the initial order of a new binding', function () {

@@ -46,6 +46,7 @@ use Spatie\Permission\Traits\HasRoles;
     'name', 'email', 'email_verified_at', 'password',
     'rank_id', 'phone', 'phone_is_public', 'avatar_path',
     'is_profile_public', 'is_gallery_public', 'race', 'main_job', 'legend', 'legend_html',
+    'legend_ru', 'legend_ru_html', 'legend_en', 'legend_en_html',
     'last_seen_at', 'last_activity_seen_at',
     'chat_banned_until', 'chat_banned_permanently', 'banned_until', 'ban_reason',
     'status', 'deletion_requested_at', 'deletion_reason', 'suspended_at', 'suspension_reason',
@@ -155,6 +156,43 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     public function messages(): HasMany
     {
         return $this->hasMany(ChatMessage::class);
+    }
+
+    /**
+     * Game characters owned by this account (ADR-012 §2.2).
+     *
+     * @return HasMany<GameCharacter, $this>
+     */
+    public function gameCharacters(): HasMany
+    {
+        return $this->hasMany(GameCharacter::class);
+    }
+
+    /**
+     * Profile description for the given interface locale.
+     *
+     * Only the requested version is returned: an empty translation is never
+     * replaced with the other language (STAGE-1 §17.3).
+     */
+    public function legendText(?string $locale): ?string
+    {
+        return match ($locale) {
+            'en' => $this->legend_en,
+            'ru' => $this->legend_ru,
+            default => null,
+        };
+    }
+
+    /**
+     * Rendered (sanitized) HTML of the profile description for the locale.
+     */
+    public function legendHtml(?string $locale): ?string
+    {
+        return match ($locale) {
+            'en' => $this->legend_en_html,
+            'ru' => $this->legend_ru_html,
+            default => null,
+        };
     }
 
     public function isAdmin(): bool

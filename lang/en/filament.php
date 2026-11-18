@@ -14,6 +14,7 @@ return [
             'cabinet' => 'Cabinet', 'cabinet_profile' => 'Cabinet: Profile', 'cabinet_social' => 'Cabinet: Social links',
             'cabinet_news' => 'Cabinet: News', 'cabinet_gallery' => 'Cabinet: Photos', 'cabinet_events' => 'Cabinet: Events',
             'cabinet_security' => 'Cabinet: Security', 'cabinet_danger' => 'Cabinet: Danger zone',
+            'cabinet_character' => 'Cabinet: character', 'my_characters' => 'My characters',
             'register' => 'Registration', 'login' => 'Sign in', 'password_request' => 'Password recovery', 'password_reset' => 'New password',
             'verification' => 'Verify email', 'mfa' => 'MFA', 'cookie' => 'Cookies', 'privacy' => 'Privacy policy', 'cms_template' => 'CMS page template',
         ],

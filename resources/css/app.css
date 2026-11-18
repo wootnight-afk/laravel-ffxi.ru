@@ -25,7 +25,13 @@
     --spacing-md: 16px;
     --spacing-lg: 32px;
     --max-width: 1000px;
-    --header-height: 76px;
+    /* Height reserved above the content for the fixed header. 56px is the real
+     * desktop height after the header logo was compacted (8px padding + 40px
+     * logo + 8px), so the reservation matches the rendered header. The value is
+     * re-measured at runtime by initHeaderOffset(), because the header grows on
+     * narrow viewports (stacked navigation) and its links change width per
+     * locale. */
+    --header-height: 56px;
     --footer-height: 100px;
 }
 
@@ -470,12 +476,15 @@ a:hover {
 }
 
 /* ------------------------------------------------------------------
-   Players section: shared shell and left menu sizing
+   Players section: shared layout, left menu, directory cards
    ------------------------------------------------------------------ */
 
-/* One page scroll for the whole section: the menu column stretches to the
- * working area and the menu card sticks below the header
- * (docs/designreview.md §11). */
+/* Каркас раздела: вертикальная навигация слева, рабочая область справа.
+ * Структура взята из docs/design/designplayersreview.html, цвета —
+ * из существующих переменных темы сайта.
+ * Прокрутка одна — общая для всей страницы, как на остальных страницах
+ * сайта. Панель меню закреплена относительно окна, поэтому при прокрутке
+ * контента остаётся на месте. */
 .players-shell {
     display: grid;
     grid-template-columns: 248px minmax(0, 1fr);
@@ -485,14 +494,28 @@ a:hover {
 
 .players-shell__nav {
     min-width: 0;
+    /* Колонка сохраняет место под закреплённую панель в общей сетке, поэтому
+     * основной контент не попадает под неё. */
     align-self: stretch;
 }
 
-/* Sticky without its own scroll container and without a height cap: a long
- * menu grows with its content and stays reachable through the page. */
+/* Панель закреплена относительно окна так же, как глобальная шапка и футер:
+ * при прокрутке контента она не перемещается. Верхняя граница совпадает с
+ * фактической нижней границей шапки, нижняя — с верхней границей футера,
+ * поэтому высота задаётся парой top/bottom, а не фиксированным значением.
+ * Точные координаты колонки и шапки выставляет initPlayersNavOffset();
+ * --footer-offset измеряет initFooterOffset().
+ * Собственной прокрутки у панели нет: при нехватке места карточка растёт по
+ * содержимому и не обрезает пункты (docs/designreview.md §11). */
 .players-shell__nav-inner {
-    position: sticky;
-    top: calc(var(--header-height) + var(--spacing-md));
+    position: fixed;
+    top: var(--players-nav-top, var(--header-height));
+    bottom: var(--footer-offset, var(--footer-height));
+    left: var(--players-nav-left, auto);
+    right: auto;
+    width: var(--players-nav-width, 248px);
+    /* Ниже шапки и футера (у них z-index 1000): панель не перекрывает их. */
+    z-index: 999;
     padding: 0;
 }
 
@@ -500,17 +523,287 @@ a:hover {
     min-width: 0;
 }
 
-/* Fills the column when the content is short and grows with the content when
- * it is long: no fixed height, so no item is clipped. */
+.players-shell__content {
+    padding: var(--spacing-md) 0;
+}
+
 .players-section-nav {
     display: flex;
     flex-direction: column;
+    /* Карточка занимает всю высоту закреплённой панели, когда содержимого
+     * меньше рабочей области; при большем содержимом растёт по нему и не
+     * обрезает пункты (docs/designreview.md §11). Высота панели определена
+     * парой top/bottom, поэтому процент разрешается. */
     min-height: 100%;
+    padding: 14px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--bg-card);
+}
+
+.players-section-nav__brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 8px 14px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 6px;
+}
+
+.players-section-nav__crest {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    border-radius: 8px;
+    background: var(--primary-color);
+    color: #fff;
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.players-section-nav__brand-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.players-section-nav__brand-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+    line-height: 1.3;
+}
+
+.players-section-nav__brand-sub {
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.players-section-nav__label {
+    padding: 14px 12px 8px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.players-section-nav__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.players-section-nav__link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.players-section-nav__link:hover {
+    background: var(--bg-light);
+    color: var(--text-main);
+    text-decoration: none;
+}
+
+.players-section-nav__icon {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    color: var(--text-muted);
+    transition: color 0.15s;
+}
+
+.players-section-nav__link:hover .players-section-nav__icon {
+    color: var(--primary-color);
+}
+
+.players-section-nav__link.is-active {
+    background: color-mix(in srgb, var(--primary-color) 12%, transparent);
+    color: var(--primary-color);
+    font-weight: 600;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary-color) 30%, transparent);
+}
+
+.players-section-nav__link.is-active .players-section-nav__icon {
+    color: var(--primary-color);
+}
+
+.players-section-nav__footer {
+    /* Футер меню прижат к низу карточки, как в образце. */
+    margin-top: auto;
+    padding: 12px 12px 2px;
+    border-top: 1px solid var(--border-color);
+}
+
+.players-section-nav__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.players-section-nav__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--primary-color);
+}
+
+.players-layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.players-layout__aside {
+    flex: 0 0 220px;
+    min-width: 220px;
+}
+
+.players-layout__content {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.players-nav__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg-card);
+}
+
+.players-nav__list li:last-child .players-nav__link {
+    border-bottom: none;
+}
+
+.players-nav__link {
+    display: block;
+    padding: 10px 16px;
+    font-size: 14px;
+    text-decoration: none;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.players-nav__link:hover {
+    background: var(--bg-light);
+}
+
+.players-nav__link.is-active {
+    background: var(--bg-light);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.players-search {
+    margin-bottom: 24px;
+}
+
+.players-search__field {
+    display: flex;
+    gap: 8px;
+    max-width: 500px;
+}
+
+.players-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.players-card {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+    background: var(--bg-card);
+}
+
+.players-card__head {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.players-card__identity {
+    min-width: 0;
+}
+
+.players-card__name {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.players-card__meta {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.players-card__rank {
+    margin-top: 4px;
+}
+
+.players-card__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.players-pagination {
+    margin-top: 32px;
+}
+
+.players-form {
+    margin-top: 12px;
+    max-width: 400px;
+}
+
+.players-card__edit {
+    margin-top: 12px;
+}
+
+.players-card__edit summary {
+    display: inline-block;
+    list-style: none;
+    cursor: pointer;
+}
+
+.players-card__edit summary::-webkit-details-marker {
+    display: none;
+}
+
+.players-card__edit form+form {
+    margin-top: 8px;
 }
 
 @media (max-width: 1023px) {
-    /* The menu becomes a horizontal strip: sticky is disabled and the card no
-     * longer stretches to the column height. */
+
+    /* На узком экране меню становится горизонтальной полосой сверху:
+     * закрепление относительно окна снимается, страница прокручивается
+     * целиком, ширина панели снова определяется сеткой. */
     .players-shell {
         grid-template-columns: 1fr;
         gap: 16px;
@@ -523,10 +816,77 @@ a:hover {
 
     .players-shell__nav-inner {
         position: static;
+        width: auto;
     }
 
+    .players-shell__content {
+        padding: 0;
+    }
+
+    /* На узком экране меню становится горизонтальной прокручиваемой полосой:
+     * навигация остаётся доступной и не вызывает переполнения страницы. */
     .players-section-nav {
         min-height: 0;
+        padding: 10px;
+    }
+
+    .players-section-nav__brand,
+    .players-section-nav__footer {
+        display: none;
+    }
+
+    .players-section-nav__label {
+        padding: 4px 4px 6px;
+    }
+
+    .players-section-nav__list {
+        flex-direction: row;
+        gap: 6px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .players-section-nav__list li {
+        flex: 0 0 auto;
+    }
+
+    .players-section-nav__link {
+        white-space: nowrap;
+        padding: 8px 12px;
+    }
+}
+
+@media (max-width: 767px) {
+    .players-layout {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .players-layout__aside {
+        flex: 1 1 auto;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .players-nav__list {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .players-nav__list li {
+        flex: 1 1 auto;
+    }
+
+    .players-nav__link {
+        border-bottom: none;
+        border-right: 1px solid var(--border-color);
+        text-align: center;
+        padding: 10px 12px;
+    }
+
+    .players-nav__list li:last-child .players-nav__link {
+        border-right: none;
     }
 }
 
@@ -1305,4 +1665,132 @@ footer {
         flex-direction: column;
         align-items: flex-start;
     }
+}
+
+/* Character page and jobs grid (STAGE-1 §4). */
+.character-page__head {
+    margin-bottom: 16px;
+}
+
+.character-page__meta {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.character-legacy {
+    margin-top: 24px;
+}
+
+.character-jobs {
+    margin: 16px 0;
+}
+
+.character-jobs__hint {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin: 0 0 8px;
+}
+
+.character-jobs__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 16px;
+}
+
+.character-jobs__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.character-jobs__row label {
+    min-width: 48px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+@media (max-width: 767px) {
+    .character-jobs__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* Localized file picker (STAGE-1 §18.2).
+   The native input stays functional (required, focus, multipart submission)
+   but is transparent and covers the localized button, so the browser never
+   renders its own "Choose file / No file chosen" strings. */
+.file-field {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+}
+
+.file-field__control {
+    position: relative;
+    display: inline-flex;
+    max-width: 100%;
+}
+
+.file-field__input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.file-field__input:focus-visible + .file-field__button {
+    outline: 2px solid var(--accent-color, #3b82f6);
+    outline-offset: 2px;
+}
+
+.file-field__button {
+    pointer-events: none;
+}
+
+.file-field__name {
+    display: block;
+    max-width: 100%;
+    font-size: 12px;
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+}
+
+/* Profile description block (STAGE-1 §17.1). */
+.profile-legend {
+    margin-bottom: 24px;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-light);
+}
+
+.profile-legend__title {
+    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+}
+
+.profile-legend__content {
+    margin: 0;
+}
+
+.profile-legend__content > :first-child {
+    margin-top: 0;
+}
+
+.profile-legend__content > :last-child {
+    margin-bottom: 0;
+}
+
+.profile-legend__empty {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 14px;
 }

@@ -18,7 +18,7 @@ it('shows dashboard to authenticated users', function () {
     $response = $this->actingAs($user)->get(route('players.dashboard'));
 
     $response->assertOk();
-    $response->assertSee('Дашборд сообщества');
+    $response->assertSee(__('site.players.overview.title'));
     $response->assertSee($user->name);
 });
 

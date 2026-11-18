@@ -232,6 +232,9 @@ final class SiteNavigation
                 continue;
             }
 
+            // Labels come from the Header/Footer editor: it owns `label_ru` and
+            // `label_en` of every item, CMS pages included. The page supplies the
+            // target and its content, never the menu wording (STAGE-1 §20).
             $label = $this->label($item);
 
             if ($label === '') {

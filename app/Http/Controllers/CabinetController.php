@@ -50,10 +50,35 @@ class CabinetController extends Controller
             'is_gallery_public' => $request->boolean('is_gallery_public'),
         ]);
 
-        $newLegend = $data['legend'] ?? null;
-        if ($newLegend !== $user->legend) {
-            $user->legend = $newLegend;
-            $user->legend_html = $newLegend ? $this->renderer->render($newLegend) : null;
+        // The two descriptions are independent: a version absent from the
+        // request keeps its current text, so editing one language never clears
+        // the other (STAGE-1 §17.3).
+        foreach (['ru', 'en'] as $locale) {
+            $key = 'legend_'.$locale;
+
+            if (! array_key_exists($key, $data)) {
+                continue;
+            }
+
+            $text = is_string($data[$key]) && trim($data[$key]) !== '' ? $data[$key] : null;
+
+            if ($text === $user->{$key}) {
+                continue;
+            }
+
+            $user->{$key} = $text;
+            $user->{$key.'_html'} = $text === null ? null : $this->renderer->render($text);
+        }
+
+        // `legend` remains the single-column fallback while the localized
+        // versions are rolled out; its behaviour is unchanged.
+        if (array_key_exists('legend', $data)) {
+            $newLegend = is_string($data['legend']) && trim($data['legend']) !== '' ? $data['legend'] : null;
+
+            if ($newLegend !== $user->legend) {
+                $user->legend = $newLegend;
+                $user->legend_html = $newLegend === null ? null : $this->renderer->render($newLegend);
+            }
         }
 
         $user->save();

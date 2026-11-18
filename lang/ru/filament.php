@@ -14,6 +14,7 @@ return [
             'cabinet' => 'Кабинет', 'cabinet_profile' => 'Кабинет: Профиль', 'cabinet_social' => 'Кабинет: Социальные сети',
             'cabinet_news' => 'Кабинет: Новости', 'cabinet_gallery' => 'Кабинет: Фото', 'cabinet_events' => 'Кабинет: События',
             'cabinet_security' => 'Кабинет: Безопасность', 'cabinet_danger' => 'Кабинет: Опасная зона',
+            'cabinet_character' => 'Кабинет: персонаж', 'my_characters' => 'Мои персонажи',
             'register' => 'Регистрация', 'login' => 'Вход', 'password_request' => 'Восстановление пароля', 'password_reset' => 'Новый пароль',
             'verification' => 'Подтверждение email', 'mfa' => 'MFA', 'cookie' => 'Cookie', 'privacy' => 'Политика ПД', 'cms_template' => 'Шаблон CMS-страницы',
         ],

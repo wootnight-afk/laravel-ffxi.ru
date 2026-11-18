@@ -52,11 +52,16 @@
             <p>Пользователь закрыл свой профиль для других игроков.</p>
         </div>
     @else
-        @if ($user->legend_html)
+        @php
+            // Only the description of the current language is published; an empty
+            // version is never replaced by the other language (STAGE-1 §18.1).
+            $playerLegend = $user->legendHtml(app()->getLocale());
+        @endphp
+        @if ($playerLegend)
             <section style="margin-bottom: 32px;">
-                <h2 class="section-title">Легенда</h2>
+                <h2 class="section-title">{{ __('site.cabinet.characters.legend.title') }}</h2>
                 <div class="content-text">
-                    {!! $user->legend_html !!}
+                    {!! $playerLegend !!}
                 </div>
             </section>
         @endif

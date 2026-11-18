@@ -5,7 +5,9 @@ use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Cabinet\CharacterController as CabinetCharacterController;
 use App\Http\Controllers\Cabinet\DangerZoneController;
+use App\Http\Controllers\Cabinet\LegacyGameDataController;
 use App\Http\Controllers\Cabinet\MfaController;
 use App\Http\Controllers\Cabinet\MyGalleryController;
 use App\Http\Controllers\Cabinet\MyGalleryPhotoController;
@@ -96,6 +98,15 @@ Route::middleware('section.access:events')->group(function () {
 Route::middleware(['auth', 'section.access:players', 'mfa.required'])->group(function () {
     Route::get('/players', [PlayerController::class, 'dashboard'])->name('players.dashboard');
     Route::get('/players/directory', [PlayerController::class, 'directory'])->name('players.directory');
+
+    // Character management lives in the cabinet (STAGE-1 §2.1). The old URL is
+    // kept as an alias for bookmarks: a temporary 302, not a permanent 301,
+    // so the decision stays reversible. It inherits the same middleware group
+    // as before, therefore access is neither widened nor narrowed, and the
+    // query string is preserved.
+    Route::get('/players/characters', function () {
+        return redirect()->route('cabinet.characters.index', request()->query());
+    })->name('players.characters.index');
 });
 
 Route::get('/activity', [ActivityController::class, 'index'])
@@ -130,6 +141,36 @@ Route::post('/players/{user:name}/gallery/{album:slug}/{photo}/comments', [Photo
 Route::middleware('auth')->prefix('cabinet')->name('cabinet.')->group(function () {
     // Reading — any authenticated user (frontend-spec §3.2).
     Route::get('/', [CabinetController::class, 'show'])->name('show');
+
+    // Characters (STAGE-1 §2.1). Registered before the {tab} catch-all and not
+    // listed in CabinetController::TABS: the page has its own controller and a
+    // second nesting level. The access matrix is the same as it was on
+    // /players/characters: section + MFA for reading, verified for writing.
+    Route::middleware(['section.access:players', 'mfa.required'])->group(function () {
+        Route::get('/characters', [CabinetCharacterController::class, 'index'])
+            ->name('characters.index');
+        Route::get('/characters/{character}', [CabinetCharacterController::class, 'show'])
+            ->whereNumber('character')
+            ->name('characters.show');
+
+        Route::middleware('verified')->group(function () {
+            Route::post('/characters', [CabinetCharacterController::class, 'store'])
+                ->middleware('throttle:20,60')
+                ->name('characters.store');
+            Route::put('/characters/{character}', [CabinetCharacterController::class, 'update'])
+                ->whereNumber('character')
+                ->middleware('throttle:20,60')
+                ->name('characters.update');
+            Route::delete('/characters/{character}', [CabinetCharacterController::class, 'destroy'])
+                ->whereNumber('character')
+                ->middleware('throttle:10,60')
+                ->name('characters.destroy');
+            Route::post('/characters/legacy-data', [LegacyGameDataController::class, 'store'])
+                ->middleware('throttle:10,60')
+                ->name('characters.legacy.store');
+        });
+    });
+
     Route::get('/{tab}', [CabinetController::class, 'show'])
         ->whereIn('tab', CabinetController::TABS)
         ->name('tab');

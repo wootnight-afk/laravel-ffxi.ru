@@ -21,15 +21,29 @@
                 method="POST"
                 action="{{ route('cabinet.avatar.upload') }}"
                 enctype="multipart/form-data"
+                data-submit-once
             >
                 @csrf
-                <input
-                    type="file"
-                    name="avatar"
-                    accept="image/jpeg,image/png,image/webp"
-                    required
-                    style="font-size: 12px;"
-                >
+                <div class="file-field" data-file-field>
+                    <div class="file-field__control">
+                        <input
+                            type="file"
+                            id="avatar"
+                            name="avatar"
+                            accept="image/jpeg,image/png,image/webp"
+                            required
+                            class="file-field__input"
+                            aria-label="{{ __('site.cabinet.profile.file_choose') }}"
+                            data-file-input
+                        >
+                        <span class="btn file-field__button" aria-hidden="true">{{ __('site.cabinet.profile.file_choose') }}</span>
+                    </div>
+                    <span
+                        class="file-field__name"
+                        data-file-name
+                        data-empty-label="{{ __('site.cabinet.profile.file_none') }}"
+                    >{{ __('site.cabinet.profile.file_none') }}</span>
+                </div>
                 <button type="submit" class="btn" style="margin-top: 6px; font-size: 13px;">{{ __('site.cabinet.profile.upload') }}</button>
             </form>
 
@@ -50,8 +64,20 @@
         </div>
     </div>
 
-    <div style="flex: 1; min-width: 240px;">
+    <div style="flex: 1; min-width: min(240px, 100%);">
         <h2 class="section-title" style="margin-top: 0;">{{ __('site.cabinet.tabs.profile') }}</h2>
+
+        @php
+            $profileLegend = $user->legendHtml(app()->getLocale());
+        @endphp
+        <div class="profile-legend">
+            <h3 class="profile-legend__title">{{ __('site.cabinet.profile.legend_block_title') }}</h3>
+            @if ($profileLegend)
+                <div class="content-text profile-legend__content">{!! $profileLegend !!}</div>
+            @else
+                <p class="profile-legend__empty">{{ __('site.cabinet.profile.legend_block_empty') }}</p>
+            @endif
+        </div>
 
         <form method="POST" action="{{ route('cabinet.profile.update') }}">
             @csrf
@@ -82,21 +108,29 @@
                 @error('main_job') <div class="form-error">{{ $message }}</div> @enderror
             </div>
 
+            @php
+                // Only the version of the interface language is edited; the other
+                // version is kept in the database and is never touched by the form
+                // (STAGE-1 §18.1).
+                $legendLocale = app()->getLocale() === 'en' ? 'en' : 'ru';
+                $legendValue = $legendLocale === 'en' ? $user->legend_en : $user->legend_ru;
+            @endphp
+
             <div class="form-group" style="max-width: 100%;">
-                <label for="legend">{{ __('site.cabinet.profile.legend') }}</label>
+                <label for="legend">{{ __('site.cabinet.profile.legend_'.$legendLocale) }}</label>
                 <textarea
                     id="legend"
-                    name="legend"
+                    name="legend_{{ $legendLocale }}"
                     class="form-control"
                     rows="8"
                     maxlength="4000"
                     placeholder="{{ __('site.cabinet.profile.legend_placeholder') }}"
                     style="resize: vertical;"
-                >{{ old('legend', $user->legend) }}</textarea>
+                >{{ old('legend_'.$legendLocale, $legendValue) }}</textarea>
                 <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
                     {{ __('site.cabinet.profile.markdown_hint') }}
                 </div>
-                @error('legend') <div class="form-error">{{ $message }}</div> @enderror
+                @error('legend_'.$legendLocale) <div class="form-error">{{ $message }}</div> @enderror
             </div>
 
             <div class="form-group">
@@ -153,7 +187,7 @@
             @endphp
 
             <div style="display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start;">
-                <form method="POST" action="{{ route('cabinet.preferences.locale') }}" style="flex: 1; min-width: 240px;">
+                <form method="POST" action="{{ route('cabinet.preferences.locale') }}" style="flex: 1; min-width: min(240px, 100%);">
                     @csrf
 
                     <div class="form-group">
@@ -178,7 +212,7 @@
                     <button type="submit" class="btn">{{ __('site.cabinet.profile.locale_save') }}</button>
                 </form>
 
-                <form method="POST" action="{{ route('cabinet.preferences.timezone') }}" style="flex: 1; min-width: 280px;">
+                <form method="POST" action="{{ route('cabinet.preferences.timezone') }}" style="flex: 1; min-width: min(280px, 100%);">
                     @csrf
 
                     <div class="form-group">
