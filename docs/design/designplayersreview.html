@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FFXI Community — Дашборд</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e1a;
+    --bg-elev:#131a2e;
+    --bg-card:#161c2e;
+    --bg-card-2:#1a2238;
+    --bg-sidebar:#0c1120;
+    --bg-sidebar-hover:#161e36;
+    --border:#2a3148;
+    --border-soft:#1f263c;
+    --text:#e8eaf0;
+    --text-dim:#8b94b0;
+    --text-faint:#5a6378;
+    --gold:#d4a955;
+    --gold-bright:#f5d28a;
+    --gold-glow:rgba(212,169,85,.18);
+    --gold-deep:#8a6a2a;
+    --accent-blue:#4a90e2;
+    --accent-green:#5cb85c;
+    --accent-purple:#9b6dff;
+    --danger:#e74c3c;
+    --shadow:0 6px 28px rgba(0,0,0,.45);
+    --shadow-soft:0 2px 12px rgba(0,0,0,.3);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(155,109,255,.06), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(212,169,85,.05), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  button{font-family:inherit;color:inherit;cursor:pointer;background:none;border:none}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:6px;border:2px solid transparent;background-clip:padding-box}
+  ::-webkit-scrollbar-thumb:hover{background:#3a445e}
+
+  /* ===== LAYOUT ===== */
+  .app{
+    display:grid;
+    grid-template-columns:248px 1fr;
+    grid-template-rows:68px 1fr;
+    grid-template-areas:
+      "sidebar header"
+      "sidebar main";
+    height:100vh;
+  }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar{
+    grid-area:sidebar;
+    background:linear-gradient(180deg,var(--bg-sidebar) 0%,#080c18 100%);
+    border-right:1px solid var(--border-soft);
+    display:flex;flex-direction:column;
+    padding:18px 14px;
+    position:relative;
+    z-index:5;
+  }
+  .sidebar::after{
+    content:"";position:absolute;top:0;right:0;bottom:0;width:1px;
+    background:linear-gradient(180deg,transparent,var(--gold-deep) 40%,var(--gold-deep) 60%,transparent);
+    opacity:.35;
+  }
+  .brand{
+    display:flex;align-items:center;gap:12px;
+    padding:6px 8px 18px;
+    border-bottom:1px solid var(--border-soft);
+    margin-bottom:14px;
+  }
+  .brand__crest{
+    width:36px;height:36px;border-radius:8px;
+    background:radial-gradient(circle at 30% 30%, var(--gold-bright), var(--gold) 50%, #6b4f1a 100%);
+    box-shadow:0 0 18px var(--gold-glow), inset 0 0 8px rgba(0,0,0,.4);
+    display:grid;place-items:center;
+    font-family:'Cinzel',serif;font-weight:700;color:#1a1206;font-size:18px;
+  }
+  .brand__name{
+    font-family:'Cinzel',serif;font-weight:600;letter-spacing:.5px;font-size:15px;
+    color:var(--text);
+  }
+  .brand__sub{font-size:10px;color:var(--text-faint);letter-spacing:1.2px;text-transform:uppercase;margin-top:1px}
+
+  .nav-label{
+    font-size:10px;letter-spacing:1.6px;text-transform:uppercase;
+    color:var(--text-faint);padding:14px 12px 8px;font-weight:600;
+  }
+  .nav{display:flex;flex-direction:column;gap:2px}
+  .nav__item{
+    display:flex;align-items:center;gap:12px;
+    padding:11px 12px;border-radius:8px;
+    color:var(--text-dim);font-size:14px;font-weight:500;
+    cursor:pointer;transition:background .15s,color .15s,box-shadow .2s;
+    position:relative;
+    width:100%;text-align:left;
+  }
+  .nav__item:hover{background:var(--bg-sidebar-hover);color:var(--text)}
+  .nav__item .ic{
+    width:18px;height:18px;flex:0 0 18px;
+    color:var(--text-faint);transition:color .15s;
+  }
+  .nav__item:hover .ic{color:var(--gold)}
+  .nav__item.is-active{
+    background:linear-gradient(90deg, rgba(212,169,85,.14), rgba(212,169,85,.04));
+    color:var(--gold-bright);
+    box-shadow:inset 0 0 0 1px rgba(212,169,85,.25);
+  }
+  .nav__item.is-active .ic{color:var(--gold)}
+  .nav__item.is-active::before{
+    content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;
+    background:linear-gradient(180deg,var(--gold-bright),var(--gold));
+    border-radius:0 3px 3px 0;
+    box-shadow:0 0 8px var(--gold-glow);
+  }
+  .nav__badge{
+    margin-left:auto;font-size:10px;font-weight:600;
+    background:rgba(212,169,85,.15);color:var(--gold-bright);
+    padding:2px 7px;border-radius:10px;letter-spacing:.4px;
+  }
+
+  .sidebar__footer{
+    margin-top:auto;padding:14px 12px 4px;
+    border-top:1px solid var(--border-soft);
+    font-size:11px;color:var(--text-faint);
+    display:flex;flex-direction:column;gap:6px;
+  }
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:11px;color:var(--text-dim);
+  }
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:var(--accent-green);box-shadow:0 0 6px var(--accent-green)}
+
+  /* ===== HEADER ===== */
+  .header{
+    grid-area:header;
+    background:linear-gradient(180deg, rgba(19,26,46,.7), rgba(19,26,46,.4));
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border-soft);
+    display:flex;align-items:center;
+    padding:0 28px;gap:18px;
+    position:relative;z-index:4;
+  }
+  .header__crumbs{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-dim)}
+  .header__crumbs .sep{color:var(--text-faint)}
+  .header__crumbs .cur{color:var(--text);font-weight:500}
+  .header__right{margin-left:auto;display:flex;align-items:center;gap:18px}
+  .iconbtn{
+    width:38px;height:38px;border-radius:9px;
+    background:var(--bg-card);border:1px solid var(--border-soft);
+    display:grid;place-items:center;color:var(--text-dim);
+    transition:background .15s,color .15s,border-color .15s;
+    position:relative;
+  }
+  .iconbtn:hover{background:var(--bg-card-2);color:var(--text);border-color:var(--border)}
+  .iconbtn .ic{width:18px;height:18px}
+  .iconbtn .ind{
+    position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;
+    background:var(--gold);box-shadow:0 0 6px var(--gold-glow);border:1.5px solid var(--bg-sidebar);
+  }
+
+  .greeting{
+    display:flex;align-items:center;gap:10px;
+    padding:6px 12px 6px 6px;
+    background:linear-gradient(90deg, rgba(212,169,85,.10), rgba(212,169,85,.02));
+    border:1px solid rgba(212,169,85,.25);
+    border-radius:30px;
+  }
+  .greeting__avatar{
+    width:30px;height:30px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--gold-bright), var(--gold) 55%, #5e4416 100%);
+    display:grid;place-items:center;
+    font-family:'Cinzel',serif;font-weight:700;color:#1a1206;font-size:14px;
+    box-shadow:0 0 10px var(--gold-glow);
+  }
+  .greeting__txt{font-size:13px;color:var(--text)}
+  .greeting__txt b{color:var(--gold-bright);font-weight:600}
+
+  /* ===== MAIN ===== */
+  .main{
+    grid-area:main;
+    overflow-y:auto;
+    padding:26px 32px 40px;
+    position:relative;
+  }
+  .page-title{
+    font-family:'Cinzel',serif;font-weight:600;font-size:22px;
+    margin-bottom:4px;color:var(--text);
+    letter-spacing:.4px;
+  }
+  .page-sub{font-size:13px;color:var(--text-dim);margin-bottom:22px}
+
+  /* ===== VANADIEL CLOCK CARD ===== */
+  .vcard{
+    background:
+      radial-gradient(800px 280px at 50% -20%, rgba(155,109,255,.10), transparent 70%),
+      radial-gradient(600px 240px at 50% 120%, rgba(212,169,85,.08), transparent 70%),
+      linear-gradient(180deg, var(--bg-card) 0%, var(--bg-card-2) 100%);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:36px 36px 30px;
+    position:relative;
+    overflow:hidden;
+    box-shadow:var(--shadow);
+    margin:0 auto;
+    max-width:760px;
+  }
+  .vcard::before{
+    content:"";position:absolute;inset:0;
+    background:
+      linear-gradient(180deg, transparent 60%, rgba(0,0,0,.25));
+    pointer-events:none;
+  }
+  .vcard__corner{
+    position:absolute;width:34px;height:34px;
+    border:1px solid var(--gold);opacity:.45;
+  }
+  .vcard__corner.tl{top:10px;left:10px;border-right:none;border-bottom:none}
+  .vcard__corner.tr{top:10px;right:10px;border-left:none;border-bottom:none}
+  .vcard__corner.bl{bottom:10px;left:10px;border-right:none;border-top:none}
+  .vcard__corner.br{bottom:10px;right:10px;border-left:none;border-top:none}
+
+  .vcard__head{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .vcard__title{
+    font-family:'Cinzel',serif;font-weight:500;font-size:13px;
+    letter-spacing:2px;text-transform:uppercase;
+    color:var(--gold);
+  }
+  .vcard__sync{
+    display:flex;align-items:center;gap:6px;
+    font-size:11px;color:var(--text-faint);
+    font-family:'JetBrains Mono',monospace;
+  }
+  .vcard__sync .dot{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--accent-green);box-shadow:0 0 6px var(--accent-green);
+    animation:pulse 2s ease-in-out infinite;
+  }
+  .vcard__sync.offline .dot{background:var(--text-faint);box-shadow:none;animation:none}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  .vclock{
+    text-align:center;
+    position:relative;
+    padding:8px 0 4px;
+  }
+  .vclock__time{
+    font-family:'Cinzel',serif;
+    font-weight:600;
+    font-size:96px;
+    line-height:1;
+    letter-spacing:2px;
+    background:linear-gradient(180deg, #fff 0%, var(--gold-bright) 55%, var(--gold) 100%);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;
+    text-shadow:0 0 40px rgba(212,169,85,.18);
+    display:inline-flex;align-items:baseline;justify-content:center;
+    gap:0;
+  }
+  .vclock__sec{
+    font-family:'JetBrains Mono',monospace;
+    font-size:28px;font-weight:500;
+    color:var(--text-dim);
+    margin-left:10px;
+    letter-spacing:0;
+    -webkit-text-fill-color:var(--text-dim);
+  }
+  .vclock__date{
+    margin-top:10px;
+    font-family:'Cinzel',serif;font-weight:500;font-size:18px;
+    color:var(--text);
+    letter-spacing:.6px;
+  }
+  .vclock__date .weekday{color:var(--gold-bright)}
+  .vclock__date .sep{color:var(--text-faint);margin:0 6px}
+
+  .vrow{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:14px;
+    margin-top:28px;
+  }
+  .vcell{
+    background:rgba(10,14,26,.55);
+    border:1px solid var(--border-soft);
+    border-radius:10px;
+    padding:14px 16px;
+    text-align:left;
+  }
+  .vcell__label{
+    font-size:10px;letter-spacing:1.4px;text-transform:uppercase;
+    color:var(--text-faint);font-weight:600;
+    display:flex;align-items:center;gap:6px;margin-bottom:8px;
+  }
+  .vcell__label .ic{width:13px;height:13px;color:var(--gold)}
+  .vcell__val{
+    font-size:16px;font-weight:600;color:var(--text);
+    font-family:'Cinzel',serif;letter-spacing:.3px;
+  }
+  .vcell__sub{font-size:11px;color:var(--text-dim);margin-top:2px;font-family:'JetBrains Mono',monospace}
+
+  .moonbar{
+    margin-top:8px;height:6px;border-radius:4px;
+    background:rgba(255,255,255,.06);overflow:hidden;
+    position:relative;
+  }
+  .moonbar__fill{
+    height:100%;border-radius:4px;
+    background:linear-gradient(90deg, #6b7290 0%, #c9cfe0 60%, #f5f5fa 100%);
+    transition:width .6s ease;
+    box-shadow:0 0 8px rgba(245,245,250,.25);
+  }
+
+  .daynight{
+    display:flex;align-items:center;gap:10px;
+    font-size:14px;color:var(--text);
+  }
+  .daynight .badge{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:4px 10px;border-radius:14px;font-size:12px;font-weight:600;
+    letter-spacing:.4px;
+  }
+  .daynight .badge.night{
+    background:rgba(91,114,184,.18);color:#a9c0ff;
+    border:1px solid rgba(91,114,184,.3);
+  }
+  .daynight .badge.day{
+    background:rgba(245,210,138,.16);color:var(--gold-bright);
+    border:1px solid rgba(212,169,85,.3);
+  }
+
+  .countdown{
+    font-family:'JetBrains Mono',monospace;
+    font-size:14px;color:var(--gold-bright);
+    font-weight:600;letter-spacing:1px;
+  }
+  .countdown .lbl{color:var(--text-dim);font-weight:500;margin-left:4px;font-size:11px}
+
+  /* next weekday cycle strip */
+  .cycle{
+    margin-top:22px;padding-top:18px;
+    border-top:1px solid var(--border-soft);
+  }
+  .cycle__title{
+    font-size:10px;letter-spacing:1.4px;text-transform:uppercase;
+    color:var(--text-faint);font-weight:600;margin-bottom:10px;
+  }
+  .cycle__strip{display:flex;gap:6px;flex-wrap:wrap}
+  .cycle__chip{
+    display:flex;flex-direction:column;align-items:center;
+    padding:8px 10px;border-radius:8px;min-width:62px;
+    background:rgba(255,255,255,.025);
+    border:1px solid var(--border-soft);
+    transition:background .15s,border-color .15s;
+  }
+  .cycle__chip .nm{font-size:10px;color:var(--text-dim);margin-bottom:3px;letter-spacing:.3px}
+  .cycle__chip .in{font-size:10px;color:var(--gold);font-family:'JetBrains Mono',monospace;font-weight:600}
+  .cycle__chip.is-today{
+    background:linear-gradient(180deg, rgba(212,169,85,.16), rgba(212,169,85,.04));
+    border-color:rgba(212,169,85,.35);
+  }
+  .cycle__chip.is-today .nm{color:var(--gold-bright)}
+  .cycle__chip.is-today .in{color:var(--gold-bright)}
+
+  /* placeholder for upcoming sections */
+  .placeholder{
+    border:1px dashed var(--border);
+    border-radius:14px;
+    padding:48px 24px;
+    text-align:center;
+    color:var(--text-dim);
+    background:rgba(255,255,255,.015);
+  }
+  .placeholder .ic{width:42px;height:42px;color:var(--text-faint);margin-bottom:12px}
+  .placeholder h3{font-family:'Cinzel',serif;font-weight:500;font-size:18px;color:var(--text);margin-bottom:6px}
+  .placeholder p{font-size:13px;max-width:420px;margin:0 auto;line-height:1.6}
+
+  .hidden{display:none !important}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============== SIDEBAR ============== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand__crest">F</div>
+      <div>
+        <div class="brand__name">FFXI Community</div>
+        <div class="brand__sub">Vana'diel Hub</div>
+      </div>
+    </div>
+
+    <div class="nav-label">Навигация</div>
+    <nav class="nav" id="nav">
+      <button class="nav__item is-active" data-target="dashboard">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        Дашборд
+      </button>
+      <button class="nav__item" data-target="players">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Игроки
+        <span class="nav__badge">128</span>
+      </button>
+      <button class="nav__item" data-target="news">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8z"/></svg>
+        Новости Игроков
+      </button>
+      <button class="nav__item" data-target="events">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M2.5 22v-6h6"/><path d="M2 11.5a10 10 0 0 1 18.8-4.3"/><path d="M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+        События игроков
+      </button>
+      <button class="nav__item" data-target="gallery">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.5-3.5a2 2 0 0 0-2.8 0L6 21"/></svg>
+        Галереи игроков
+      </button>
+    </nav>
+
+    <div class="sidebar__footer">
+      <span class="pill"><span class="dot"></span> Сервер: Bahamut</span>
+      <span class="pill" style="opacity:.7">v0.1 · prototype</span>
+    </div>
+  </aside>
+
+  <!-- ============== HEADER ============== -->
+  <header class="header">
+    <div class="header__crumbs">
+      <span>Сообщество</span>
+      <span class="sep">/</span>
+      <span class="cur" id="crumb-current">Дашборд</span>
+    </div>
+
+    <div class="header__right">
+      <button class="iconbtn" title="Поиск" aria-label="Поиск">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      </button>
+      <button class="iconbtn" title="Уведомления" aria-label="Уведомления">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        <span class="ind"></span>
+      </button>
+      <button class="iconbtn" title="Настройки" aria-label="Настройки">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+
+      <div class="greeting" title="Ваш профиль">
+        <div class="greeting__avatar">D</div>
+        <div class="greeting__txt">Привет, <b>Denso</b></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============== MAIN ============== -->
+  <main class="main">
+
+    <!-- ===== DASHBOARD ===== -->
+    <section id="view-dashboard">
+      <h1 class="page-title">Дашборд</h1>
+      <p class="page-sub">Обзор игрового мира Вана'диэль и вашей активности в сообществе</p>
+
+      <div class="vcard" id="vanadiel-card">
+        <span class="vcard__corner tl"></span>
+        <span class="vcard__corner tr"></span>
+        <span class="vcard__corner bl"></span>
+        <span class="vcard__corner br"></span>
+
+        <div class="vcard__head">
+          <div class="vcard__title">Vana'diel Clock</div>
+          <div class="vcard__sync" id="sync-indicator">
+            <span class="dot"></span>
+            <span id="sync-text">Синхронизация…</span>
+          </div>
+        </div>
+
+        <div class="vclock">
+          <div class="vclock__time">
+            <span id="vana-time">--:--</span>
+            <span class="vclock__sec" id="vana-sec">:--</span>
+          </div>
+          <div class="vclock__date">
+            <span class="weekday" id="vana-weekday">—</span>
+            <span class="sep">•</span>
+            <span id="vana-date">—</span>
+          </div>
+        </div>
+
+        <div class="vrow">
+          <!-- moon -->
+          <div class="vcell">
+            <div class="vcell__label">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg>
+              Луна
+            </div>
+            <div class="vcell__val" id="moon-phase">—</div>
+            <div class="vcell__sub" id="moon-pct">—%</div>
+            <div class="moonbar"><div class="moonbar__fill" id="moon-fill" style="width:0%"></div></div>
+          </div>
+
+          <!-- day / night -->
+          <div class="vcell">
+            <div class="vcell__label">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+              Время суток
+            </div>
+            <div class="daynight">
+              <span class="badge night" id="dn-badge">Ночь</span>
+              <span class="vcell__sub" id="dn-sub" style="margin:0">—</span>
+            </div>
+          </div>
+
+          <!-- next day countdown -->
+          <div class="vcell">
+            <div class="vcell__label">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              До след. дня
+            </div>
+            <div class="countdown" id="countdown">--:--<span class="lbl">мин</span></div>
+            <div class="vcell__sub" id="next-weekday">след. —</div>
+          </div>
+        </div>
+
+        <!-- weekly element cycle -->
+        <div class="cycle">
+          <div class="cycle__title">Цикл дней недели · ближайшие 8</div>
+          <div class="cycle__strip" id="cycle-strip"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== PLACEHOLDERS ===== -->
+    <section id="view-players" class="hidden">
+      <h1 class="page-title">Игроки</h1>
+      <p class="page-sub">Каталог участников сообщества</p>
+      <div class="placeholder">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <h3>Раздел в разработке</h3>
+        <p>Здесь появится каталог игроков сообщества: профили, уровни, сервера, ссылки на новости и галереи. Скоро заполним.</p>
+      </div>
+    </section>
+
+    <section id="view-news" class="hidden">
+      <h1 class="page-title">Новости Игроков</h1>
+      <p class="page-sub">Лента публикаций от участников сообщества</p>
+      <div class="placeholder">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/></svg>
+        <h3>Раздел в разработке</h3>
+        <p>Сюда выведем ленту новостей и анонсов от игроков: успехи, ивенты, рекорды, гильдийские сводки.</p>
+      </div>
+    </section>
+
+    <section id="view-events" class="hidden">
+      <h1 class="page-title">События игроков</h1>
+      <p class="page-sub">Календарь ивентов, рейдов и встреч сообщества</p>
+      <div class="placeholder">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <h3>Раздел в разработке</h3>
+        <p>Тут будет календарь событий сообщества: Dynamis, Limbus, гильдийские рейды и встречи.</p>
+      </div>
+    </section>
+
+    <section id="view-gallery" class="hidden">
+      <h1 class="page-title">Галереи игроков</h1>
+      <p class="page-sub">Скриншоты, арт и моменты из Вана'диэля</p>
+      <div class="placeholder">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.5-3.5a2 2 0 0 0-2.8 0L6 21"/></svg>
+        <h3>Раздел в разработке</h3>
+        <p>Здесь соберём галереи игроков: скриншоты побед, пейзажи Вана'диэля, портреты персонажей.</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+/* =====================================================================
+   FFXI Community — Vana'diel clock controller
+   Strategy:
+     1) Try a direct fetch to the public API (works if same-origin or
+        the API ever opens CORS).
+     2) If that fails, fall back to a CORS proxy.
+     3) If everything fails, compute locally from an embedded anchor
+        snapshot taken from a real API call.
+   In all cases the displayed clock keeps ticking at the Vana'diel
+   ratio (1 real second = 25 Vana'diel seconds) using a high-res timer.
+   ===================================================================== */
+
+const API = 'https://vana-time.com/api/v1/time/vanadiel';
+const PROXIES = [
+  (u) => 'https://corsproxy.io/?url=' + encodeURIComponent(u),
+  (u) => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+  (u) => 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(u),
+];
+
+// --- Anchor snapshot captured from a live API response ---
+// real_time_ms  <->  vana_seconds_since_epoch (year 1 / day 1 / 00:00:00)
+const ANCHOR = {
+  realMs: Date.parse('2026-11-11T13:49:54.782Z'),     // 1762874994782
+  vanaSec: 47141894869,                               // Darksday 14/8/1516, 18:47:49
+  weekday: 'Darksday', moon_phase: 'Waning Gibbous', moon_percent: 79,
+  is_daytime: false, seconds_until_next_day: 18731
+};
+
+const RATIO = 25; // 1 real second = 25 Vana'diel seconds
+
+const WEEKDAYS = [
+  'Firesday','Earthsday','Watersday','Windsday',
+  'Iceday','Lightningday','Lightsday','Darksday'
+];
+const WEEKDAYS_RU = {
+  Firesday:'День Огня', Earthsday:'День Земли', Watersday:'День Воды',
+  Windsday:'День Ветра', Iceday:'День Льда', Lightningday:'День Молнии',
+  Lightsday:'День Света', Darksday:'День Тьмы'
+};
+const MOON_RU = {
+  'New Moon':'Новолуние',
+  'Waxing Crescent':'Растущий серп',
+  'First Quarter':'Первая четверть',
+  'Waxing Gibbous':'Растущая Луна',
+  'Full Moon':'Полнолуние',
+  'Waning Gibbous':'Убывающая Луна',
+  'Last Quarter':'Последняя четверть',
+  'Waning Crescent':'Убывающий серп'
+};
+
+// Vana'diel calendar math: 1 year = 12 months * 30 days, weeks = 8 days
+// Day 1/1/1 is Firesday.
+function vanaTotalToParts(totalSec){
+  const totalDays = Math.floor(totalSec / 86400);
+  const daySec = totalSec - totalDays * 86400;
+  const hours = Math.floor(daySec / 3600);
+  const minutes = Math.floor((daySec % 3600) / 60);
+  const seconds = Math.floor(daySec % 60);
+
+  const year = Math.floor(totalDays / 360) + 1;
+  const dayOfYear = totalDays % 360;            // 0..359
+  const month = Math.floor(dayOfYear / 30) + 1; // 1..12
+  const day = (dayOfYear % 30) + 1;             // 1..30
+  const weekdayIdx = ((totalDays % 8) + 8) % 8; // 0=Firesday
+
+  const secondsUntilNextDay = 86400 - daySec;
+
+  return { hours, minutes, seconds, day, month, year,
+           weekdayIdx, weekday: WEEKDAYS[weekdayIdx],
+           secondsUntilNextDay,
+           vanaDayTotal: totalDays };
+}
+
+// Approximate moon phase from Vana'diel day index.
+// FFXI moon cycle = 84 Vana'diel days. New Moon anchored at day 0.
+function moonFromDay(dayTotal){
+  const CYCLE = 84;
+  const phase = ((dayTotal % CYCLE) + CYCLE) % CYCLE; // 0..83
+  // moon percent: 0 at phase 0, 100 at phase 42 (full moon), back to 0 at phase 84
+  let pct;
+  if (phase <= 42) pct = Math.round((phase / 42) * 100);
+  else             pct = Math.round(((84 - phase) / 42) * 100);
+
+  // waxing (0->100) on first half, waning on second
+  const waxing = phase <= 42;
+  let name;
+  if (pct === 0)   name = 'New Moon';
+  else if (pct === 100) name = 'Full Moon';
+  else if (waxing && pct < 50)  name = 'Waxing Crescent';
+  else if (waxing && pct === 50) name = 'First Quarter';
+  else if (waxing && pct > 50)  name = 'Waxing Gibbous';
+  else if (!waxing && pct > 50) name = 'Waning Gibbous';
+  else if (!waxing && pct === 50) name = 'Last Quarter';
+  else if (!waxing && pct < 50)  name = 'Waning Crescent';
+  return { name, percent: pct };
+}
+
+// State
+let lastSync = null;        // {realMs, vanaSec, moon_phase, moon_percent, is_daytime, weekday, nextWeekday}
+let syncMode = 'pending';   // 'live' | 'proxy' | 'local' | 'error'
+let cycleData = null;       // array of {name, offset_days}
+
+function fmt2(n){ return String(n).padStart(2,'0'); }
+
+function fmtTime(parts){
+  return fmt2(parts.hours) + ':' + fmt2(parts.minutes);
+}
+function fmtDate(parts){
+  return parts.day + '/' + parts.month + '/' + parts.year;
+}
+
+function realToVanaSec(realMs){
+  const deltaMs = realMs - ANCHOR.realMs;
+  const deltaSec = deltaMs / 1000 * RATIO;
+  return ANCHOR.vanaSec + deltaSec;
+}
+
+function applySnapshot(snap){
+  lastSync = snap;
+  render();
+}
+
+function buildSnapFromLocal(){
+  const nowMs = Date.now();
+  const vanaSec = realToVanaSec(nowMs);
+  const parts = vanaTotalToParts(vanaSec);
+  const moon = moonFromDay(parts.vanaDayTotal);
+  return {
+    realMs: nowMs,
+    vanaSec,
+    hours: parts.hours, minutes: parts.minutes, seconds: parts.seconds,
+    day: parts.day, month: parts.month, year: parts.year,
+    weekday: parts.weekday,
+    seconds_until_next_day: parts.secondsUntilNextDay,
+    moon_phase: moon.name,
+    moon_percent: moon.percent,
+    is_daytime: (parts.hours >= 6 && parts.hours < 18),
+    source: 'local'
+  };
+}
+
+function buildSnapFromApi(data){
+  // API: { formatted_time, hours, minutes, seconds, formatted_date, weekday,
+  //        day, month, year, moon_phase, moon_percent, is_daytime,
+  //        seconds_until_next_day, real_time, next_weekday_cycle? }
+  const realMs = Date.parse(data.real_time) || Date.now();
+  // recompute total vana seconds for accurate local progression
+  const totalDays = (data.year - 1) * 360 + (data.month - 1) * 30 + (data.day - 1);
+  const vanaSec = totalDays * 86400 + data.hours * 3600 + data.minutes * 60 + data.seconds;
+  return {
+    realMs, vanaSec,
+    hours: data.hours, minutes: data.minutes, seconds: data.seconds,
+    day: data.day, month: data.month, year: data.year,
+    weekday: data.weekday,
+    seconds_until_next_day: data.seconds_until_next_day,
+    moon_phase: data.moon_phase,
+    moon_percent: data.moon_percent,
+    is_daytime: data.is_daytime,
+    cycle: data.next_weekday_cycle || null,
+    source: 'api'
+  };
+}
+
+async function tryFetch(){
+  // 1) direct
+  try {
+    const r = await fetch(API, { cache: 'no-store' });
+    if (r.ok) {
+      const j = await r.json();
+      if (j && j.ok && j.data) {
+        syncMode = 'live';
+        return buildSnapFromApi(j.data);
+      }
+    }
+  } catch(e) { /* fallthrough */ }
+
+  // 2) proxies
+  for (const wrap of PROXIES){
+    try {
+      const r = await fetch(wrap(API), { cache:'no-store' });
+      if (r.ok){
+        const txt = await r.text();
+        const j = JSON.parse(txt);
+        if (j && j.ok && j.data){
+          syncMode = 'proxy';
+          return buildSnapFromApi(j.data);
+        }
+      }
+    } catch(e) { /* try next */ }
+  }
+
+  // 3) local fallback
+  syncMode = 'local';
+  return buildSnapFromLocal();
+}
+
+function pad2(n){return String(n).padStart(2,'0');}
+
+function vanaSecAtNow(){
+  if (!lastSync) return realToVanaSec(Date.now());
+  const deltaMs = Date.now() - lastSync.realMs;
+  return lastSync.vanaSec + (deltaMs / 1000 * RATIO);
+}
+
+function realSecondsUntilNextVanaDay(){
+  if (!lastSync) return null;
+  // current Vana seconds within today
+  const nowVana = vanaSecAtNow();
+  const daySec = nowVana % 86400;
+  const remainingVanaSec = 86400 - daySec;
+  return remainingVanaSec / RATIO; // real seconds
+}
+
+function render(){
+  if (!lastSync) return;
+  const vanaSec = vanaSecAtNow();
+  const p = vanaTotalToParts(vanaSec);
+
+  // time
+  document.getElementById('vana-time').textContent = fmt2(p.hours) + ':' + fmt2(p.minutes);
+  document.getElementById('vana-sec').textContent = ':' + fmt2(p.seconds);
+
+  // date / weekday
+  document.getElementById('vana-weekday').textContent = p.weekday + ' · ' + (WEEKDAYS_RU[p.weekday] || '');
+  document.getElementById('vana-date').textContent = fmtDate(p);
+
+  // moon — prefer live API values when fresh (<5 min old), else recalc
+  const ageMs = Date.now() - (lastSync.realMs || 0);
+  let moon;
+  if (lastSync.source === 'api' && ageMs < 5 * 60 * 1000){
+    moon = { name: lastSync.moon_phase, percent: lastSync.moon_percent };
+  } else {
+    moon = moonFromDay(p.vanaDayTotal);
+  }
+  document.getElementById('moon-phase').textContent =
+    moon.name + (MOON_RU[moon.name] ? ' · ' + MOON_RU[moon.name] : '');
+  document.getElementById('moon-pct').textContent = moon.percent + '%';
+  document.getElementById('moon-fill').style.width = moon.percent + '%';
+
+  // day/night
+  const isDay = (p.hours >= 6 && p.hours < 18);
+  const badge = document.getElementById('dn-badge');
+  badge.textContent = isDay ? 'День' : 'Ночь';
+  badge.className = 'badge ' + (isDay ? 'day' : 'night');
+  document.getElementById('dn-sub').textContent =
+    isDay ? 'светлая фаза' : 'тёмная фаза';
+
+  // countdown to next day (real seconds)
+  const realLeft = realSecondsUntilNextVanaDay();
+  if (realLeft != null){
+    const m = Math.floor(realLeft / 60);
+    const s = Math.floor(realLeft % 60);
+    document.getElementById('countdown').innerHTML =
+      pad2(m) + ':' + pad2(s) + '<span class="lbl">мин</span>';
+  }
+
+  // next weekday name
+  const nextIdx = (p.weekdayIdx + 1) % 8;
+  const nextWd = WEEKDAYS[nextIdx];
+  document.getElementById('next-weekday').textContent =
+    'след. — ' + nextWd + ' (' + (WEEKDAYS_RU[nextWd] || '') + ')';
+
+  // sync indicator
+  const ind = document.getElementById('sync-indicator');
+  const txt = document.getElementById('sync-text');
+  ind.classList.toggle('offline', syncMode === 'local' || syncMode === 'error');
+  const labels = {
+    live:  'Live · vana-time.com',
+    proxy: 'Через прокси',
+    local: 'Локальный расчёт',
+    pending: 'Синхронизация…',
+    error: 'Ошибка API'
+  };
+  txt.textContent = labels[syncMode] || '—';
+
+  // cycle strip
+  renderCycle(p.weekdayIdx, p.vanaDayTotal);
+}
+
+function renderCycle(todayIdx, dayTotal){
+  const strip = document.getElementById('cycle-strip');
+  strip.innerHTML = '';
+  for (let i = 0; i < 8; i++){
+    const idx = (todayIdx + i) % 8;
+    const name = WEEKDAYS[idx];
+    const chip = document.createElement('div');
+    chip.className = 'cycle__chip' + (i === 0 ? ' is-today' : '');
+    const offsetLabel = i === 0 ? 'сегодня' : (i === 1 ? 'завтра' : '+' + i + ' дн.');
+    chip.innerHTML =
+      '<div class="nm">' + name + '</div>' +
+      '<div class="in">' + offsetLabel + '</div>';
+    strip.appendChild(chip);
+  }
+}
+
+async function bootstrap(){
+  applySnapshot(buildSnapFromLocal());   // show immediately
+  try {
+    const snap = await tryFetch();
+    applySnapshot(snap);
+  } catch(e){
+    syncMode = 'error';
+  }
+  // re-sync every 5 min from API/proxy
+  setInterval(async () => {
+    try {
+      const snap = await tryFetch();
+      applySnapshot(snap);
+    } catch(e){ /* keep ticking locally */ }
+  }, 5 * 60 * 1000);
+
+  // smooth local tick every 250ms
+  setInterval(render, 250);
+}
+
+// ----- navigation switching -----
+const NAV = document.getElementById('nav');
+NAV.addEventListener('click', (e) => {
+  const btn = e.target.closest('.nav__item');
+  if (!btn) return;
+  const target = btn.dataset.target;
+  document.querySelectorAll('.nav__item').forEach(b => b.classList.toggle('is-active', b === btn));
+  document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+  const view = document.getElementById('view-' + target);
+  if (view) view.classList.remove('hidden');
+  // update crumb
+  const labels = { dashboard:'Дашборд', players:'Игроки', news:'Новости Игроков', events:'События игроков', gallery:'Галереи игроков' };
+  document.getElementById('crumb-current').textContent = labels[target] || '';
+});
+
+bootstrap();
+</script>
+</body>
+</html>
