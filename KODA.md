@@ -1,5 +1,7 @@
 # Project Instructions
 
+For additional instructions specific to the WorkAI IDE, see [`WorkAI.md`](WorkAI.md).
+
 Project spec: `docs/ai/context.md` v4.0 + `docs/ai/frontend-spec.md` v1.0.
 
 ## Read first
